@@ -1,0 +1,17 @@
+// @import './styles/variables';
+// @import './styles/mixins';
+
+// Reset global
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    background-color: #f5f0f0;
+}

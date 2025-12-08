@@ -1,0 +1,34 @@
+// Couleurs principales
+$primary-color: #e63946;
+$primary-hover: darken($primary-color, 10%);
+
+$secondary-color: #457b9d;      // bleu doux + harmonieux
+$secondary-hover: darken($secondary-color, 10%);
+
+$danger-color: #d62828;
+$danger-hover: darken($danger-color, 10%);
+
+// Couleurs utilitaires
+$text-color: #333;
+$background-color: #f5f0f0;
+
+$white: #ffffff;
+$black: #000000;
+
+// Fonts
+$font-stack: 'Montserrat', sans-serif;
+
+// Espacements
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Border radius
+$border-radius: 5px;
+
+// Breakpoints
+$breakpoint-small: 600px;
+$breakpoint-medium: 900px;
+$breakpoint-large: 1200px;

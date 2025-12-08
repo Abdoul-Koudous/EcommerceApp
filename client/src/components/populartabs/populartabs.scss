@@ -1,0 +1,70 @@
+.popular-tabs {
+  position: relative;
+  width: 100%;
+
+  .slider-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .scroll-btn {
+      background: #fff;
+      border: 1px solid #ccc;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+      z-index: 2;
+
+      &:hover {
+        background: #111;
+        color: #fff;
+      }
+    }
+
+    .tabs-slider {
+      display: flex;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      flex: 1;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tab-item {
+        flex: 0 0 auto;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        padding: 10px 20px;
+        margin-right: 10px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        color: #333;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: #111;
+          color: #fff;
+        }
+
+        &.active {
+          background: #111;
+          color: #fff;
+          border-color: #111;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .scroll-btn {
+      display: none;
+    }
+  }
+}

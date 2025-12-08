@@ -1,0 +1,69 @@
+.otp-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  padding: 2rem 3rem;
+  border-radius: 12px;
+  width: 560px;
+  text-align: center;
+
+  .otp-icon {
+    font-size: 3rem;
+    color: #e63946;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    color: #222;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    color: #555;
+
+    strong {
+      color: #e63946;
+    }
+  }
+
+  .otp-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+
+    .otp-inputs {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    input {
+      width: 50px;
+      height: 50px;
+      font-size: 1.4rem;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 0.6rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      background: #e63946;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #c62b38;
+      }
+    }
+  }
+}

@@ -1,0 +1,232 @@
+.admin-header {
+  position: fixed;
+  top: 0;
+  left: 16rem; // largeur de la sidebar
+  right: 0;
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 0 2rem;
+  border-bottom: 2px solid #eee;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  z-index: 1000;
+
+
+
+  .menu-btn {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: #444;
+    transition: 0.2s ease;
+
+    &:hover {
+      color: #e63946;
+      transform: scale(1.1);
+    }
+  }
+
+  .part2 {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    .icon-wrapper {
+      position: relative;
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: #555;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: #e63946;
+        transform: scale(1.1);
+      }
+
+      &.badge {
+        .badge-number {
+          position: absolute;
+          top: -6px;
+          right: -8px;
+          background: #e63946;
+          color: #fff;
+          font-size: 0.65rem;
+          font-weight: 600;
+          padding: 2px 5px;
+          border-radius: 10px;
+          border: 1.5px solid #fff;
+          min-width: 16px;
+          text-align: center;
+          animation: popIn 0.3s ease;
+        }
+      }
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.2s;
+      border-radius: 50%;
+      overflow: hidden;
+      width: 38px;
+      height: 38px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        transform: scale(1.05);
+      }
+
+      .avatar {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+    }
+  }
+}
+.user-menu {
+  position: relative;
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+    width: 38px;
+    height: 38px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: 0.2s;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 50px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    width: 240px;
+    overflow: hidden;
+    animation: fadeInUp 0.25s ease forwards;
+    z-index: 100;
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.8rem 1rem;
+      background: #fafafa;
+      border-bottom: 1px solid #eee;
+
+      .avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .info {
+        display: flex;
+        flex-direction: column;
+        h4 {
+          font-size: 0.95rem;
+          margin: 0;
+          font-weight: 600;
+          color: #222;
+        }
+        p {
+          font-size: 0.8rem;
+          color: #888;
+          margin: 2px 0 0;
+        }
+      }
+    }
+
+    .menu-items {
+      list-style: none;
+      margin: 0;
+      padding: 0.4rem 0;
+
+      li {
+        padding: 0.6rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        .icon {
+          color: #e63946;
+          font-size: 1.1rem;
+        }
+
+        &:hover {
+          background: rgba(230, 57, 70, 0.08);
+        }
+
+        &.logout {
+          color: #e63946;
+          font-weight: 600;
+          border-top: 1px solid #eee;
+          margin-top: 4px;
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation d’apparition du badge */
+@keyframes popIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.login-btn {
+  padding: 0.4rem 1rem;
+  background: #e63946;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #d62839;
+    transform: scale(1.05);
+  }
+}

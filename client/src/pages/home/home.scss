@@ -1,0 +1,156 @@
+.section2{
+    background-color: white;
+    margin: 0 auto;
+    .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    }
+    .freeshipping{
+        margin: 0 20px;
+        border:1px solid #ff5252;
+        padding: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .free1 {
+            font-size: 18px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .free3 p{
+            font-size: 20px;
+            font-weight: bolder;
+        }
+    }
+}
+
+.section1 {
+  padding: 60px 0;
+  background-color: #fff;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .cont1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px; // espace entre les deux colonnes
+    flex-wrap: wrap; // pour s’adapter sur mobile
+
+    // ----- Colonne gauche -----
+    .cont1-left {
+      flex: 1;
+      min-width: 280px;
+
+      h3 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 0.8rem;
+        color: #555;
+        line-height: 1.6;
+      }
+    }
+
+    // ----- Colonne droite -----
+    .cont1-right {
+      flex: 2;
+      min-width: 300px;
+      position: relative;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 25px;
+      box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
+
+  // ----- Responsive -----
+  @media (max-width: 992px) {
+    .cont1 {
+      gap: 30px;
+
+      .cont1-left {
+        h3 {
+          font-size: 1.6rem;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .cont1 {
+      flex-direction: column;
+      align-items: stretch;
+
+      .cont1-left,
+      .cont1-right {
+        width: 100%;
+      }
+
+      .cont1-right {
+        padding: 15px 20px;
+      }
+    }
+  }
+}
+
+
+.section3{
+  margin: 0 auto;
+  background-color: #fff;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+}
+
+.section4{
+  margin: 0 auto;
+  background-color: #fff;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+}
+
+.banner-section {
+  display: flex;
+  gap: 10px;          // espace entre slide et box
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;     // sur mobile, les éléments passent en colonne
+  padding: 5px;
+}
+
+.slide-wrapper {
+  flex: 3;            // prend plus de largeur
+  min-width: 300px;   // responsive
+}
+
+.box-wrapper {
+  flex: 1;            // moins large que le slide
+  min-width: 250px;
+}

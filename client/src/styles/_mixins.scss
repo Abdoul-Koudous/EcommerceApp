@@ -1,0 +1,38 @@
+// Flex centré
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Bouton standard
+@mixin button($bg-color: $primary-color, $hover-color: $primary-hover, $text-color: $white) {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    background-color: $hover-color;
+  }
+}
+
+
+// Shadow box
+@mixin shadow-box($color: rgba(0,0,0,0.1), $blur: 10px) {
+  box-shadow: 0 2px $blur $color;
+}
+
+// Media query responsive
+@mixin respond($breakpoint) {
+  @if $breakpoint == small {
+    @media (max-width: $breakpoint-small) { @content; }
+  } @else if $breakpoint == medium {
+    @media (max-width: $breakpoint-medium) { @content; }
+  } @else if $breakpoint == large {
+    @media (max-width: $breakpoint-large) { @content; }
+  }
+}

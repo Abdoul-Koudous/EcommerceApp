@@ -1,0 +1,101 @@
+nav {
+  width: 100%;
+  background-color: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: "Poppins", sans-serif;
+
+  .container {
+    width: 90%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+  }
+
+  /* ---------- Partie gauche : bouton catégories ---------- */
+  .cont1 {
+    button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: rgb(130, 11, 11);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+
+      &:hover {
+        background-color: rgb(100, 9, 9);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      svg {
+        font-size: 18px;
+      }
+    }
+  }
+
+  /* ---------- Partie centrale : liens de navigation ---------- */
+  .cont2 {
+    ul {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+
+      li {
+        list-style: none;
+
+        a {
+          text-decoration: none;
+          color: #333;
+          font-weight: 500;
+          font-size: 14px;
+          position: relative;
+          transition: color 0.2s ease;
+
+          &:hover {
+            color: rgb(130, 11, 11);
+          }
+
+          /* Petit trait en bas au survol */
+          &::after {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: rgb(130, 11, 11);
+            transition: width 0.3s ease;
+          }
+
+          &:hover::after {
+            width: 100%;
+          }
+        }
+      }
+    }
+  }
+
+  /* ---------- Partie droite : message livraison ---------- */
+  .cont3 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgb(130, 11, 11);
+    font-size: 13px;
+    font-weight: 500;
+
+    svg {
+      font-size: 18px;
+    }
+  }
+}

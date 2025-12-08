@@ -1,0 +1,148 @@
+.sidebar {
+  width: 16rem;
+  background: #ffffff;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #eee;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  overflow: hidden;
+  transition: width 0.3s ease;
+
+  /* ----------------- LOGO ----------------- */
+  .sidebar-logo {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #e63946;
+
+      span {
+        color: #111;
+      }
+    }
+  }
+
+  /* ----------------- LISTE ----------------- */
+  .sidebar-links {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0.75rem;
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+
+      li {
+        margin-bottom: 0.5rem;
+
+        /* Parent ou lien simple */
+        a,
+        .menu-parent {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 0.9rem;
+          border-radius: 8px;
+          text-decoration: none;
+          color: #444;
+          font-weight: 500;
+          cursor: pointer;
+          background: transparent;
+          transition: 0.25s ease-in-out;
+
+          &:hover {
+            background: #f8f8f8;
+            color: #e63946;
+          }
+
+          &.active {
+            background: #e63946;
+            color: #fff;
+
+            .icon {
+              color: #fff;
+            }
+          }
+
+          .menu-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .icon {
+            font-size: 1.2rem;
+            color: #e63946;
+          }
+
+          .arrow {
+            font-size: 1.3rem;
+            color: #aaa;
+            transition: transform 0.3s ease;
+          }
+        }
+
+        /* Sous-menu */
+        .submenu {
+          margin-left: 2rem;
+          margin-top: 0.3rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+
+          a {
+            padding: 0.5rem 0.6rem;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            color: #555;
+
+            &:hover {
+              background: #f1f1f1;
+              color: #e63946;
+            }
+
+            &.active {
+              background: #e63946;
+              color: #fff;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* ----------------- BOUTON LOGOUT ----------------- */
+  .logout-btn {
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    gap: 10px;
+    font-weight: 600;
+    color: #e63946;
+    cursor: pointer;
+    border-top: 1px solid #eee;
+    transition: 0.25s;
+
+    .icon {
+      font-size: 1.2rem;
+      color: #e63946;
+    }
+
+    &:hover {
+      background: rgba(230, 57, 70, 0.06);
+    }
+  }
+}

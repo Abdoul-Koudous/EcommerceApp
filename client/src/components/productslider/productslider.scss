@@ -1,0 +1,56 @@
+.product-slider-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  /* --- Boutons de défilement --- */
+  .scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #111;
+    z-index: 10;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #111;
+      color: #fff;
+    }
+
+    &.left {
+      left: -15px;
+    }
+
+    &.right {
+      right: -15px;
+    }
+  }
+
+  /* --- Zone de glissement --- */
+  .product-slider {
+    display: flex;
+    gap: 1.5rem;
+    overflow: hidden;
+    scroll-behavior: smooth;
+    padding: 1rem 0;
+
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 10px;
+    }
+  }
+}

@@ -1,0 +1,109 @@
+.zoom-wrapper {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+
+  .thumbnails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+
+    scrollbar-width: thin;
+    scrollbar-color: #e63946 #ddd;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: #e63946;
+      border-radius: 3px;
+    }
+
+    img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+
+      &:hover,
+      &.active {
+        border-color: #e63946;
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .main-image {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      cursor: crosshair;
+      transition: opacity 0.3s ease;
+    }
+
+    .zoom-display {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      background-repeat: no-repeat;
+      background-size: 200%;
+      background-position: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease, background-position 0.05s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .zoom-display.visible {
+      opacity: 1;
+    }
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .zoom-wrapper {
+    flex-direction: column;
+    align-items: center;
+
+    .thumbnails {
+      flex-direction: row;
+      max-height: unset;
+      overflow-x: auto;
+      overflow-y: hidden;
+
+      img {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    .main-image {
+      width: 100%;
+      max-width: 350px;
+      height: auto;
+
+      .zoom-display {
+        display: none; // on cache le zoom sur mobile
+      }
+    }
+  }
+}

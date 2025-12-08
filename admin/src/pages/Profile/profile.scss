@@ -1,0 +1,200 @@
+.profile-container {
+  display: flex;
+  gap: 30px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  font-family: "Poppins", sans-serif;
+  animation: fadeIn 0.5s ease;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.profile-left {
+  .avatar-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 4px solid #e63946;
+      object-fit: cover;
+    }
+
+    .change-avatar {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e63946;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+
+      &:hover { background: #c62b38; }
+    }
+  }
+}
+
+.profile-right {
+  flex: 1;
+
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+    button {
+      background: transparent;
+      color: #e63946;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+}
+
+.profile-form {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  .form-group {
+    position: relative;
+    background: #fbfbfd;
+    border-radius: 12px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    height: 62px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      font-size: 1.2rem;
+      color: #e63946;
+    }
+
+    input {
+      width: 100%;
+      padding-left: 40px;
+      border: none;
+      background: transparent;
+      outline: none;
+    }
+
+    label {
+      position: absolute;
+      left: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.95rem;
+      color: #888;
+      pointer-events: none;
+      transition: 0.18s ease;
+    }
+
+    input:focus + label,
+    input:not(:placeholder-shown) + label {
+      top: -8px;
+      font-size: 0.75rem;
+      color: #e63946;
+      background: #fff;
+      padding: 0 4px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      cursor: pointer;
+    }
+  }
+
+  .actions {
+    grid-column: 1 / 3;
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+
+    .btn-edit, .btn-save, .btn-cancel {
+      padding: 12px 26px;
+      border-radius: 10px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-edit, .btn-save { background: #e63946; color: #fff; }
+    .btn-save:hover, .btn-edit:hover { background: #c62b38; }
+    .btn-cancel { background: #ddd; color: #333; }
+    .btn-cancel:hover { background: #ccc; }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .profile-form { grid-template-columns: 1fr; }
+}
+.btn-flat {
+  background: transparent;
+  color: #e63946;
+  border: 1px solid #e63946;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 10px;
+
+  &:hover {
+    background: #e63946;
+    color: #fff;
+  }
+}
+.address-block {
+  grid-column: 1 / 3; // pour qu'il prenne toute la largeur du formulaire
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .btn-flat {
+    align-self: flex-start; // bouton aligné à gauche
+  }
+
+  .address-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+
+    .address-radio {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+
+      input[type="radio"] {
+        accent-color: #e63946;
+      }
+
+      .address-text {
+        font-size: 0.95rem;
+        color: #333;
+      }
+    }
+  }
+}

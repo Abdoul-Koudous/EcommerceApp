@@ -1,0 +1,133 @@
+:root {
+  --accent: #e63946;
+  --accent-600: #c62b38;
+  --muted: #666;
+  --bg: linear-gradient(135deg, #e63946, #ff758f);
+}
+
+/* 🔔 Popup OTP envoyé */
+.otp-popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: #2b9348;
+  border: 2px solid #2b9348;
+  padding: 0.8rem 1.2rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
+  animation: fadeInOut 3s ease forwards;
+  z-index: 9999;
+}
+
+.otp-popup .icon {
+  font-size: 1.3rem;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -20px); }
+  15%, 85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+
+.verify-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+//   background: var(--bg);
+  padding: 1rem;
+}
+
+.verify-box {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+.verify-box h2 {
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+
+.verify-box p {
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.user-email {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.otp-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.otp-inputs input {
+  width: 45px;
+  height: 55px;
+  text-align: center;
+  font-size: 1.5rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  transition: border-color 0.2s ease, transform 0.1s ease;
+}
+
+.otp-inputs input:focus {
+  border-color: var(--accent);
+  outline: none;
+  transform: scale(1.05);
+}
+
+.verify-btn {
+  background: var(--accent);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  width: 100%;
+}
+
+.verify-btn:hover {
+  background: var(--accent-600);
+}
+
+.resend-text {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.resend-text a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.resend-text a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,39 @@
+.searchBox{
+    height: 50px;
+    background-color: #e5e5e5;
+    border-radius: 5px;
+    position: relative;
+    padding: 8px;
+    width: 100%;
+    input{
+        position: absolute;
+        width: 90%;
+        height: 35px;
+        background: inherit;
+        border: none;
+        font-size: 15px;
+        bottom: 5px;
+        &:focus{
+            outline: none;
+        }
+        &::placeholder{
+            color: #373737 !important;
+        }
+    }
+    button {
+        z-index: 50;
+        position: absolute;
+        right: 5px;
+        top: 10px;
+        font-size: 30px;
+        background: inherit;
+        border: none;
+        cursor: pointer;
+        margin-right: 5px;
+        transition: transform 0.1s ease, opacity 0.1s ease;
+        &:active{
+            transform: scale(0.9); /* le bouton rétrécit un peu */
+            opacity: 0.7;
+        }
+        }
+}

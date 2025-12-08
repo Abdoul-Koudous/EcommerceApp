@@ -1,0 +1,69 @@
+.graph-container {
+  margin-top: 3rem;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  border: none;
+  outline: none;
+
+  h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  *:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  &:hover {
+    border: none;
+    outline: none;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .recharts-wrapper {
+    width: 100%;
+  }
+
+  /* ✅ Section légende customisée */
+  .points {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem; /* espace entre les deux légendes */
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 1.2rem;
+
+    span {
+      margin: 0 2px 0 0; /* petit espace après le rond */
+    }
+
+    .customer,
+    .sales {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .customer {
+      background-color: #10b981; /* vert clients */
+    }
+
+    .sales {
+      background-color: #3b82f6; /* bleu ventes */
+    }
+
+    /* effet au survol pour dynamiser */
+    .customer:hover,
+    .sales:hover {
+      transform: scale(1.2);
+      transition: 0.2s ease;
+    }
+  }
+}
