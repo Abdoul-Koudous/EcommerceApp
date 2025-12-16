@@ -1,0 +1,144 @@
+.subcategories-page {
+  padding: 20px;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+
+      .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+
+        &.add {
+          background: #4caf50;
+          color: #fff;
+        }
+
+        &.export {
+          background: #f1f1f1;
+        }
+
+        &.save {
+          background: #2196f3;
+          color: #fff;
+          margin-left: 8px;
+        }
+
+        &.cancel {
+          background: #f44336;
+          color: #fff;
+          margin-left: 4px;
+        }
+      }
+    }
+  }
+
+  .tree-table {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    overflow: hidden;
+
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      transition: background 0.15s ease;
+
+      &:hover {
+        background: #fafafa;
+      }
+
+      &.level-0 {
+        font-weight: 600;
+        background: #f8f9fb;
+      }
+
+      select,
+      input {
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        margin-right: 8px;
+      }
+
+      button {
+        padding: 4px 8px;
+        font-size: 13px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+
+        &.save {
+          background: #2196f3;
+          color: #fff;
+        }
+
+        &.cancel {
+          background: #f44336;
+          color: #fff;
+        }
+      }
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      color: #333;
+
+      &.name {
+        flex: 1;
+        gap: 8px;
+      }
+
+      &.actions {
+        gap: 12px;
+      }
+    }
+
+    .toggle {
+      cursor: pointer;
+      font-size: 14px;
+      width: 16px;
+      text-align: center;
+      color: #555;
+    }
+
+    .indent {
+      width: 20px;
+    }
+
+    .icon {
+      cursor: pointer;
+      font-size: 15px;
+
+      &.edit {
+        color: #2196f3;
+      }
+
+      &.delete {
+        color: #f44336;
+      }
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+}

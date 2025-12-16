@@ -45,7 +45,7 @@ const AdminSidebar = () => {
       icon: <FaBoxOpen />,
       subLinks: [
         { to: "/categories/lists", label: "Liste des catégories" },
-        { to: "/categories/add", label: "Ajouter une catégorie" },
+        { to: "/subCategories/lists", label: "Liste des sous catégories" },
       ],
     },
     {

@@ -59,6 +59,24 @@ export const uploadImage = async (url, updatedData) => {
 };
 
 
+export const uploadImages = async (url, formData) => {
+  try {
+    const params = {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
+        "Content-Type": "multipart/form-data",
+      },
+    };
+    const response = await axios.post(apiUrl + url, formData, params);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    return { error: true, message: error.message || "Erreur serveur" };
+  }
+};
+
+
+
 export const editData = async (url, updatedData) => {
   try {
     const params = {
@@ -74,3 +92,30 @@ export const editData = async (url, updatedData) => {
     return { error: true, message: error.message || "Erreur serveur" };
   }
 };
+
+export const deleteImages = async (url) => {
+  try {
+    const params = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
+      },
+    };
+
+    const { data } = await axios.delete(apiUrl + url, params);
+    return data;
+
+  } catch (error) {
+    return { error: true, message: error.message };
+  }
+};
+
+
+export const deleteData = async (url) => {
+  const params = {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
+    },
+  };
+  const res = await axios.delete(apiUrl + url, params);
+  return res; 
+}
