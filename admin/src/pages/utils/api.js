@@ -110,12 +110,14 @@ export const deleteImages = async (url) => {
 };
 
 
-export const deleteData = async (url) => {
+export const deleteData = async (url, data = {}) => {
   const params = {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
     },
+    data, // maintenant défini via l’argument
   };
   const res = await axios.delete(apiUrl + url, params);
-  return res; 
+  return res.data; 
 }
+

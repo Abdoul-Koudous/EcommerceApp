@@ -37,7 +37,6 @@ const AdminSidebar = () => {
       subLinks: [
         { to: "/products/lists", label: "Liste des produits" },
         { to: "/products/add", label: "Ajouter un produit" },
-        { to: "/categories", label: "Catégories" },
       ],
     },
     {

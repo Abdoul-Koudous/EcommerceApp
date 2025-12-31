@@ -10,6 +10,7 @@ import AuthPage from "./pages/AuthPage/AuthPage";
 import Profile from "./pages/Profile";
 import CategoriesPage from "./pages/Categorie";
 import SubCategoriesPage from "./pages/SubCategoriesPage/SubCategoriesPage";
+import ProductDetails from "./pages/products/productDetails";
 
 function App() {
   return (
@@ -37,6 +38,14 @@ function App() {
           element={
             <AdminLayout>
               <AddProduct />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/product/:id"
+          element={
+            <AdminLayout>
+              <ProductDetails />
             </AdminLayout>
           }
         />

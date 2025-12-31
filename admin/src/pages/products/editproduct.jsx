@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useContext, useRef,useMemo } from "react";
-import { FaTimes, FaStar, FaPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTimes, FaPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import "./addproduct.scss";
 import { UserContext } from "../../UserContext/UserContext";
-import { fetchDataFromApi, postData, uploadImages } from "../utils/api";
+import { editData, uploadImages } from "../utils/api";
 import HoverRating from "../../components/HoverRating/HoverRating";
 import { ToastContext } from "../../context/ToastContext";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 
 
-const optionsYesNo = ["Oui", "Non"];
+
+
+
 const rams = ["2GB", "4GB", "8GB", "16GB"];
 const sizes = ["S", "M", "L", "XL"];
 const weights = ["0.5kg", "1kg", "2kg", "5kg", "8kg", "10kg"];
@@ -68,9 +70,10 @@ const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
 };
 
 
-const AddProduct = ({ onClose }) => {
+const EditProduct = ({ product, onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
-  const { categories, setCategories } = useContext(UserContext);
+  const { categories } = useContext(UserContext);
+
   const { openToast } = useContext(ToastContext);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingMainImage, setLoadingMainImage] = useState(false);
@@ -79,10 +82,8 @@ const AddProduct = ({ onClose }) => {
 
 
 
-  const [productRam, setProductRam] = useState([]);
-  const [productWeight, setProductWeight] = useState([]);
-  const [size, setSize] = useState([]);
-  const [productFeatured, setProductFeatured] = useState("");
+  
+  
   const [selectedThirdSubCat, setSelectedThirdSubCat] = useState("");
 
   const [selectedCat, setSelectedCat] = useState("");
@@ -96,7 +97,6 @@ const AddProduct = ({ onClose }) => {
     brand: "",
     price: 0,
     oldPrice: 0,
-    category: "",
     catName: "",
     catId: "",
     subCat: "",
@@ -111,24 +111,55 @@ const AddProduct = ({ onClose }) => {
     size: [],
     productWeight: [],
   });
-
-
   useEffect(() => {
-    if (!categories || categories.length === 0) {
-      fetchDataFromApi("/api/category").then((res) => {
-        if (res?.data) setCategories(res.data);
-      });
-    }
-  }, [categories, setCategories]);
+  if (!product) return;
 
-  const mainCategories = categories || [];
-  const selectedCategory = mainCategories.find((cat) => cat._id === selectedCat);
-  const subCategories = selectedCategory?.children || [];
-  const selectedSubCategory = subCategories.find((sub) => sub._id === selectedSubCat);
-  const thirdSubCategories = useMemo(() => {
-    const selSub = subCategories.find((sub) => sub._id === selectedSubCat);
-    return selSub?.children || [];
-  }, [subCategories, selectedSubCat]);
+  setFormFields({
+    name: product.name || "",
+    description: product.description || "",
+    brand: product.brand || "",
+    price: product.price || 0,
+    oldPrice: product.oldPrice || 0,
+    discount: product.discount || 0,
+    countIntStock: product.countIntStock || 0,
+    rating: product.rating || 0,
+    isFeatured: product.isFeatured ?? false,
+    catId: product.catId || "",
+    catName: product.catName || "",
+    subCatId: product.subCatId || "",
+    subCat: product.subCat || "",
+    thirdSubCatId: product.thirdSubCatId || "",
+    thirdsubCat: product.thirdsubCat || "",
+    productRam: product.productRam || [],
+    size: product.size || [],
+    productWeight: product.productWeight || [],
+    mainImage: product.images?.[0] || null,
+    extraImages: product.images?.slice(1) || [],
+  });
+
+  setSelectedCat(product.catId || "");
+  setSelectedSubCat(product.subCatId || "");
+  setSelectedThirdSubCat(product.thirdSubCatId || "");
+
+  
+}, [product]);
+
+
+const mainCategories = categories || [];
+
+const subCategories = useMemo(() => {
+  return mainCategories.find(c => c._id === selectedCat)?.children || [];
+}, [mainCategories, selectedCat]);
+
+const thirdSubCategories = useMemo(() => {
+  return subCategories.find(sc => sc._id === selectedSubCat)?.children || [];
+}, [subCategories, selectedSubCat]);
+
+
+
+
+  
+
 
   const onChangeInput = (e) => {
     const { name, value } = e.target;
@@ -168,9 +199,17 @@ const [extraImageFiles, setExtraImageFiles] = useState([]);
 
     e.target.value = ""; // pour pouvoir re-sélectionner les mêmes fichiers
   }
+  
+
 };
 
 
+useEffect(() => {
+  return () => {
+    URL.revokeObjectURL(formFields.mainImage);
+    formFields.extraImages.forEach(URL.revokeObjectURL);
+  };
+}, [formFields.mainImage, formFields.extraImages]);
 
 
 // Supprimer une image secondaire
@@ -183,10 +222,7 @@ const removeExtraImage = (index) => {
 };
 
 
-  const handleChangeProductFeatured = (event) => {
-    setProductFeatured(event.target.value);
-    setFormFields((prev) => ({ ...prev, isFeatured: event.target.value }));
-  };
+  
 
   const handleClose = () => {
     setIsClosing(true);
@@ -205,10 +241,22 @@ const removeExtraImage = (index) => {
   if (!formFields.catId)
     return openToast("error", "Veuillez sélectionner une catégorie");
 
-  if (!mainImageFile)
-    return openToast("error", "Veuillez ajouter une image principale");
-  if (extraImageFiles.length === 0)
-    return openToast("error", "Veuillez ajouter au moins une image secondaire"); 
+  if (!formFields.mainImage && !mainImageFile)
+  return openToast("error", "Veuillez ajouter une image principale");
+
+ const hasOldImages = product?.images?.length > 1;
+
+
+  if (
+    !hasOldImages &&
+    (!formFields.extraImages || formFields.extraImages.length === 0) &&
+    extraImageFiles.length === 0
+  ) {
+    return openToast("error", "Veuillez ajouter au moins une image secondaire");
+  }
+  if (!formFields.brand.trim())
+    return openToast("error", "La marque du produit est obligatoire");
+
   if (formFields.countIntStock <= 0)
     return openToast("error", "Le stock doit être supérieur à zéro");
   if (formFields.discount < 0)
@@ -227,12 +275,11 @@ const removeExtraImage = (index) => {
     return openToast("error", "Veuillez sélectionner au moins un poids");
   if (formFields.discount > 100)
     return openToast("error", "La remise ne peut pas dépasser 100%"); 
-  if (Number(formFields.oldPrice) < Number(formFields.price))
+  if (formFields.oldPrice > 0 && formFields.oldPrice < formFields.price)
     return openToast("error", "L'ancien prix doit être supérieur au prix actuel");
-  if (formFields.isFeatured === "")
-    return openToast("error", "Veuillez indiquer si le produit est en vedette");
-  if (formFields.countIntStock % 1 !== 0)
+  if (!Number.isInteger(Number(formFields.countIntStock)))
     return openToast("error", "Le stock doit être un nombre entier");
+  
   // 🔹 SUBMIT
   
 
@@ -241,72 +288,69 @@ const removeExtraImage = (index) => {
 
 
   try {
-    setLoadingSubmit(true);
+  setLoadingSubmit(true);
 
-    // 🔹 UPLOAD IMAGES
+  let finalImages = [];
+
+  // Si on a de nouvelles images à uploader
+  if (mainImageFile || extraImageFiles.length > 0) {
     const formData = new FormData();
-    formData.append("images", mainImageFile);
-    extraImageFiles.forEach((file) => formData.append("images", file));
+    if (mainImageFile) formData.append("images", mainImageFile);
+    extraImageFiles.forEach(f => formData.append("images", f));
 
     const uploadRes = await uploadImages("/api/product/uploadImages", formData);
 
-    if (!uploadRes || uploadRes.error || !uploadRes.images?.length) {
-      throw new Error(uploadRes?.message || "Erreur upload images");
+    // Nouvelle image principale ? sinon garder l'ancienne
+    finalImages.push(mainImageFile ? uploadRes.images[0] : formFields.mainImage);
+
+    // Ajouter les anciennes images secondaires déjà présentes
+    finalImages.push(...formFields.extraImages);
+
+    // Ajouter les nouvelles images secondaires uploadées
+    if (extraImageFiles.length > 0) {
+      finalImages.push(...uploadRes.images.slice(mainImageFile ? 1 : 0));
     }
 
-    // 🔹 PAYLOAD
-    const payload = {
-      ...formFields,
-      images: uploadRes.images,
-      category: formFields.catId,
-      thirdSubCatId: formFields.thirdSubCatId || null,
-    };
-
-    // 🔹 CREATE PRODUCT
-    const res = await postData("/api/product/create", payload);
-
-    if (!res?.success) {
-      throw new Error(res?.message || "Erreur ajout produit");
-    }
-
-    openToast("success", "Produit ajouté avec succès");
-     setTimeout(() => handleClose(), 500);
-
-  } catch (error) {
-    console.error(error);
-    openToast("error", error.message || "Erreur serveur");
-  } finally {
-    setLoadingSubmit(false);
+  } else {
+    // Pas de nouvelles images => garder toutes les images existantes
+    finalImages = [formFields.mainImage, ...formFields.extraImages];
   }
+
+  // Préparer le payload final
+  const payload = { ...formFields, images: finalImages };
+
+  const res = await editData(`/api/product/updateProduct/${product._id}`, payload);
+
+  if (!res?.success) throw new Error(res?.message || "Erreur de modification produit");
+
+  openToast("success", res?.message || "Produit mis à jour");
+  setTimeout(handleClose, 500);
+
+} catch (error) {
+  console.error(error);
+  openToast("error", error.message || "Erreur serveur");
+} finally {
+  setLoadingSubmit(false);
+}
 };
 
-
-
-  const setPreviewsFun = (previewsArr) => {
-    setPreviews(previewsArr);
-    setFormFields((prev) => ({
+useEffect(() => {
+  if (
+    selectedThirdSubCat &&
+    !thirdSubCategories.find(t => t._id === selectedThirdSubCat)
+  ) {
+    setSelectedThirdSubCat("");
+    setFormFields(prev => ({
       ...prev,
-      images: previewsArr,
+      thirdSubCatId: "",
+      thirdsubCat: ""
     }));
-  };
+  }
+}, [thirdSubCategories, selectedThirdSubCat]);
 
-  const removeImage = async (imgUrl, index) => {
-      try {
-        const res = await deleteImages(
-          `/api/category/deleteImage?img=${encodeURIComponent(imgUrl)}`
-        );
   
-        if (res?.error) {
-          return openToast("error", res.message);
-        }
-  
-        setPreviews((prev) => prev.filter((_, i) => i !== index));
-  
-        openToast("success", res?.message || "Image supprimée");
-      } catch (err) {
-        openToast("error", "Erreur suppression image");
-      }
-    };
+
+ 
   
 
   return (
@@ -317,7 +361,8 @@ const removeExtraImage = (index) => {
             <button className="close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
-            <h2>Ajouter un produit</h2>
+            <h2>Modifier le produit</h2>
+
           </div>
         </div>
 
@@ -350,19 +395,22 @@ const removeExtraImage = (index) => {
                 onChange={(e) => {
                   const value = e.target.value;
                   const selected = mainCategories.find((c) => c._id === value)?.name || "";
+
                   setSelectedCat(value);
                   setSelectedSubCat("");
+                  setSelectedThirdSubCat(""); // ✅ ICI
+
                   setFormFields((prev) => ({
                     ...prev,
                     catId: value,
-                    category: value,
-                    catName: selected,       // <-- ajoute le nom ici
+                    catName: selected,
                     subCatId: "",
                     subCat: "",
                     thirdSubCatId: "",
                     thirdsubCat: "",
                   }));
                 }}
+
               >
 
                 <option value="">Sélectionne...</option>
@@ -382,15 +430,19 @@ const removeExtraImage = (index) => {
                 onChange={(e) => {
                   const value = e.target.value;
                   const selected = subCategories.find((sc) => sc._id === value)?.name || "";
+
                   setSelectedSubCat(value);
+                  setSelectedThirdSubCat(""); // ✅ ICI
+
                   setFormFields((prev) => ({
                     ...prev,
                     subCatId: value,
-                    subCat: selected,        // <-- nom de la sous-catégorie
+                    subCat: selected,
                     thirdSubCatId: "",
                     thirdsubCat: "",
                   }));
                 }}
+
               >
 
                 <option value="">Sélectionne...</option>
@@ -404,18 +456,20 @@ const removeExtraImage = (index) => {
                 <label>Sous-sous-catégorie</label>
               <select
                 name="thirdSubCatId"
-                value={selectedThirdSubCat}
+               
                 disabled={!selectedSubCat}
+                value={formFields.thirdSubCatId}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setSelectedThirdSubCat(value);
-                  const selectedName = thirdSubCategories.find((tsc) => tsc._id === value)?.name || "";
-                  setFormFields((prev) => ({
+                  const selectedName = thirdSubCategories.find(t => t._id === value)?.name || "";
+
+                  setFormFields(prev => ({
                     ...prev,
-                    thirdSubCatId: value || "",
-                    thirdsubCat: selectedName,
+                    thirdSubCatId: value,
+                    thirdsubCat: selectedName
                   }));
                 }}
+
               >
                 <option value="">Sélectionne...</option>
                 {thirdSubCategories.map((tsc) => (
@@ -466,19 +520,19 @@ const removeExtraImage = (index) => {
               <div className="form-group">
                 <label>Produit en vedette ?</label>
                 <select
-                  name="isFeatured"
-                  value={formFields.isFeatured}
+                  value={String(formFields.isFeatured)}
                   onChange={(e) =>
-                    setFormFields((prev) => ({
+                    setFormFields(prev => ({
                       ...prev,
-                      isFeatured: e.target.value === "true", // conversion en Boolean
+                      isFeatured: e.target.value === "true"
                     }))
                   }
                 >
-                  <option value="">Sélectionner</option>
-                  <option value={true}>Oui</option>
-                  <option value={false}>Non</option>
+                  <option value="true">Oui</option>
+                  <option value="false">Non</option>
                 </select>
+
+
               </div>
 
               <div className="form-group">
@@ -519,11 +573,10 @@ const removeExtraImage = (index) => {
                 <DropdownMultiSelect
                   label="La RAM"
                   options={rams}
-                  selectedValues={productRam}
-                  onChange={(vals) => {
-                    setProductRam(vals); // état local
-                    setFormFields((prev) => ({ ...prev, productRam: vals })); // tableau pour la BDD
-                  }}
+                  selectedValues={formFields.productRam}
+                  onChange={(vals) =>
+                    setFormFields((prev) => ({ ...prev, productRam: vals }))
+                  }
                 />
               </div>
 
@@ -531,10 +584,9 @@ const removeExtraImage = (index) => {
                 <DropdownMultiSelect
                   label="Taille"
                   options={sizes}
-                  selectedValues={size}
+                  selectedValues={formFields.size}
                   onChange={(vals) => {
-                    setSize(vals);
-                    setFormFields((prev) => ({ ...prev, size: vals }));
+                    setFormFields((prev) => ({ ...prev, size: vals }))
                   }}
                 />
               </div>
@@ -543,9 +595,8 @@ const removeExtraImage = (index) => {
                 <DropdownMultiSelect
                   label="Poids"
                   options={weights}
-                  selectedValues={productWeight}
+                  selectedValues={formFields.productWeight}
                   onChange={(vals) => {
-                    setProductWeight(vals);
                     setFormFields((prev) => ({ ...prev, productWeight: vals }));
                   }}
                 />
@@ -602,13 +653,10 @@ const removeExtraImage = (index) => {
             </div>
 
 
-            <button
-              type="submit"
-              className="publish-btn"
-              disabled={loadingSubmit}
-            >
-              {loadingSubmit ? <CircularProgress /> : "Publier"}
+            <button type="submit" className="publish-btn" disabled={loadingSubmit}>
+              {loadingSubmit ? <CircularProgress /> : "Mettre à jour"}
             </button>
+
 
           </form>
         </div>
@@ -617,4 +665,4 @@ const removeExtraImage = (index) => {
   );
 };
 
-export default AddProduct;
+export default EditProduct;

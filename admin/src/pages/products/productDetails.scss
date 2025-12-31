@@ -1,0 +1,193 @@
+.product-details {
+  padding: 1.5rem;
+  
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    .back-btn {
+      text-decoration: none;
+      color: #e63946;
+      font-weight: 600;
+    }
+  }
+
+  .details-content {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 50px;
+
+    .images {
+      flex: 1;
+    }
+
+    .info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+
+      .meta-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-top: 20px;
+        width: 100%;
+
+        .meta-item {
+            display: grid;
+            grid-template-columns: 24px 120px 10px auto; // icône | label | : | valeur
+            align-items: center;
+            gap: 1rem;
+
+            .icon {
+            color: #e63946;
+            }
+
+            .label {
+            font-weight: 600;
+            text-align: left;
+            }
+
+            .colon {
+            text-align: center;      // le : centré verticalement
+            font-weight: 600;
+            }
+
+            .value {
+            text-align: left;
+            opacity: 0.85;
+            }
+        }
+        }
+
+    }
+  }
+
+  .description {
+    margin-top: 2rem;
+
+    h3 {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .details-content {
+      flex-direction: column;
+
+      .images,
+      .info {
+        width: 100%;
+      }
+    }
+  }
+}
+/* 🟩 Liste des avis */
+  .reviews-list {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 1.5rem;
+    position: relative;
+
+    h4 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #f2f2f2;
+      padding-bottom: 0.5rem;
+    }
+
+    /* ✅ Scroll activé quand la liste devient longue */
+    max-height: 400px;          /* hauteur maximale visible */
+    overflow-y: auto;           /* active le scroll vertical */
+    scrollbar-width: thin;      /* scrollbar fine (Firefox) */
+    scrollbar-color: #ccc #f9f9f9;
+
+    /* Style scrollbar (Chrome / Edge) */
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #aaa;
+    }
+
+    .review-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 1rem;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .review-avatar {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #eee;
+      }
+
+      .review-content {
+        flex: 1;
+
+        h5 {
+          margin: 0;
+          color: #333;
+          font-size: 1.05rem;
+          font-weight: 600;
+        }
+
+        .review-date {
+          display: block;
+          font-size: 0.9rem;
+          color: #888;
+          margin-top: 0.25rem;
+        }
+
+        p {
+          margin-top: 0.75rem;
+          color: #555;
+          font-size: 0.95rem;
+          line-height: 1.5;
+        }
+      }
+
+      .review-rating {
+        font-size: 1.3rem;
+        color: #e6b800;
+        white-space: nowrap;
+        align-self: center;
+      }
+    }
+
+    /* Animation légère au survol */
+    .review-item:hover {
+      background: #fafafa;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+  }
+
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px; // ou 100vh si tu veux centrer sur toute la page
+}

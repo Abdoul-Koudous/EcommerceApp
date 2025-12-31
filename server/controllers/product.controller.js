@@ -68,7 +68,7 @@ export async function createProduct(request, response) {
             subCatId: request.body.subCatId,
             subCat: request.body.subCat,
             thirdsubCat: request.body.thirdsubCat,
-            thirdsubCatId: request.body.thirdsubCatId,
+            thirdSubCatId: request.body.thirdSubCatId,
             countIntStock: request.body.countIntStock,
             rating: request.body.rating,
             isFeatured: request.body.isFeatured,
@@ -652,50 +652,107 @@ export async function getAllFeaturedProducts(request, response) {
     }
 }
 
-
-export async function deleteProducts(request, response){
+export async function deleteProducts(request, response) {
+  try {
     const product = await ProductModel.findById(request.params.id).populate("category");
 
-    if(!product){
-        return response.status.status(404).json({
-            message: "Produit introuvable",
-            error: true,
-            success: false
-        })
+    if (!product) {
+      return response.status(404).json({
+        message: "Produit introuvable",
+        error: true,
+        success: false
+      });
     }
 
-    const images = product.images;
+    const images = product.images || [];
 
-    let img="";
+    for (const img of product.images) {
+    try {
+        const parts = img.split("/");
+        const file = parts[parts.length - 1];
+        const publicId = file.split(".")[0];
 
-    for(img of images){
-        const imagesArr = img;
-        const urlArr = imgUrl.split("/");
-        const image = urlArr[urlArr.length - 1];
-        const imageName = image.split(".")[0];
-
-        if(imageName){
-            cloudinary.uploader.destroy(imageName, (error,result) => {
-
-            });
-        }
+        await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+        console.warn("Image non supprimée :", img);
     }
+    }
+
+
 
     const deleteProduct = await ProductModel.findByIdAndDelete(request.params.id);
 
-    if(!deleteProduct){
-        response.status(400).json({
-            message: "Produit non suprimer",
-            success:false,
-            error:true 
-        });
+    if (!deleteProduct) {
+      return response.status(400).json({
+        message: "Produit non supprimé",
+        success: false,
+        error: true
+      });
     }
+
     return response.status(200).json({
-        success: true,
-        error: false,
-        message: "produit suprimer",
+      success: true,
+      error: false,
+      message: "Produit supprimé supprimés avec succès",
     });
+
+  } catch (error) {
+    console.error("❌ Erreur suppression produit :", error);
+    return response.status(500).json({
+      success: false,
+      error: true,
+      message: "Erreur serveur lors de la suppression",
+    });
+  }
 }
+export async function deleteMultipleProduct(req, res) {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({
+      message: "Aucun ID de produit fourni",
+      error: true,
+      success: false
+    });
+  }
+
+  try {
+    const products = await ProductModel.find({ _id: { $in: ids } });
+
+    for (const product of products) {
+      if (Array.isArray(product.images)) {
+        for (const imgUrl of product.images) {
+          try {
+            const parts = imgUrl.split("/");
+            const file = parts[parts.length - 1];
+            const publicId = file.split(".")[0];
+
+            await cloudinary.uploader.destroy(publicId);
+          } catch (err) {
+            console.warn("Image non supprimée :", imgUrl);
+          }
+        }
+      }
+    }
+
+    await ProductModel.deleteMany({ _id: { $in: ids } });
+
+    return res.status(200).json({
+      message: "Produits supprimés avec succès",
+      success: true,
+      error: false
+    });
+
+  } catch (error) {
+    console.error("DELETE MULTIPLE ERROR:", error);
+    return res.status(500).json({
+      message: "Erreur serveur",
+      error: true,
+      success: false
+    });
+  }
+}
+
 
 export async function getProduct(request, response){
     try {
@@ -763,7 +820,7 @@ export async function updateProduct(request, response) {
                 subCatId: request.body.subCatId,
                 subCat: request.body.subCat,
                 thirdsubCat: request.body.thirdsubCat,
-                thirdsubCatId: request.body.thirdsubCatId,
+                thirdSubCatId: request.body.thirdSubCatId ?? undefined,
                 countIntStock: request.body.countIntStock,
                 rating: request.body.rating,
                 isFeatured: request.body.isFeatured,
