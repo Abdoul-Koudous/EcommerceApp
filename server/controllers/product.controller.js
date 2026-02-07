@@ -1,4 +1,7 @@
 import ProductModel from "../models/product.model.js";
+import productRAMModel from "../models/productRAMs.js";
+import productSIZEModel from "../models/productSIZE.js";
+import productWEIGHTModel from "../models/productWEIGHT.js";
 
 
 
@@ -857,5 +860,613 @@ export async function updateProduct(request, response) {
             error: true,
             success: false
         });
+    }
+}
+
+
+export async function getProducts(req, res) {
+  try {
+    const {
+      catName,
+      subCat,
+      thirdsubCat,
+      search,
+      page = 1,
+      perPage = 10
+    } = req.query;
+
+    const filter = {};
+
+    // 🎯 filtres totalement indépendants
+    if (catName) filter.catName = catName;
+    if (subCat) filter.subCat = subCat;
+    if (thirdsubCat) filter.thirdsubCat = thirdsubCat;
+
+    // 🔍 recherche texte
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const total = await ProductModel.countDocuments(filter);
+
+    const products = await ProductModel.find(filter)
+      .populate("category")
+      .skip((page - 1) * perPage)
+      .limit(Number(perPage))
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      error: false,
+      products,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / perPage)
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+}
+
+export async function createProductRAM(request, response) {
+    try {
+        let productRAM = new productRAMModel({
+            name: request.body.name,
+        });
+        productRAM = await productRAM.save();
+
+        if (!productRAM) {
+            return response.status(400).json({
+                message: "Product RAM non créé",
+                success: false,
+                error: true
+            });
+        }
+        return response.status(200).json({
+            message: "Product RAM créé avec succès",
+            error: false,
+            success: true,
+            productRAM
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+
+export async function deleteProductRAM(request, response) {
+  try {
+    const productRAM = await productRAMModel.findById(request.params.id);
+
+    if (!productRAM) {
+      return response.status(404).json({
+        message: "RAM introuvable",
+        error: true,
+        success: false
+      });
+    }
+
+    const deleteProduct = await productRAMModel.findByIdAndDelete(request.params.id);
+
+    if (!deleteProduct) {
+      return response.status(400).json({
+        message: "LA RAM du Produit non supprimé",
+        success: false,
+        error: true
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      error: false,
+      message: "La RAM du Produit supprimé avec succès",
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur suppression  RAM produit :", error);
+    return response.status(500).json({
+      success: false,
+      error: true,
+      message: "Erreur serveur lors de la suppression",
+    });
+  }
+}
+export async function deleteMultipleProductRAM(req, res) {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({
+      message: "Aucun ID de produit fourni",
+      error: true,
+      success: false
+    });
+  }
+
+  try {
+
+    await productRAMModel.deleteMany({ _id: { $in: ids } });
+
+    return res.status(200).json({
+      message: "La RAM du Produits supprimés avec succès",
+      success: true,
+      error: false
+    });
+
+  } catch (error) {
+    console.error("DELETE MULTIPLE ERROR:", error);
+    return res.status(500).json({
+      message: "Erreur serveur",
+      error: true,
+      success: false
+    });
+  }
+}
+
+export async function updateProductRAM(request, response) {
+    try {
+        const productRAM = await productRAMModel.findByIdAndUpdate(
+            request.params.id,
+            {
+                name: request.body.name,
+            },
+            { new: true }
+        );
+        if (!productRAM) {
+            return response.status(404).json({
+                message: "La RAM du produit n'a pas été mis à jour",
+                success: false
+            });
+        }
+        return response.status(200).json({
+            message: "La RAM du produit a été mis à jour avec succès",
+            error: false,
+            success: true,
+            productRAM
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message,
+            error: true,
+            success: false
+        });
+    }
+}
+export async function getAllProductRAMs(request, response) {
+  try {
+    const page = parseInt(request.query.page) || 1;
+    const perPage = parseInt(request.query.perPage) || 5;
+
+    const skip = (page - 1) * perPage;
+
+    const total = await productRAMModel.countDocuments();
+
+    const productRAMs = await productRAMModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(perPage);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      productRAMs,
+      total,
+      page,
+      perPage
+    });
+
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    });
+  }
+}
+
+export async function getProductRAMById(request, response){
+    try {
+        const productRAM = await productRAMModel.findById(request.params.id);
+        if(!productRAM){
+            return response.status(404).json({
+                message: "la RAM du produit est introuvable",
+                error: true,
+                success:false
+            });
+        }   
+        return response.status(200).json({
+            error: false,
+            success: true,
+            productRAM:productRAM
+        }) 
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message,
+            error: true,
+            success: false
+        }); 
+    }
+}
+
+
+
+export async function createProductWEIGHT(request, response) {
+    try {
+        let productWEIGHT = new productWEIGHTModel({
+            name: request.body.name,
+        });
+        productWEIGHT = await productWEIGHT.save();
+
+        if (!productWEIGHT) {
+            return response.status(400).json({
+                message: "Product WEIGHT non créé",
+                success: false,
+                error: true
+            });
+        }
+        return response.status(200).json({
+            message: "Product WEIGHT créé avec succès",
+            error: false,
+            success: true,
+            productWEIGHT
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+
+export async function deleteProductWEIGHT(request, response) {
+  try {
+    const productWEIGHT = await productWEIGHTModel.findById(request.params.id);
+
+    if (!productWEIGHT) {
+      return response.status(404).json({
+        message: "WEIGHT introuvable",
+        error: true,
+        success: false
+      });
+    }
+
+    const deleteProduct = await productWEIGHTModel.findByIdAndDelete(request.params.id);
+
+    if (!deleteProduct) {
+      return response.status(400).json({
+        message: "LE WEIGHT du Produit non supprimé",
+        success: false,
+        error: true
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      error: false,
+      message: "Le WEIGHT du Produit supprimé avec succèss",
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur suppression  WEIGHT produit :", error);
+    return response.status(500).json({
+      success: false,
+      error: true,
+      message: "Erreur serveur lors de la suppression",
+    });
+  }
+}
+export async function deleteMultipleProductWEIGHT(req, res) {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({
+      message: "Aucun ID de produit fourni",
+      error: true,
+      success: false
+    });
+  }
+
+  try {
+
+    await productWEIGHTModel.deleteMany({ _id: { $in: ids } });
+
+    return res.status(200).json({
+      message: "Le WEIGHT du Produits supprimés avec succès",
+      success: true,
+      error: false
+    });
+
+  } catch (error) {
+    console.error("DELETE MULTIPLE ERROR:", error);
+    return res.status(500).json({
+      message: "Erreur serveur",
+      error: true,
+      success: false
+    });
+  }
+}
+
+export async function updateProductWEIGHT(request, response) {
+    try {
+        const productWEIGHT = await productWEIGHTModel.findByIdAndUpdate(
+            request.params.id,
+            {
+                name: request.body.name,
+            },
+            { new: true }
+        );
+        if (!productWEIGHT) {
+            return response.status(404).json({
+                message: "Le WEIGHT du produit n'a pas été mis à jour",
+                success: false
+            });
+        }
+        return response.status(200).json({
+            message: "Le WEIGHT du produit a été mis à jour avec succès",
+            error: false,
+            success: true,
+            productWEIGHT
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message,
+            error: true,
+            success: false
+        });
+    }
+}
+export async function getAllProductWEIGHTs(request, response) {
+  try {
+    const page = parseInt(request.query.page) || 1;
+    const perPage = parseInt(request.query.perPage) || 5;
+
+    const skip = (page - 1) * perPage;
+
+    const total = await productWEIGHTModel.countDocuments();
+
+    const productWEIGHTs = await productWEIGHTModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(perPage);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      productWEIGHTs,
+      total,
+      page,
+      perPage
+    });
+
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    });
+  }
+}
+
+export async function getProductWEIGHTById(request, response){
+    try {
+        const productWEIGHT = await productWEIGHTModel.findById(request.params.id);
+        if(!productWEIGHT){
+            return response.status(404).json({
+                message: "le WEIGHT du produit est introuvable",
+                error: true,
+                success:false
+            });
+        }   
+        return response.status(200).json({
+            error: false,
+            success: true,
+            productWEIGHT:productWEIGHT
+        }) 
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message,
+            error: true,
+            success: false
+        }); 
+    }
+}
+
+
+
+
+
+export async function createProductSIZE(request, response) {
+    try {
+        let productSIZE = new productSIZEModel({
+            name: request.body.name,
+        });
+        productSIZE = await productSIZE.save();
+
+        if (!productSIZE) {
+            return response.status(400).json({
+                message: "Product SIZE non créé",
+                success: false,
+                error: true
+            });
+        }
+        return response.status(200).json({
+            message: "Product SIZE créé avec succès",
+            error: false,
+            success: true,
+            productSIZE
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+
+export async function deleteProductSIZE(request, response) {
+  try {
+    const productSIZE = await productSIZEModel.findById(request.params.id);
+
+    if (!productSIZE) {
+      return response.status(404).json({
+        message: "SIZE introuvable",
+        error: true,
+        success: false
+      });
+    }
+
+    const deleteProduct = await productSIZEModel.findByIdAndDelete(request.params.id);
+
+    if (!deleteProduct) {
+      return response.status(400).json({
+        message: "LE SIZE du Produit non supprimé",
+        success: false,
+        error: true
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      error: false,
+      message: "Le SIZE du Produit supprimé avec succès",
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur suppression  SIZE produit :", error);
+    return response.status(500).json({
+      success: false,
+      error: true,
+      message: "Erreur serveur lors de la suppression",
+    });
+  }
+}
+export async function deleteMultipleProductSIZE(req, res) {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({
+      message: "Aucun ID de produit fourni",
+      error: true,
+      success: false
+    });
+  }
+
+  try {
+
+    await productSIZEModel.deleteMany({ _id: { $in: ids } });
+
+    return res.status(200).json({
+      message: "Le SIZE du Produits supprimés avec succès",
+      success: true,
+      error: false
+    });
+
+  } catch (error) {
+    console.error("DELETE MULTIPLE ERROR:", error);
+    return res.status(500).json({
+      message: "Erreur serveur",
+      error: true,
+      success: false
+    });
+  }
+}
+
+export async function updateProductSIZE(request, response) {
+    try {
+        const productSIZE = await productSIZEModel.findByIdAndUpdate(
+            request.params.id,
+            {
+                name: request.body.name,
+            },
+            { new: true }
+        );
+        if (!productSIZE) {
+            return response.status(404).json({
+                message: "Le SIZE du produit n'a pas été mis à jour",
+                success: false
+            });
+        }
+        return response.status(200).json({
+            message: "Le SIZE du produit a été mis à jour avec succès",
+            error: false,
+            success: true,
+            productSIZE
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message,
+            error: true,
+            success: false
+        });
+    }
+}
+export async function getAllProductSIZEs(request, response) {
+  try {
+    const page = parseInt(request.query.page) || 1;
+    const perPage = parseInt(request.query.perPage) || 5;
+
+    const skip = (page - 1) * perPage;
+
+    const total = await productSIZEModel.countDocuments();
+
+    const productSIZEs = await productSIZEModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(perPage);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      productSIZEs,
+      total,
+      page,
+      perPage
+    });
+
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    });
+  }
+}
+
+export async function getProductSIZEById(request, response){
+    try {
+        const productSIZE = await productSIZEModel.findById(request.params.id);
+        if(!productSIZE){
+            return response.status(404).json({
+                message: "le SIZE du produit est introuvable",
+                error: true,
+                success:false
+            });
+        }   
+        return response.status(200).json({
+            error: false,
+            success: true,
+            productSIZE:productSIZE
+        }) 
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message,
+            error: true,
+            success: false
+        }); 
     }
 }

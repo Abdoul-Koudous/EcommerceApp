@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useContext  } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { FaEdit, FaEye, FaTrash, FaPlus, FaDownload, FaSearch } from "react-icons/fa";
 import "./productslist.scss";
@@ -13,10 +13,11 @@ import CircularProgress from "../../components/CircularProgress/CircularProgress
 const Product = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(3);
-  const [selectedCategory, setSelectedCategory] = useState("Toutes");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [productData, setProductData] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [productToEdit, setProductToEdit] = useState(null);
@@ -24,297 +25,204 @@ const Product = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDeleteId, setToDeleteId] = useState(null);
   const { openToast } = useContext(ToastContext);
-  const [productCat, setProductCat] = useState(""); // Catégorie principale
-  const [productSubCat, setProductSubCat] = useState(""); // Sous-catégorie
-  const [productThirdSubCat, setProductThirdSubCat] = useState(""); // Sous-sous-catégorie
+
+  const [productCat, setProductCat] = useState("");
+  const [productSubCat, setProductSubCat] = useState("");
+  const [productThirdSubCat, setProductThirdSubCat] = useState("");
+
   const [allCategories, setAllCategories] = useState([]);
   const [allSubCategories, setAllSubCategories] = useState([]);
   const [allThirdSubCategories, setAllThirdSubCategories] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
+  /* =========================
+     CHARGEMENT DES LISTES (1 FOIS)
+  ========================== */
+  useEffect(() => {
+    const fetchFilters = async () => {
+      const res = await fetchDataFromApi("/api/product/getAllProducts");
+      if (!res?.error) {
+        const cats = [...new Set(res.products.map(p => p.catName))];
+        const subs = [...new Set(res.products.map(p => p.subCat))];
+        const thirds = [...new Set(res.products.map(p => p.thirdsubCat))];
 
+        setAllCategories(cats.map(name => ({ _id: name, name })));
+        setAllSubCategories(subs.map(name => ({ _id: name, name })));
+        setAllThirdSubCategories(thirds.map(name => ({ _id: name, name })));
+      }
+    };
 
+    fetchFilters();
+  }, []);
 
+  /* =========================
+     FETCH PRODUITS (BACK FILTER)
+  ========================== */
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
 
+      const res = await fetchDataFromApi(
+        `/api/product?catName=${productCat}&subCat=${productSubCat}&thirdsubCat=${productThirdSubCat}&search=${searchTerm}&page=${currentPage}&perPage=${itemsPerPage}`
+      );
 
+      if (!res?.error) {
+        setProductData(res.products || []);
+        setTotalItems(res.total || 0);
+      }
 
- useEffect(() => {
-  const fetchProducts = async () => {
-    setLoading(true); // 🔹 start loading
-    const res = await fetchDataFromApi("/api/product/getAllProducts");
-    if (!res.error) {
-      setProductData(res.products || []);
+      setLoading(false);
+    };
 
-      // Listes uniques
-      const cats = [...new Set(res.products.map(p => p.catName))];
-      const subCats = [...new Set(res.products.map(p => p.subCat))];
-      const thirdSubs = [...new Set(res.products.map(p => p.thirdsubCat))];
+    fetchProducts();
+  }, [
+    productCat,
+    productSubCat,
+    productThirdSubCat,
+    searchTerm,
+    currentPage,
+    itemsPerPage
+  ]);
 
-      setAllCategories(cats.map(name => ({ _id: name, name })));
-      setAllSubCategories(subCats.map(name => ({ _id: name, name })));
-      setAllThirdSubCategories(thirdSubs.map(name => ({ _id: name, name })));
-    }
-    setLoading(false); // 🔹 finish loading
-  };
-
-  fetchProducts();
-}, []);
-
-const getProducts = async () => {
-  setLoading(true);
-  const res = await fetchDataFromApi("/api/product/getAllProducts");
-  if (!res.error) {
-    setProductData(res.products || []);
-
-    const cats = [...new Set(res.products.map(p => p.catName))];
-    const subCats = [...new Set(res.products.map(p => p.subCat))];
-    const thirdSubs = [...new Set(res.products.map(p => p.thirdsubCat))];
-
-    setAllCategories(cats.map(name => ({ _id: name, name })));
-    setAllSubCategories(subCats.map(name => ({ _id: name, name })));
-    setAllThirdSubCategories(thirdSubs.map(name => ({ _id: name, name })));
-  }
-  setLoading(false);
-};
-
-
-
-
-  const handleChangeProductCat = async (event) => {
-  const catId = event.target.value;
-  setProductCat(catId);
-  setProductSubCat("");
-  setProductThirdSubCat("");
-  setAllSubCategories([]);
-  setAllThirdSubCategories([]);
-
-  if (!catId) {
-    // Si "Toutes", récupère tous les produits
-    await getProducts();
-    return;
-  }
-
-  const res = await fetchDataFromApi(`/api/product/getAllProductsByCatId/${catId}`);
-  if (!res.error) {
-    setProductData(res.products || []);
-
-    // Récupérer les sous-catégories uniques
-    const subCats = [...new Set(res.products.map(p => p.subCat))].map(name => ({ _id: name, name }));
-    setAllSubCategories(subCats);
-  }
-};
-
-
-const handleChangeProductSubCat = (event) => {
-  const subCatId = event.target.value;
-  setProductSubCat(subCatId);
-  setProductThirdSubCat("");
-  setAllThirdSubCategories([]);
-
-  fetchDataFromApi(`/api/product/getAllProductsBySubCatId/${subCatId}`).then((res) => {
-    if (!res.error) {
-      setProductData(res.products || []);
-
-      // créer la liste des sous-sous-catégories
-      const thirdSubs = [...new Set(res.products.map(p => p.thirdsubCat))].map(name => ({ _id: name, name }));
-      setAllThirdSubCategories(thirdSubs);
-    }
-  });
-};
-
-const handleChangeProductThirdSubCat = (event) => {
-  const thirdSubId = event.target.value;
-  setProductThirdSubCat(thirdSubId);
-
-  fetchDataFromApi(`/api/product/getAllProductsByThirdLavelCat/${thirdSubId}`).then((res) => {
-    if (!res.error) {
-      setProductData(res.products || []);
-    }
-  });
-};
-
-  // Filtrage indépendant
-const filteredProducts = productData.filter(p => {
-  const matchesCat = !productCat || p.catName === productCat;
-  const matchesSubCat = !productSubCat || p.subCat === productSubCat;
-  const matchesThirdSubCat = !productThirdSubCat || p.thirdsubCat === productThirdSubCat;
-  const matchesSearch = !searchTerm ||
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.description?.toLowerCase().includes(searchTerm.toLowerCase());
-  
-  return matchesCat && matchesSubCat && matchesThirdSubCat && matchesSearch;
-});
-
-
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedFiltered = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  /* =========================
+     SELECTION
+  ========================== */
+  const allSelected =
+    productData.length > 0 &&
+    productData.every(p => selectedProducts.includes(p._id));
 
   const handleSelectAll = (e) => {
-  const visibleIds = displayedFiltered.map(p => p._id);
-
-  setSelectedProducts(prev => {
-    const next = e.target.checked
-      ? Array.from(new Set([...prev, ...visibleIds]))
-      : prev.filter(id => !visibleIds.includes(id));
-
-    console.log("🔵 SELECT ALL → selectedProducts:", next, "count:", next.length);
-    return next;
-  });
-};
-
-
-
+    if (e.target.checked) {
+      setSelectedProducts(productData.map(p => p._id));
+    } else {
+      setSelectedProducts([]);
+    }
+  };
 
   const handleSelectOne = (id) => {
-  setSelectedProducts(prev => {
-    const next = prev.includes(id)
-      ? prev.filter(pid => pid !== id)
-      : [...prev, id];
+    setSelectedProducts(prev =>
+      prev.includes(id)
+        ? prev.filter(pid => pid !== id)
+        : [...prev, id]
+    );
+  };
 
-    console.log("🟢 CLICK → selectedProducts:", next, "count:", next.length);
-    return next;
-  });
-};
-
-
-
-
+  /* =========================
+     SUPPRESSION
+  ========================== */
   const handleDeleteClick = (id) => {
     setToDeleteId(id);
     setConfirmOpen(true);
   };
 
+  const handleConfirmDelete = async () => {
+    try {
+      if (toDeleteId) {
+        const res = await deleteData(`/api/product/${toDeleteId}`);
+        if (!res?.error) {
+          setProductData(prev => prev.filter(p => p._id !== toDeleteId));
+          openToast("success", "Produit supprimé");
+        }
+      } else if (selectedProducts.length > 0) {
+        const res = await deleteData("/api/product/deleteMultipleProduct", {
+          ids: selectedProducts
+        });
 
- const handleConfirmDelete = async () => {
-  try {
-    if (toDeleteId) {
-      // 🔴 suppression individuelle
-      const res = await deleteData(`/api/product/${toDeleteId}`);
-
-      if (!res?.error) {
-        setProductData(prev => prev.filter(p => p._id !== toDeleteId));
-        openToast("success", res?.message || "Produit supprimé ");
+        if (!res?.error) {
+          setProductData(prev =>
+            prev.filter(p => !selectedProducts.includes(p._id))
+          );
+          setSelectedProducts([]);
+          openToast("success", "Produits supprimés");
+        }
       }
-    } else if (selectedProducts.length > 0) {
-      // 🟢 suppression multiple
-      const res = await deleteData(
-        "/api/product/deleteMultipleProduct",
-         { ids: selectedProducts }
-      );
-
-      if (!res?.error) {
-        setProductData(prev =>
-          prev.filter(p => !selectedProducts.includes(p._id))
-        );
-        setSelectedProducts([]);
-        openToast("success", res?.message || "Produits supprimés");
-      }
+    } catch (err) {
+      openToast("error", "Erreur serveur");
     }
-  } catch (error) {
-    console.error(error);
-    openToast("error", error.message || "Erreur serveur lors de la suppression");
-  }
 
-  setToDeleteId(null);
-  setConfirmOpen(false);
-};
-
-
-  const handleCancelDelete = () => {
-    setToDeleteId(null);
     setConfirmOpen(false);
+    setToDeleteId(null);
   };
-  
-
-const [selectedCount, setSelectedCount] = useState(0);
-
-
-useEffect(() => {
-  console.log("🟡 EFFECT → selectedProducts.length =", selectedProducts.length);
-}, [selectedProducts]);
-
-
-
-  const allSelected =
-  displayedFiltered.length > 0 &&
-  displayedFiltered.every(p => selectedProducts.includes(p._id));
-
 
   return (
     <div className="admin-pages">
       <div className="header">
         <h2>Liste des produits</h2>
-        
+
         <div className="header-actions">
-<button
-  className={`delete-multiple-btn ${
-    selectedProducts.length > 0 ? "show" : "hide"
-  }`}
-  onClick={() => {
-    setToDeleteId(null);      // IMPORTANT : null = suppression multiple
-    setConfirmOpen(true);
-  }}
->
-  <FaTrash />
-  <span>Supprimer</span>
-  <strong>{selectedProducts.length}</strong>
-</button>
-
-
-
-
-
+          {selectedProducts.length > 0 && (
+            <button
+              className="delete-multiple-btn show"
+              onClick={() => {
+                setToDeleteId(null);
+                setConfirmOpen(true);
+              }}
+            >
+              <FaTrash />
+              <span>Supprimer</span>
+              <strong>{selectedProducts.length}</strong>
+            </button>
+          )}
 
           <button className="export-btn"><FaDownload /> Exporter</button>
 
-         
           <button className="add-btn" onClick={() => setShowAddDialog(true)}>
             <FaPlus /> Ajouter un produit
           </button>
         </div>
-
       </div>
 
       <div className="product-table-container">
-       {
-       loading ? (<div className="loading"><CircularProgress /></div>) : (
-        <>
-         <div className="filters-actions">
+        <div className="filters-actions">
           <div className="left">
-              <div className="form-group">
-                <label>Catégorie</label>
-            <select value={productCat} onChange={e => setProductCat(e.target.value)}>
-              <option value="">Toutes</option>
-              {allCategories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-            </select>
-          </div>
-              <div className="form-group">
-                <label>sous Catégorie</label>
-            <select value={productSubCat} onChange={e => setProductSubCat(e.target.value)}>
-              <option value="">Toutes</option>
-              {allSubCategories.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
-            </select>
-          </div>
             <div className="form-group">
-                <label>Dernier sous Catégorie</label>
-
-            <select value={productThirdSubCat} onChange={e => setProductThirdSubCat(e.target.value)}>
-              <option value="">Toutes</option>
-              {allThirdSubCategories.map(t => <option key={t._id} value={t.name}>{t.name}</option>)}
-            </select>
+              <label>Catégorie</label>
+              <select value={productCat} onChange={e => {
+                setProductCat(e.target.value);
+                setCurrentPage(1);
+              }}>
+                <option value="">Toutes</option>
+                {allCategories.map(c => (
+                  <option key={c._id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
             </div>
 
+            <div className="form-group">
+              <label>Sous catégorie</label>
+              <select value={productSubCat} onChange={e => {
+                setProductSubCat(e.target.value);
+                setCurrentPage(1);
+              }}>
+                <option value="">Toutes</option>
+                {allSubCategories.map(s => (
+                  <option key={s._id} value={s.name}>{s.name}</option>
+                ))}
+              </select>
+            </div>
 
-
+            <div className="form-group">
+              <label>Dernier sous catégorie</label>
+              <select value={productThirdSubCat} onChange={e => {
+                setProductThirdSubCat(e.target.value);
+                setCurrentPage(1);
+              }}>
+                <option value="">Toutes</option>
+                {allThirdSubCategories.map(t => (
+                  <option key={t._id} value={t.name}>{t.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
+
           <div className="search-bar">
             <FaSearch className="icon" />
             <input
               type="text"
               placeholder="Rechercher un produit..."
               value={searchTerm}
-              onChange={(e) => {
+              onChange={e => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
@@ -322,93 +230,81 @@ useEffect(() => {
           </div>
         </div>
 
-        <table className="product-table">
-          <thead>
-            <tr>
-              <th><input type="checkbox" checked={allSelected} onChange={handleSelectAll} /></th>
-              <th>Produit</th>
-              <th>Catégorie</th>
-              <th>Sous-catégorie</th>
-              <th>Prix</th>
-              <th>Ventes</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedFiltered.map((product) => (
-              <tr key={product._id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedProducts.includes(product._id)}
-                    onChange={() => handleSelectOne(product._id)}
-                  />
-                </td>
-                <td className="product-info">
-                  <Link to={`/product/${product._id}`}>
-                    <img src={product.images?.[0]} alt={product.name} />
-                  </Link>
-                  <div>
-                    <Link to={`/product/${product._id}`}><h4>{product.name}</h4></Link>
-                    <p>{product.brand}</p>
-                  </div>
-                </td>
-                <td>{product.catName}</td>
-                <td>{product.subCat || "—"}</td>
-                <td className="price">
-                  {product.oldPrice > 0 && (
-                    <div className="old-price">{product.oldPrice} FCFA</div>
-                  )}
-                  <div className="current-price">{product.price} FCFA</div>
-                </td>
+        {loading ? (
+          <div className="loading"><CircularProgress /></div>
+        ): productData.length === 0 ? (
+          <div className="no-results">
+            Aucun produit correspondant aux filtres ou à la recherche.
+          </div>
+        ) : (
+          <table className="product-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" checked={allSelected} onChange={handleSelectAll} /></th>
+                <th>Produit</th>
+                <th>Catégorie</th>
+                <th>Sous-catégorie</th>
+                <th>Prix</th>
+                <th>Ventes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {productData.map(product => (
+                <tr key={product._id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(product._id)}
+                      onChange={() => handleSelectOne(product._id)}
+                    />
+                  </td>
+                  <td className="product-info"> 
+                    <Link to={`/product/${product._id}`}> <img src={product.images?.[0]} alt={product.name} /> </Link> 
+                    <div> 
+                      <Link to={`/product/${product._id}`}><h4>{product.name}</h4></Link>
+                       <p>{product.brand}</p> 
+                    </div> 
+                  </td>
+                  
+                  <td>{product.catName}</td>
+                  <td>{product.subCat || "—"}</td>
+                  <td className="price"> 
+                    {product.oldPrice > 0 && ( <div className="old-price">{product.oldPrice} FCFA</div> )}
+                     <div className="current-price">{product.price} FCFA</div> 
+                  </td>
+                  <td className="sales"> 
+                    <span>{product.sale}%</span> 
+                    <div className="progress-bar"> 
+                      <div className="progress" style={{ width: `${product.sale}%`, background: product.sale < 40 ? "#ef4444" : product.sale < 70 ? "#facc15" : "#22c55e", }} >
 
-                <td className="sales">
-                  <span>{product.sale}%</span>
-                  <div className="progress-bar">
-                    <div
-                      className="progress"
-                      style={{
-                        width: `${product.sale}%`,
-                        background:
-                          product.sale < 40 ? "#ef4444" :
-                          product.sale < 70 ? "#facc15" :
-                          "#22c55e",
-                      }}
-                    ></div>
-                  </div>
-                </td>
-                <td className="actions">
-                  <Link to={`/product/${product._id}`}>
-                    <button className="view">
-                      <FaEye />
-                    </button>
-                  </Link>
-                  <button
-                    className="edit"
-                    onClick={() => {
+                      </div>
+                   </div> 
+                  </td>
+                  <td className="actions">
+                    <Link to={`/product/${product._id}`}> <button > <FaEye /> </button> </Link>
+                    <button onClick={() => {
                       setProductToEdit(product);
                       setShowEditDialog(true);
-                    }}
-                  >
-                    <FaEdit />
-                  </button>
-
-                  <button
-                      className="delete"
-                      onClick={() => handleDeleteClick(product._id)}
-                    >
+                    }}>
+                      <FaEdit />
+                    </button>
+                    <button onClick={() => handleDeleteClick(product._id)}>
                       <FaTrash />
                     </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        
 
         <div className="table-footer">
           <div className="items-selector">
             <label>Afficher</label>
+
             <select
               value={itemsPerPage}
               onChange={(e) => {
@@ -421,48 +317,35 @@ useEffect(() => {
               <option value={5}>5</option>
               <option value={10}>10</option>
             </select>
+
             <span>éléments</span>
           </div>
+
           <PaginationPro
             currentPage={currentPage}
-            totalItems={filteredProducts.length}
+            totalItems={totalItems}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />
         </div>
-        </>
-        )
-       }
+
       </div>
 
-      {showAddDialog && (
-        <AddProduct
-          onClose={() => setShowAddDialog(false)}
-        />
-      )}
-
+      {showAddDialog && <AddProduct onClose={() => setShowAddDialog(false)} />}
       {showEditDialog && productToEdit && (
-        <EditProduct
-          product={productToEdit}
-          onClose={() => {
-            setShowEditDialog(false);
-            setProductToEdit(null);
-          }}
-        />
+        <EditProduct product={productToEdit} onClose={() => setShowEditDialog(false)} />
       )}
 
-        <ConfirmDialog
-          open={confirmOpen}
-          message={
-            toDeleteId
-              ? "Voulez-vous vraiment supprimer ce produit ?"
-              : `Voulez-vous vraiment supprimer ${selectedProducts.length} produits ?`
-          }
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
-
-
+      <ConfirmDialog
+        open={confirmOpen}
+        message={
+          toDeleteId
+            ? "Voulez-vous vraiment supprimer ce produit ?"
+            : `Voulez-vous vraiment supprimer ${selectedProducts.length} produits ?`
+        }
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 };

@@ -36,7 +36,9 @@ const AdminSidebar = () => {
       icon: <FaBoxOpen />,
       subLinks: [
         { to: "/products/lists", label: "Liste des produits" },
-        { to: "/products/add", label: "Ajouter un produit" },
+        { to: "/products/RAM/add", label: "Ajout de RAM" },
+        { to: "/products/WEIGHT/add", label: "Ajout de WEIGHT" },
+        { to: "/products/SIZE/add", label: "Ajout de SIZE" },
       ],
     },
     {

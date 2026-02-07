@@ -11,6 +11,9 @@ import Profile from "./pages/Profile";
 import CategoriesPage from "./pages/Categorie";
 import SubCategoriesPage from "./pages/SubCategoriesPage/SubCategoriesPage";
 import ProductDetails from "./pages/products/productDetails";
+import AddRAMs from "./pages/products/addRAMs";
+import AddWEIGHT from "./pages/products/addWEIGHT";
+import AddSIZE from "./pages/products/addSIZE";
 
 function App() {
   return (
@@ -34,10 +37,26 @@ function App() {
           }
         />
         <Route
-          path="/products/add"
+          path="/products/RAM/add"
           element={
             <AdminLayout>
-              <AddProduct />
+              <AddRAMs />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/products/WEIGHT/add"
+          element={
+            <AdminLayout>
+              <AddWEIGHT/>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/products/SIZE/add"
+          element={
+            <AdminLayout>
+              <AddSIZE/>
             </AdminLayout>
           }
         />
