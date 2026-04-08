@@ -4,6 +4,7 @@ import DashboardBoxe from "../../components/dashboardboxes";
 import OrdersTabPage from "../myaccount/orderstabpage";
 import ProductTable from "../../components/producrttable1/producttable";
 import GraphStats from "../../components/graph1/graphstats";
+import Product from "../products";
 
 const Dashboard = () => {
   const adminName = "Abdoul-Koudous";
@@ -35,7 +36,7 @@ const Dashboard = () => {
       <DashboardBoxe />
 
       {/* ====== TABLE PRODUITS ====== */}
-      <ProductTable />
+      <Product/>
 
       {/* ====== COMMANDES ====== */}
       <div className="recentOrder">

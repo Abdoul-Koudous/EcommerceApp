@@ -1,18 +1,11 @@
 import React, { useEffect, useState, useContext, useRef,useMemo } from "react";
-import { FaTimes, FaStar, FaPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaCloudUploadAlt,FaTimes, FaStar, FaPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import "./addproduct.scss";
 import { UserContext } from "../../UserContext/UserContext";
 import { fetchDataFromApi, postData, uploadImages } from "../utils/api";
 import HoverRating from "../../components/HoverRating/HoverRating";
 import { ToastContext } from "../../context/ToastContext";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
-
-
-const optionsYesNo = ["Oui", "Non"];
-const rams = ["2GB", "4GB", "8GB", "16GB"];
-const sizes = ["S", "M", "L", "XL"];
-const weights = ["0.5kg", "1kg", "2kg", "5kg", "8kg", "10kg"];
-
 
 
 // Dropdown multi-sélection
@@ -78,10 +71,14 @@ const AddProduct = ({ onClose }) => {
 
 
 
+   // STATES : options (API) vs selections (utilisateur)
+const [ramOptions, setRamOptions] = useState([]);
+const [sizeOptions, setSizeOptions] = useState([]);
+const [weightOptions, setWeightOptions] = useState([]);
 
-  const [productRam, setProductRam] = useState([]);
-  const [productWeight, setProductWeight] = useState([]);
-  const [size, setSize] = useState([]);
+const [productRam, setProductRam] = useState([]);
+const [productSize, setProductSize] = useState([]);
+const [productWeight, setProductWeight] = useState([]);
   const [productFeatured, setProductFeatured] = useState("");
   const [selectedThirdSubCat, setSelectedThirdSubCat] = useState("");
 
@@ -121,6 +118,34 @@ const AddProduct = ({ onClose }) => {
     }
   }, [categories, setCategories]);
 
+ 
+
+useEffect(() => {
+  // RAM
+  fetchDataFromApi("/api/product/productRAM").then((res) => {
+    // console.log("RAM response:", res); 
+    if (res?.error === false) {
+      setRamOptions(res.productRAMs?.map((item) => item.name) || []);
+    }
+  });
+
+  // SIZE
+  fetchDataFromApi("/api/product/productSIZE").then((res) => {
+    // console.log("SIZE response:", res); 
+    if (res?.error === false) {
+      setSizeOptions(res.productSIZEs?.map((item) => item.name) || []);
+    }
+  });
+
+  // WEIGHT
+  fetchDataFromApi("/api/product/productWEIGHT").then((res) => {
+    // console.log("WEIGHT response:", res); 
+    if (res?.error === false) {
+      setWeightOptions(res.productWEIGHTs?.map((item) => item.name) || []);
+    }
+  });
+}, []);
+
   const mainCategories = categories || [];
   const selectedCategory = mainCategories.find((cat) => cat._id === selectedCat);
   const subCategories = selectedCategory?.children || [];
@@ -132,7 +157,7 @@ const AddProduct = ({ onClose }) => {
 
   const onChangeInput = (e) => {
     const { name, value } = e.target;
-    setFormFields(() => ({ ...formFields, [name]: value }));
+    setFormFields((prev) => ({ ...prev, [name]: value }));
   };
 
   // States pour les fichiers et prévisualisations
@@ -221,8 +246,8 @@ const removeExtraImage = (index) => {
     return openToast("error", "La note doit être comprise entre 0 et 5");
   if (formFields.productRam.length === 0)
     return openToast("error", "Veuillez sélectionner au moins une option de RAM");  
-  if (formFields.size.length === 0)
-    return openToast("error", "Veuillez sélectionner au moins une taille");
+  // if (formFields.size.length === 0)
+  //   return openToast("error", "Veuillez sélectionner au moins une taille");
   if (formFields.productWeight.length === 0)
     return openToast("error", "Veuillez sélectionner au moins un poids");
   if (formFields.discount > 100)
@@ -280,33 +305,6 @@ const removeExtraImage = (index) => {
   }
 };
 
-
-
-  const setPreviewsFun = (previewsArr) => {
-    setPreviews(previewsArr);
-    setFormFields((prev) => ({
-      ...prev,
-      images: previewsArr,
-    }));
-  };
-
-  const removeImage = async (imgUrl, index) => {
-      try {
-        const res = await deleteImages(
-          `/api/category/deleteImage?img=${encodeURIComponent(imgUrl)}`
-        );
-  
-        if (res?.error) {
-          return openToast("error", res.message);
-        }
-  
-        setPreviews((prev) => prev.filter((_, i) => i !== index));
-  
-        openToast("success", res?.message || "Image supprimée");
-      } catch (err) {
-        openToast("error", "Erreur suppression image");
-      }
-    };
   
 
   return (
@@ -452,7 +450,7 @@ const removeExtraImage = (index) => {
               <div className="form-group">
                 <label>Note</label>
                 <HoverRating
-                  value={formFields.rating}
+                  rating={formFields.rating}
                   onChange={(val) =>
                     setFormFields((prev) => ({ ...prev, rating: val }))
                   }
@@ -518,11 +516,11 @@ const removeExtraImage = (index) => {
               <div className="form-group">
                 <DropdownMultiSelect
                   label="La RAM"
-                  options={rams}
+                  options={ramOptions}
                   selectedValues={productRam}
                   onChange={(vals) => {
-                    setProductRam(vals); // état local
-                    setFormFields((prev) => ({ ...prev, productRam: vals })); // tableau pour la BDD
+                    setProductRam(vals);
+                    setFormFields((prev) => ({ ...prev, productRam: vals }));
                   }}
                 />
               </div>
@@ -530,10 +528,10 @@ const removeExtraImage = (index) => {
               <div className="form-group">
                 <DropdownMultiSelect
                   label="Taille"
-                  options={sizes}
-                  selectedValues={size}
+                  options={sizeOptions}
+                  selectedValues={productSize}
                   onChange={(vals) => {
-                    setSize(vals);
+                    setProductSize(vals);
                     setFormFields((prev) => ({ ...prev, size: vals }));
                   }}
                 />
@@ -542,7 +540,7 @@ const removeExtraImage = (index) => {
               <div className="form-group">
                 <DropdownMultiSelect
                   label="Poids"
-                  options={weights}
+                  options={weightOptions}
                   selectedValues={productWeight}
                   onChange={(vals) => {
                     setProductWeight(vals);
@@ -556,13 +554,43 @@ const removeExtraImage = (index) => {
             {/* Image principale */}
             <div className="image-upload">
               <label>Image principale</label>
-              <div className="image-box" onClick={() => document.getElementById("main-img").click()}>
+              <div className="image-box" onClick={() => document.getElementById("main-img").click()}
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    border: "2px dashed #ccc",
+                    borderRadius: "8px",
+                    padding: "20px",
+                    cursor: "pointer",
+                    minWidth: "120px",
+                    minHeight: "120px",
+                    transition: "all 0.2s ease",
+                    backgroundColor: "#fafafa",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#1976d2";
+                    e.currentTarget.style.backgroundColor = "#e3f2fd";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#ccc";
+                    e.currentTarget.style.backgroundColor = "#fafafa";
+                  }}
+                  
+                >
                 {loadingMainImage ? (
                   <CircularProgress />
                 ) : formFields.mainImage ? (
                   <img src={formFields.mainImage} alt="" />
                 ) : (
-                  <FaPlus />
+                  <>
+                    <FaCloudUploadAlt style={{ fontSize: "32px", color: "#1976d2" }} />
+                    <span style={{ fontSize: "12px", color: "#666", textAlign: "center" }}>
+                      Ajouter des images
+                    </span>
+                  </>
                 )}
               </div>
               <input
@@ -587,8 +615,38 @@ const removeExtraImage = (index) => {
                     </button>
                   </div>
                 ))}
-                <div className="image-box" onClick={() => document.getElementById("extra-img").click()}>
-                  {loadingExtraImages ? <CircularProgress /> : <FaPlus />}
+                <div className="image-box" onClick={() => document.getElementById("extra-img").click()}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    border: "2px dashed #ccc",
+                    borderRadius: "8px",
+                    padding: "20px",
+                    cursor: "pointer",
+                    minWidth: "120px",
+                    minHeight: "120px",
+                    transition: "all 0.2s ease",
+                    backgroundColor: "#fafafa",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#1976d2";
+                    e.currentTarget.style.backgroundColor = "#e3f2fd";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#ccc";
+                    e.currentTarget.style.backgroundColor = "#fafafa";
+                  }}
+                  
+                  >
+                  {loadingExtraImages ? <CircularProgress /> : <>
+                                        <FaCloudUploadAlt style={{ fontSize: "32px", color: "#1976d2" }} />
+                                        <span style={{ fontSize: "12px", color: "#666", textAlign: "center" }}>
+                                          Ajouter des images
+                                        </span>
+                                      </>}
                 </div>
               </div>
               <input

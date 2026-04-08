@@ -1,93 +1,47 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import ProductItem from "../productitem";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./productslider.scss";
+import { fetchDataFromApi } from "../../pages/utils/api";
+import CircularProgress from "../../../../admin/src/components/CircularProgress/CircularProgress";
+import { ProductLoading } from "../ProductLoading";
 
-const ProductSlider = () => {
+const ProductSlider = ({ categoryId = null, products = null }) => {
   const scrollRef = useRef(null);
+  const [productsData, setProductsData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const products = [
-    {
-      image1: "/od11.jpg",
-      image2: "/od12.jpg",
-      title: "Montre connectée Pro",
-      desc: "Montre intelligente avec capteur cardiaque",
-      price: "15000",
-      oldPrice: "20000",
-      discount: "25",
-      rating: 5,
-      isNew: true,
-    },
-    {
-      image1: "/od21.jpg",
-      image2: "/od22.jpg",
-      title: "Écouteurs Bluetooth X10",
-      desc: "Autonomie 24h avec boîtier de charge",
-      price: "10000",
-      oldPrice: "12000",
-      discount: "17",
-      rating: 4,
-      isNew: true,
-    },
-    {
-      image1: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600",
-      image2: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=627",
-      title: "Smartphone Galaxy Z",
-      desc: "128 Go, double SIM, écran HD",
-      price: "85000",
-      oldPrice: "95000",
-      discount: "11",
-      rating: 5,
-    },
-    {
-      image1: "/od12.jpg",
-      image2: "/od13.jpg",
-      title: "Ordinateur Portable HP",
-      desc: "Core i5, 8 Go RAM, SSD 512 Go",
-      price: "250000",
-      oldPrice: "280000",
-      discount: "11",
-      rating: 5,
-    },
-    {
-      image1: "/od32.jpg",
-      image2: "/od31.jpg",
-      title: "Casque Audio ProBass",
-      desc: "Son clair et basse profonde",
-      price: "30000",
-      oldPrice: "35000",
-      discount: "14",
-      rating: 4,
-    },
-     {
-      image1: "/od32.jpg",
-      image2: "/od31.jpg",
-      title: "Casque Audio ProBass",
-      desc: "Son clair et basse profonde",
-      price: "30000",
-      oldPrice: "35000",
-      discount: "14",
-      rating: 4,
-    },
-     {
-      image1: "/od32.jpg",
-      image2: "/od31.jpg",
-      title: "Casque Audio ProBass",
-      desc: "Son clair et basse profonde",
-      price: "30000",
-      oldPrice: "35000",
-      discount: "14",
-      rating: 4,
-    },
-  ];
+  useEffect(() => {
+    // Si products est passé en props, on l'utilise directement
+    if (products && products.length > 0) {
+      setProductsData(products);
+      setLoading(false);
+      return;
+    }
 
-  const scrollLeft = () => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      let url = "/api/product/getAllProducts";
+      if (categoryId) url = `/api/product/getAllProductsByCatId/${categoryId}`;
+
+      try {
+        const res = await fetchDataFromApi(url);
+        const fetchedProducts = res.products || res.data || res;
+        setProductsData(fetchedProducts);
+      } catch (err) {
+        console.error(err);
+        setProductsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [categoryId, products]);
+  const scrollLeft = () =>
     scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
-  };
-
-  const scrollRight = () => {
+  const scrollRight = () =>
     scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
-  };
 
   return (
     <div className="product-slider-wrapper">
@@ -96,9 +50,13 @@ const ProductSlider = () => {
       </button>
 
       <div className="product-slider" ref={scrollRef}>
-        {products.map((p, i) => (
-          <ProductItem key={i} {...p} />
-        ))}
+        {loading ? (
+          <ProductLoading/>
+        ) : productsData.length > 0 ? (
+         productsData.map((p) => <ProductItem key={p._id} product={p} />)
+        ) : (
+          <p>Aucun produit trouvé</p>
+        )}
       </div>
 
       <button className="scroll-btn right" onClick={scrollRight}>

@@ -2,18 +2,22 @@ import React from "react";
 import { FaStar } from "react-icons/fa";
 import "./hoverRating.scss";
 
-const HoverRating = ({ value = 0, onChange }) => {
+const HoverRating = ({ rating = 0, onChange }) => {
+  const handleChange = (value) => {
+    if (onChange) onChange(value);
+  };
+
   return (
     <div className="hover-rating">
       {[1, 2, 3, 4, 5].map((i) => (
         <FaStar
           key={i}
-          className={`star ${i <= value ? "full" : "empty"}`}
-          onClick={() => onChange(i)}
-          onMouseEnter={() => onChange(i)}
+          className={`star ${i <= rating ? "full" : "empty"}`}
+          onClick={() => handleChange(i)}
+          onMouseEnter={() => handleChange(i)}
         />
       ))}
-      <span className="rating-value">{value}</span>
+      <span className="rating-value">{rating}</span>
     </div>
   );
 };

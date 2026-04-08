@@ -1,87 +1,126 @@
 .home-cat-slider {
   position: relative;
   padding: 40px 20px;
-  background: transparent;
-  width: 80%;
-  margin: 0 auto;
+  width: 90%;
+  margin: auto;
 }
 
+/* 🔥 CONTAINER SLIDER */
 .cat-container {
   display: flex;
-  gap: 15px;
+  gap: 20px;
   overflow-x: auto;
   scroll-behavior: smooth;
   padding: 10px 0;
+  cursor: grab;
 }
 
-.cat-card {
-  flex: 0 0 auto;
-  width: 160px;
-  height: 160px;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.cat-container:active {
+  cursor: grabbing;
 }
 
-.cat-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.cat-card .cat-name {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  font-weight: 500;
-  padding: 8px 0;
-  font-size: 1rem;
-}
-
-.cat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.cat-card:hover img {
-  transform: scale(1.1);
-}
-
-.slider-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.5);
-  border: none;
-  color: #fff;
-  font-size: 2rem;
-  cursor: pointer;
-  width: 40px;
-  height: 60px;
-  border-radius: 6px;
-  z-index: 10;
-}
-
-.slider-btn.left {
-  left: 10px;
-}
-
-.slider-btn.right {
-  right: 10px;
-}
-
-/* Masquer la scrollbar */
+/* ❌ cacher scrollbar */
 .cat-container::-webkit-scrollbar {
   display: none;
 }
 .cat-container {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* 🔥 CARD */
+.cat-card {
+  flex: 0 0 auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 15px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cat-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.4s;
+}
+
+/* 🔥 NOM */
+.cat-name {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+/* 🔥 HOVER */
+.cat-card:hover {
+  transform: translateY(-6px);
+}
+
+.cat-card:hover img {
+  transform: scale(1.1);
+}
+
+/* 🔥 BOUTONS */
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #000;
+  color: #fff;
+  border: none;
+  font-size: 2rem;
+  width: 45px;
+  height: 65px;
+  cursor: pointer;
+  border-radius: 8px;
+  z-index: 10;
+  opacity: 0.7;
+  transition: 0.3s;
+}
+
+.slider-btn:hover {
+  opacity: 1;
+}
+
+.slider-btn.left {
+  left: 0;
+}
+
+.slider-btn.right {
+  right: 0;
+}
+
+/* 🔄 LOADER */
+.loader {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* ❌ VIDE */
+.empty-msg {
+  text-align: center;
+  width: 100%;
+}
+
+/* 📱 RESPONSIVE */
+@media (max-width: 768px) {
+  .cat-card {
+    width: 140px;
+    height: 140px;
+  }
+
+  .slider-btn {
+    display: none;
+  }
 }

@@ -61,7 +61,12 @@ nav {
           position: relative;
           transition: color 0.2s ease;
 
-          &:hover {
+          &:visited {
+            color: #333;
+          }
+
+          &:hover,
+          &.active {
             color: rgb(130, 11, 11);
           }
 
@@ -77,7 +82,8 @@ nav {
             transition: width 0.3s ease;
           }
 
-          &:hover::after {
+          &:hover::after,
+          &.active::after {
             width: 100%;
           }
         }

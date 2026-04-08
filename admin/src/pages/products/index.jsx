@@ -9,6 +9,7 @@ import { ToastContext } from "../../context/ToastContext";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import EditProduct from "./editproduct";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
+import HoverRating from "../../components/HoverRating/HoverRating";
 
 const Product = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -245,6 +246,7 @@ const Product = () => {
                 <th>Catégorie</th>
                 <th>Sous-catégorie</th>
                 <th>Prix</th>
+                <th>Note</th>
                 <th>Ventes</th>
                 <th>Actions</th>
               </tr>
@@ -272,6 +274,9 @@ const Product = () => {
                   <td className="price"> 
                     {product.oldPrice > 0 && ( <div className="old-price">{product.oldPrice} FCFA</div> )}
                      <div className="current-price">{product.price} FCFA</div> 
+                  </td>
+                  <td className="rating"> 
+                    <HoverRating rating={product.rating} />
                   </td>
                   <td className="sales"> 
                     <span>{product.sale}%</span> 

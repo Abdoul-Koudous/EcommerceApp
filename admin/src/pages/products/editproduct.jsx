@@ -1,20 +1,11 @@
 import React, { useEffect, useState, useContext, useRef,useMemo } from "react";
-import { FaTimes, FaPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaCloudUploadAlt,FaTimes, FaPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import "./addproduct.scss";
 import { UserContext } from "../../UserContext/UserContext";
-import { editData, uploadImages } from "../utils/api";
+import { editData, fetchDataFromApi, uploadImages } from "../utils/api";
 import HoverRating from "../../components/HoverRating/HoverRating";
 import { ToastContext } from "../../context/ToastContext";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
-
-
-
-
-
-const rams = ["2GB", "4GB", "8GB", "16GB"];
-const sizes = ["S", "M", "L", "XL"];
-const weights = ["0.5kg", "1kg", "2kg", "5kg", "8kg", "10kg"];
-
 
 
 // Dropdown multi-sélection
@@ -80,9 +71,20 @@ const EditProduct = ({ product, onClose }) => {
   const [loadingExtraImages, setLoadingExtraImages] = useState(false);
 
 
+// STATES
+const [mainImageFile, setMainImageFile] = useState(null);
+const [extraImageFiles, setExtraImageFiles] = useState([]);       // nouveaux File
+const [extraImagePreviews, setExtraImagePreviews] = useState([]); // blob URLs pour preview
+const [existingExtraImages, setExistingExtraImages] = useState([]); // URLs Cloudinary existantes
 
+   // STATES : options (API) vs selections (utilisateur)
+const [ramOptions, setRamOptions] = useState([]);
+const [sizeOptions, setSizeOptions] = useState([]);
+const [weightOptions, setWeightOptions] = useState([]);
 
-  
+const [productRam, setProductRam] = useState([]);
+const [productSize, setProductSize] = useState([]);
+const [productWeight, setProductWeight] = useState([]);
   
   const [selectedThirdSubCat, setSelectedThirdSubCat] = useState("");
 
@@ -111,6 +113,7 @@ const EditProduct = ({ product, onClose }) => {
     size: [],
     productWeight: [],
   });
+
   useEffect(() => {
   if (!product) return;
 
@@ -134,15 +137,45 @@ const EditProduct = ({ product, onClose }) => {
     size: product.size || [],
     productWeight: product.productWeight || [],
     mainImage: product.images?.[0] || null,
-    extraImages: product.images?.slice(1) || [],
+    extraImages: [],  // vide, les existantes vont dans existingExtraImages
   });
 
+  setExistingExtraImages(product.images?.slice(1) || []);
   setSelectedCat(product.catId || "");
   setSelectedSubCat(product.subCatId || "");
   setSelectedThirdSubCat(product.thirdSubCatId || "");
 
-  
+  // Initialiser les selections dropdown
+  setProductRam(product.productRam || []);
+  setProductSize(product.size || []);
+  setProductWeight(product.productWeight || []);
 }, [product]);
+
+useEffect(() => {
+  // RAM
+  fetchDataFromApi("/api/product/productRAM").then((res) => {
+    // console.log("RAM response:", res); 
+    if (res?.error === false) {
+      setRamOptions(res.productRAMs?.map((item) => item.name) || []);
+    }
+  });
+
+  // SIZE
+  fetchDataFromApi("/api/product/productSIZE").then((res) => {
+    // console.log("SIZE response:", res);  
+    if (res?.error === false) {
+      setSizeOptions(res.productSIZEs?.map((item) => item.name) || []);
+    }
+  });
+
+  // WEIGHT
+  fetchDataFromApi("/api/product/productWEIGHT").then((res) => {
+    // console.log("WEIGHT response:", res); 
+    if (res?.error === false) {
+      setWeightOptions(res.productWEIGHTs?.map((item) => item.name) || []);
+    }
+  });
+}, []);
 
 
 const mainCategories = categories || [];
@@ -163,15 +196,12 @@ const thirdSubCategories = useMemo(() => {
 
   const onChangeInput = (e) => {
     const { name, value } = e.target;
-    setFormFields(() => ({ ...formFields, [name]: value }));
+    setFormFields((prev) => ({ ...prev, [name]: value }));
   };
 
-  // States pour les fichiers et prévisualisations
-const [mainImageFile, setMainImageFile] = useState(null);
-const [extraImageFiles, setExtraImageFiles] = useState([]);
 
 // Changer les images (prévisualisation)
-  const handleImageChange = async (e, main = false) => {
+const handleImageChange = async (e, main = false) => {
   const files = Array.from(e.target.files);
   if (!files.length) return;
 
@@ -181,44 +211,39 @@ const [extraImageFiles, setExtraImageFiles] = useState([]);
 
     if (main) {
       const file = files[0];
-      const url = URL.createObjectURL(file);
-
       setMainImageFile(file);
-      setFormFields(prev => ({ ...prev, mainImage: url }));
+      setFormFields(prev => ({ ...prev, mainImage: URL.createObjectURL(file) }));
     } else {
-      const urls = files.map(file => URL.createObjectURL(file));
+      const previews = files.map(f => URL.createObjectURL(f));
       setExtraImageFiles(prev => [...prev, ...files]);
-      setFormFields(prev => ({
-        ...prev,
-        extraImages: [...prev.extraImages, ...urls],
-      }));
+      setExtraImagePreviews(prev => [...prev, ...previews]);
+      // NE PAS toucher formFields.extraImages ici
     }
   } finally {
     if (main) setLoadingMainImage(false);
     else setLoadingExtraImages(false);
-
-    e.target.value = ""; // pour pouvoir re-sélectionner les mêmes fichiers
+    e.target.value = "";
   }
-  
-
 };
 
 
 useEffect(() => {
   return () => {
-    URL.revokeObjectURL(formFields.mainImage);
-    formFields.extraImages.forEach(URL.revokeObjectURL);
+    extraImagePreviews.forEach(URL.revokeObjectURL);
   };
-}, [formFields.mainImage, formFields.extraImages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
 
 // Supprimer une image secondaire
-const removeExtraImage = (index) => {
+const removeExistingImage = (index) => {
+  setExistingExtraImages(prev => prev.filter((_, i) => i !== index));
+};
+
+const removeNewImage = (index) => {
+  URL.revokeObjectURL(extraImagePreviews[index]);
   setExtraImageFiles(prev => prev.filter((_, i) => i !== index));
-  setFormFields(prev => ({
-    ...prev,
-    extraImages: prev.extraImages.filter((_, i) => i !== index),
-  }));
+  setExtraImagePreviews(prev => prev.filter((_, i) => i !== index));
 };
 
 
@@ -247,13 +272,9 @@ const removeExtraImage = (index) => {
  const hasOldImages = product?.images?.length > 1;
 
 
-  if (
-    !hasOldImages &&
-    (!formFields.extraImages || formFields.extraImages.length === 0) &&
-    extraImageFiles.length === 0
-  ) {
-    return openToast("error", "Veuillez ajouter au moins une image secondaire");
-  }
+if (existingExtraImages.length === 0 && extraImageFiles.length === 0) {
+  return openToast("error", "Veuillez ajouter au moins une image secondaire");
+}
   if (!formFields.brand.trim())
     return openToast("error", "La marque du produit est obligatoire");
 
@@ -267,10 +288,10 @@ const removeExtraImage = (index) => {
     return openToast("error", "L'ancien prix ne peut pas être négatif");
   if (formFields.rating < 0 || formFields.rating > 5)
     return openToast("error", "La note doit être comprise entre 0 et 5");
-  if (formFields.productRam.length === 0)
-    return openToast("error", "Veuillez sélectionner au moins une option de RAM");  
-  if (formFields.size.length === 0)
-    return openToast("error", "Veuillez sélectionner au moins une taille");
+  // if (formFields.productRam.length === 0)
+  //   return openToast("error", "Veuillez sélectionner au moins une option de RAM");  
+  // if (formFields.size.length === 0)
+  //   return openToast("error", "Veuillez sélectionner au moins une taille");
   if (formFields.productWeight.length === 0)
     return openToast("error", "Veuillez sélectionner au moins un poids");
   if (formFields.discount > 100)
@@ -288,53 +309,47 @@ const removeExtraImage = (index) => {
 
 
   try {
-  setLoadingSubmit(true);
+    setLoadingSubmit(true);
+    let finalImages = [];
 
-  let finalImages = [];
-
-  // Si on a de nouvelles images à uploader
-  if (mainImageFile || extraImageFiles.length > 0) {
-    const formData = new FormData();
-    if (mainImageFile) formData.append("images", mainImageFile);
-    extraImageFiles.forEach(f => formData.append("images", f));
-
-    const uploadRes = await uploadImages("/api/product/uploadImages", formData);
-
-    // Nouvelle image principale ? sinon garder l'ancienne
-    finalImages.push(mainImageFile ? uploadRes.images[0] : formFields.mainImage);
-
-    // Ajouter les anciennes images secondaires déjà présentes
-    finalImages.push(...formFields.extraImages);
-
-    // Ajouter les nouvelles images secondaires uploadées
-    if (extraImageFiles.length > 0) {
-      finalImages.push(...uploadRes.images.slice(mainImageFile ? 1 : 0));
+    // 1. Image principale
+    if (mainImageFile) {
+      const fd = new FormData();
+      fd.append("images", mainImageFile);
+      const uploadRes = await uploadImages("/api/product/uploadImages", fd);
+      finalImages.push(uploadRes.images[0]);
+    } else {
+      finalImages.push(formFields.mainImage);
     }
 
-  } else {
-    // Pas de nouvelles images => garder toutes les images existantes
-    finalImages = [formFields.mainImage, ...formFields.extraImages];
+    // 2. Images existantes (deja sur Cloudinary)
+    finalImages.push(...existingExtraImages);
+
+    // 3. Nouvelles images (a uploader)
+    if (extraImageFiles.length > 0) {
+      const fd = new FormData();
+      extraImageFiles.forEach(f => fd.append("images", f));
+      const uploadRes = await uploadImages("/api/product/uploadImages", fd);
+      finalImages.push(...uploadRes.images);
+    }
+
+    // Aucune blob URL dans finalImages
+    const { extraImages, mainImage, ...cleanFields } = formFields;
+    const payload = { ...cleanFields, images: finalImages };
+    const res = await editData(`/api/product/updateProduct/${product._id}`, payload);
+
+    if (!res?.success) throw new Error(res?.message || "Erreur");
+    openToast("success", res?.message || "Produit mis a jour");
+    setTimeout(handleClose, 500);
+  } catch (error) {
+    openToast("error", error.message || "Erreur serveur");
+  } finally {
+    setLoadingSubmit(false);
   }
-
-  // Préparer le payload final
-  const payload = { ...formFields, images: finalImages };
-
-  const res = await editData(`/api/product/updateProduct/${product._id}`, payload);
-
-  if (!res?.success) throw new Error(res?.message || "Erreur de modification produit");
-
-  openToast("success", res?.message || "Produit mis à jour");
-  setTimeout(handleClose, 500);
-
-} catch (error) {
-  console.error(error);
-  openToast("error", error.message || "Erreur serveur");
-} finally {
-  setLoadingSubmit(false);
-}
 };
 
 useEffect(() => {
+  
   if (
     selectedThirdSubCat &&
     !thirdSubCategories.find(t => t._id === selectedThirdSubCat)
@@ -506,7 +521,7 @@ useEffect(() => {
               <div className="form-group">
                 <label>Note</label>
                 <HoverRating
-                  value={formFields.rating}
+                  rating={formFields.rating}
                   onChange={(val) =>
                     setFormFields((prev) => ({ ...prev, rating: val }))
                   }
@@ -567,26 +582,28 @@ useEffect(() => {
             </div>
 
 
-            {/* Multi-selections + Rating */}
+           {/* Multi-selections + Rating */}
             <div className="row">
               <div className="form-group">
                 <DropdownMultiSelect
                   label="La RAM"
-                  options={rams}
-                  selectedValues={formFields.productRam}
-                  onChange={(vals) =>
-                    setFormFields((prev) => ({ ...prev, productRam: vals }))
-                  }
+                  options={ramOptions}
+                  selectedValues={productRam}
+                  onChange={(vals) => {
+                    setProductRam(vals);
+                    setFormFields((prev) => ({ ...prev, productRam: vals }));
+                  }}
                 />
               </div>
 
               <div className="form-group">
                 <DropdownMultiSelect
                   label="Taille"
-                  options={sizes}
-                  selectedValues={formFields.size}
+                  options={sizeOptions}
+                  selectedValues={productSize}
                   onChange={(vals) => {
-                    setFormFields((prev) => ({ ...prev, size: vals }))
+                    setProductSize(vals);
+                    setFormFields((prev) => ({ ...prev, size: vals }));
                   }}
                 />
               </div>
@@ -594,9 +611,10 @@ useEffect(() => {
               <div className="form-group">
                 <DropdownMultiSelect
                   label="Poids"
-                  options={weights}
-                  selectedValues={formFields.productWeight}
+                  options={weightOptions}
+                  selectedValues={productWeight}
                   onChange={(vals) => {
+                    setProductWeight(vals);
                     setFormFields((prev) => ({ ...prev, productWeight: vals }));
                   }}
                 />
@@ -629,27 +647,69 @@ useEffect(() => {
             {/* Images secondaires */}
             <div className="image-upload">
               <label>Images secondaires</label>
+              {/* Images secondaires */}
               <div className="extra-images">
-                {formFields.extraImages.map((img, i) => (
-                  <div key={i} className="image-preview">
-                    <img src={img} alt="" />
-                    <button type="button" onClick={() => removeExtraImage(i)}>
+                {/* Existantes (Cloudinary) */}
+                {existingExtraImages.map((img, i) => (
+                  <div key={`existing-${i}`} className="image-preview">
+                    <img src={img || "/placeholder.svg"} alt={`existante ${i}`} />
+                    <button onClick={() => removeExistingImage(i)}>
                       <FaTimes />
                     </button>
                   </div>
                 ))}
-                <div className="image-box" onClick={() => document.getElementById("extra-img").click()}>
-                  {loadingExtraImages ? <CircularProgress /> : <FaPlus />}
+
+                {/* Nouvelles (blob previews) */}
+                {extraImagePreviews.map((img, i) => (
+                  <div key={`new-${i}`} className="image-preview">
+                    <img src={img || "/placeholder.svg"} alt={`nouvelle ${i}`} />
+                    <button onClick={() => removeNewImage(i)}>
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+
+                <div className="image-box"
+                  onClick={() => document.getElementById("extra-img").click()}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    border: "2px dashed #ccc",
+                    borderRadius: "8px",
+                    padding: "20px",
+                    cursor: "pointer",
+                    minWidth: "120px",
+                    minHeight: "120px",
+                    transition: "all 0.2s ease",
+                    backgroundColor: "#fafafa",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#1976d2";
+                    e.currentTarget.style.backgroundColor = "#e3f2fd";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#ccc";
+                    e.currentTarget.style.backgroundColor = "#fafafa";
+                  }}
+                >
+                  {loadingExtraImages ? (
+                    <CircularProgress size={30} />
+                  ) : (
+                    <>
+                      <FaCloudUploadAlt style={{ fontSize: "32px", color: "#1976d2" }} />
+                      <span style={{ fontSize: "12px", color: "#666", textAlign: "center" }}>
+                        Ajouter des images
+                      </span>
+                    </>
+                  )}
                 </div>
+                <input id="extra-img" type="file" hidden multiple accept="image/*"
+                  onChange={(e) => handleImageChange(e, false)} />
               </div>
-              <input
-                id="extra-img"
-                type="file"
-                hidden
-                accept="image/*"
-                multiple
-                onChange={(e) => handleImageChange(e, false)}
-              />
+              
             </div>
 
 

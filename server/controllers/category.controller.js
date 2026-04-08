@@ -92,31 +92,27 @@ export async function createCategory(request, response) {
 
 export async function getCategories(request, response) {
     try {
-        const categories = await CategoryModel.find();
-        const categoryMap = {};
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 5;
 
-        categories.forEach(cat =>{
-            categoryMap[cat._id] = {...cat._doc, children: []};
+        const total = await CategoryModel.countDocuments({
+            parentId: undefined
         });
 
-        const rootCategories = [];
-
-        categories.forEach(cat => {
-            if(cat.parentId){
-                categoryMap[cat.parentId].children.push(categoryMap[cat._id]);
-
-            }else{
-                rootCategories.push(categoryMap[cat._id]);
-            }
-            
-        });
+        const categories = await CategoryModel.find({
+            parentId: undefined
+        })
+        .skip((page - 1) * perPage)
+        .limit(perPage);
 
         return response.status(200).json({
             error: false,
             success: true,
-            data:rootCategories
+            data: categories,
+            total,
+            page,
+            perPage
         });
-
 
     } catch (error) {
         return response.status(500).json({
@@ -124,11 +120,8 @@ export async function getCategories(request, response) {
             error: true,
             success: false
         });
-        
     }
-    
 }
-
 
 
 export async function getCategoriesCount(request, response){

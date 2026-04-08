@@ -10,44 +10,15 @@ import {
 import "./productlistview.scss";
 import ProductPopup from "../productmodal";
 
-
-const ProductItemView = ({
-  image1,
-  image2,
-  title,
-  desc,
-  price,
-  oldPrice,
-  rating,
-  discount,
-  isNew,
-  brand = "YeboShop", // par défaut
-  colors = ["Red", "Blue", "Black"],
-  stock = true,
-  shippingDays = 3,
-  reviews = 5,
-}) => {
+const ProductItemView = ({ product }) => {
   const [hovered, setHovered] = useState(false);
-  const [showPopup, setShowPopup] = useState(false); // ✅ état pour le popup
+  const [showPopup, setShowPopup] = useState(false);
 
   const handleOpenPopup = () => setShowPopup(true);
   const handleClosePopup = () => setShowPopup(false);
 
-  const productData = {
-    title,
-    desc,
-    price,
-    oldPrice,
-    rating,
-    discount,
-    isNew,
-    brand,
-    colors,
-    stock,
-    shippingDays,
-    reviews,
-    images: [image1, image2],
-  };
+  // Déstructuration directe des données du produit
+  const { name, description, price, oldPrice, rating = 0, discount = 0, isNew = false, images = [] } = product;
 
   return (
     <>
@@ -56,26 +27,18 @@ const ProductItemView = ({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        {/* Bloc image */}
+        {/* Image */}
         <div className="img-box">
-          <img src={hovered && image2 ? image2 : image1} alt={title} />
+          <img src={hovered && images[1] ? images[1] : images[0]} alt={name} />
 
-          {/* Badge de réduction */}
-          {discount && <div className="discount-badge">-{discount}%</div>}
-
-          {/* Badge Nouveau */}
+          {discount > 0 && <div className="discount-badge">-{discount}%</div>}
           {isNew && <div className="new-badge">Nouveau</div>}
 
-          {/* Icônes flottantes au hover */}
           <div className={`icon-overlay ${hovered ? "show" : ""}`}>
             <button className="icon compare" title="Comparer">
               <FaExchangeAlt />
             </button>
-            <button
-              className="icon view"
-              title="Voir le produit"
-              onClick={handleOpenPopup} // ✅ ouvre le popup
-            >
+            <button className="icon view" title="Voir le produit" onClick={handleOpenPopup}>
               <FaEye />
             </button>
             <button className="icon zoom" title="Zoom">
@@ -87,10 +50,10 @@ const ProductItemView = ({
           </div>
         </div>
 
-        {/* Bloc Détails */}
+        {/* Détails du produit */}
         <div className="details">
-          <h4>{title}</h4>
-          <p className="desc">{desc}</p>
+          <h4>{name}</h4>
+          <p className="desc">{description}</p>
 
           <div className="rating">
             {[...Array(5)].map((_, i) => (
@@ -110,13 +73,8 @@ const ProductItemView = ({
         </div>
       </div>
 
-      {/* ✅ Le Popup s’affiche ici quand showPopup est true */}
-      {showPopup && (
-        <ProductPopup
-          product={productData}
-          onClose={handleClosePopup} // fonction pour fermer
-        />
-      )}
+      {/* Popup */}
+      {showPopup && <ProductPopup product={product} onClose={handleClosePopup} />}
     </>
   );
 };

@@ -14,6 +14,7 @@ import ProductDetails from "./pages/products/productDetails";
 import AddRAMs from "./pages/products/addRAMs";
 import AddWEIGHT from "./pages/products/addWEIGHT";
 import AddSIZE from "./pages/products/addSIZE";
+import HomeSlidePage from "./pages/HomeSliderBanners";
 
 function App() {
   return (
@@ -25,6 +26,14 @@ function App() {
           element={
             <AdminLayout>
               <Dashboard />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/slides/lists"
+          element={
+            <AdminLayout>
+              <HomeSlidePage/>
             </AdminLayout>
           }
         />
