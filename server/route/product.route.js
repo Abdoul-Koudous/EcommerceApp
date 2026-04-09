@@ -2,12 +2,13 @@ import { Router } from 'express';
 
 import auth from '../middlewares/auth.js';
 import upload from '../middlewares/multer.js';
-import { createProduct,removeImageFromCloudinary, deleteProducts, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getProduct, getProductsCount, uploadImages, updateProduct, deleteMultipleProduct, getAllProductsByThirdLavelCatId, getAllProductsByThirdLavelCatName, getProducts, createProductRAM, deleteProductRAM, updateProductRAM, deleteMultipleProductRAM, getAllProductRAMs, getProductRAMById, createProductWEIGHT, createProductSIZE, deleteProductWEIGHT, deleteProductSIZE, deleteMultipleProductSIZE, deleteMultipleProductWEIGHT, updateProductWEIGHT, updateProductSIZE, getAllProductWEIGHTs, getAllProductSIZEs, getProductWEIGHTById, getProductSIZEById} from '../controllers/product.controller.js';
+import { createProduct,removeImageFromCloudinary, deleteProducts, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getProduct, getProductsCount, uploadImages, updateProduct, deleteMultipleProduct, getAllProductsByThirdLavelCatId, getAllProductsByThirdLavelCatName, getProducts, createProductRAM, deleteProductRAM, updateProductRAM, deleteMultipleProductRAM, getAllProductRAMs, getProductRAMById, createProductWEIGHT, createProductSIZE, deleteProductWEIGHT, deleteProductSIZE, deleteMultipleProductSIZE, deleteMultipleProductWEIGHT, updateProductWEIGHT, updateProductSIZE, getAllProductWEIGHTs, getAllProductSIZEs, getProductWEIGHTById, getProductSIZEById, uploadBannerImages} from '../controllers/product.controller.js';
 
 
 const productRouter = Router();
 
 productRouter.post('/uploadImages', auth, upload.array('images'), uploadImages);
+productRouter.post('/uploadBannerImages', auth, upload.array('bannerimages'), uploadBannerImages);
 productRouter.post('/create', auth, createProduct);
 productRouter.post('/productRAM/create', auth,createProductRAM);
 productRouter.post('/productSIZE/create', auth,createProductSIZE);

@@ -24,7 +24,10 @@ const productSchema = mongoose.Schema({
     productRam: [{ type: String, default: null }],
     size: [{ type: String, default: null }],
     productWeight: [{ type: String, default: null }],
+    bannerimages: [{ type: String, default: []  }],
+    bannerTitleName: { type: String, required: true },
     dateCreated: { type: Date, default: Date.now },
+    isDisplayOnHomeBanner: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const ProductModel = mongoose.model("Produits", productSchema);

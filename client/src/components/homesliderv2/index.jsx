@@ -1,53 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import BannerBoxv2 from "../bannerboxv2";
+import { fetchDataFromApi } from "../../pages/utils/api";
 import "./homesliderv2.scss";
 
-
-const slides = [
-  {
-    id: 1,
-    image:
-      "https://sindivestuario.org.br/wp-content/uploads/2019/05/Imagem-cabides.jpg",
-    title: "Nouvelle Collection Été",
-    subtitle: "Découvrez nos tendances exclusives",
-    button: "Découvrir maintenant",
-  },
-  {
-    id: 2,
-    image:
-      "https://cdn.pixabay.com/photo/2015/01/21/14/14/apple-606761_1280.jpg",
-    title: "Électronique de qualité",
-    subtitle: "La technologie au meilleur prix",
-    button: "Voir les produits",
-  },
-  {
-    id: 3,
-    image:
-      "https://media.istockphoto.com/id/1408439145/fr/photo/soin-dautomne-et-concept-de-maquillage-dautomne-avec-des-produits-de-beaut%C3%A9-sur-table.jpg?s=612x612&w=0&k=20&c=HykZYDSmfbmdMsGnsQHMJMjAXlE-r9L-2-FLAlady1g=",
-    title: "Mode & Accessoires",
-    subtitle: "Exprimez votre style unique",
-    button: "Acheter maintenant",
-  },
-];
-
 const HomeBannerV2 = () => {
+  const [bannerProducts, setBannerProducts] = useState([]);
   const [current, setCurrent] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // défilement automatique
+  // 🔹 Récupération des produits à afficher dans la bannière
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(interval);
+    const fetchBannerProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchDataFromApi("/api/product/getAllProducts");
+        const products = res.products || res.data || [];
+        const filtered = products.filter((p) => p.isDisplayOnHomeBanner);
+        setBannerProducts(filtered);
+      } catch (err) {
+        console.error(err);
+        setBannerProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBannerProducts();
   }, []);
 
-  const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+  // 🔹 Défilement automatique
+  useEffect(() => {
+    if (bannerProducts.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % bannerProducts.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [bannerProducts]);
+
+  const nextSlide = () =>
+    setCurrent((prev) => (prev + 1) % bannerProducts.length);
+  const prevSlide = () =>
+    setCurrent(
+      (prev) => (prev - 1 + bannerProducts.length) % bannerProducts.length
+    );
+
+  if (loading) return <p>Chargement des produits...</p>;
+  if (bannerProducts.length === 0) return <p>Aucun produit en bannière.</p>;
+
+  const currentSlide = bannerProducts[current];
 
   return (
-    <>
     <div className="home-banner-v2">
       <button className="nav-btn left" onClick={prevSlide}>
         <FaArrowLeft />
@@ -55,44 +57,61 @@ const HomeBannerV2 = () => {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={slides[current].id}
+          key={currentSlide._id}
           className="slide"
           style={{
-            backgroundImage: `url(${slides[current].image})`,
+            backgroundImage: `url(${currentSlide.bannerimages?.[0] || "/placeholder.jpg"})`,
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
         >
-          {/* ✅ Texte par-dessus l’image */}
           <div className="slide-content">
-            <motion.h2
-              key={slides[current].title}
+            <motion.p
+              key={currentSlide.bannerTitleName}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              {slides[current].title}
-            </motion.h2>
+              {currentSlide.bannerTitleName}
+            </motion.p>
 
-            <motion.p
-              key={slides[current].subtitle}
+            <motion.h2
+              key={currentSlide.name}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.9, duration: 0.6 }}
             >
-              {slides[current].subtitle}
-            </motion.p>
+              {currentSlide.name}
+            </motion.h2>
 
+            
+
+            {/* 🔹 Prix affiché à part */}
+            <motion.div
+              className="slide-price"
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 1.5, duration: 0.6 }}
+            >
+              <span className="slide-price-text">Commencer avec seulement </span>
+              <h3 className="slide-price-value">
+                {new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "XOF",
+                }).format(currentSlide.price)}
+              </h3>
+            </motion.div>
+
+            {/* ✅ Bouton original */}
             <motion.button
               className="slide-btn"
-              key={slides[current].button}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.3, duration: 0.6 }}
             >
-              {slides[current].button}
+              Découvrir maintenant
             </motion.button>
           </div>
         </motion.div>
@@ -102,7 +121,6 @@ const HomeBannerV2 = () => {
         <FaArrowRight />
       </button>
     </div>
-    </>
   );
 };
 

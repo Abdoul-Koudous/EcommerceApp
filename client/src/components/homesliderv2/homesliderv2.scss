@@ -123,3 +123,23 @@
     }
   }
 }
+
+.slide-price {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px; // espace entre texte et prix
+}
+
+.slide-price-text {
+  font-size: 1.1rem;
+  color: #fff; // ou une autre couleur si fond clair
+}
+
+.slide-price-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #e63946; // prix en rouge
+  margin: 0;
+  font-family: cursive;
+}

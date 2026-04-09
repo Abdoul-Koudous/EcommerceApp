@@ -82,6 +82,11 @@ const [ramOptions, setRamOptions] = useState([]);
 const [sizeOptions, setSizeOptions] = useState([]);
 const [weightOptions, setWeightOptions] = useState([]);
 
+const [bannerFiles, setBannerFiles] = useState([]);
+const [bannerPreviews, setBannerPreviews] = useState([]);
+const [existingBannerImages, setExistingBannerImages] = useState([]);
+const [loadingBanner, setLoadingBanner] = useState(false);
+
 const [productRam, setProductRam] = useState([]);
 const [productSize, setProductSize] = useState([]);
 const [productWeight, setProductWeight] = useState([]);
@@ -112,6 +117,9 @@ const [productWeight, setProductWeight] = useState([]);
     productRam: [],
     size: [],
     productWeight: [],
+    bannerTitleName: "",
+    bannerimages: [],
+    isDisplayOnHomeBanner: false,
   });
 
   useEffect(() => {
@@ -138,9 +146,12 @@ const [productWeight, setProductWeight] = useState([]);
     productWeight: product.productWeight || [],
     mainImage: product.images?.[0] || null,
     extraImages: [],  // vide, les existantes vont dans existingExtraImages
+    bannerTitleName: product.bannerTitleName || "",
+    isDisplayOnHomeBanner: product.isDisplayOnHomeBanner ?? false,
   });
 
   setExistingExtraImages(product.images?.slice(1) || []);
+  setExistingBannerImages(product.bannerimages || []);
   setSelectedCat(product.catId || "");
   setSelectedSubCat(product.subCatId || "");
   setSelectedThirdSubCat(product.thirdSubCatId || "");
@@ -234,6 +245,25 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
+
+const handleBannerChange = (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  const previews = files.map(f => URL.createObjectURL(f));
+
+  setBannerFiles(prev => [...prev, ...files]);
+  setBannerPreviews(prev => [...prev, ...previews]);
+};
+
+const removeExistingBanner = (index) => {
+  setExistingBannerImages(prev => prev.filter((_, i) => i !== index));
+};
+
+const removeNewBanner = (index) => {
+  setBannerFiles(prev => prev.filter((_, i) => i !== index));
+  setBannerPreviews(prev => prev.filter((_, i) => i !== index));
+};
 
 // Supprimer une image secondaire
 const removeExistingImage = (index) => {
@@ -332,10 +362,27 @@ if (existingExtraImages.length === 0 && extraImageFiles.length === 0) {
       const uploadRes = await uploadImages("/api/product/uploadImages", fd);
       finalImages.push(...uploadRes.images);
     }
+    let bannerUrls = [...existingBannerImages];
+
+    if (bannerFiles.length > 0) {
+      const fd = new FormData();
+      bannerFiles.forEach(f => fd.append("bannerimages", f));
+
+      const res = await uploadImages("/api/product/uploadBannerImages", fd);
+
+      if (!res || res.error) throw new Error("Erreur upload banner");
+
+      bannerUrls.push(...res.images);
+    }
 
     // Aucune blob URL dans finalImages
     const { extraImages, mainImage, ...cleanFields } = formFields;
-    const payload = { ...cleanFields, images: finalImages };
+    const payload = {
+      ...cleanFields,
+      images: finalImages,
+      bannerimages: bannerUrls,
+      bannerTitleName: formFields.bannerTitleName?.trim() || formFields.name
+    };
     const res = await editData(`/api/product/updateProduct/${product._id}`, payload);
 
     if (!res?.success) throw new Error(res?.message || "Erreur");
@@ -710,6 +757,73 @@ useEffect(() => {
                   onChange={(e) => handleImageChange(e, false)} />
               </div>
               
+            </div>
+
+            <div className="image-upload">
+              <label>Images Banner</label>
+
+              <div className="extra-images">
+
+                {/* EXISTANTES */}
+                {existingBannerImages.map((img, i) => (
+                  <div key={i} className="image-preview">
+                    <img src={img} alt="" />
+                    <button onClick={() => removeExistingBanner(i)}>
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+
+                {/* NOUVELLES */}
+                {bannerPreviews.map((img, i) => (
+                  <div key={i} className="image-preview">
+                    <img src={img} alt="" />
+                    <button onClick={() => removeNewBanner(i)}>
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+
+                <div className="image-box" onClick={() => document.getElementById("banner-img").click()}>
+                  {loadingBanner ? <CircularProgress /> : <FaCloudUploadAlt />}
+                </div>
+
+              </div>
+
+              <input
+                id="banner-img"
+                type="file"
+                hidden
+                multiple
+                accept="image/*"
+                onChange={handleBannerChange}
+              />
+            </div>
+
+            <div className="form-group banner-toggle">
+              <label> Afficher dans le banner accueil</label>
+
+              <div
+                className={`switch ${formFields.isDisplayOnHomeBanner ? "active" : ""}`}
+                onClick={() =>
+                  setFormFields(prev => ({
+                    ...prev,
+                    isDisplayOnHomeBanner: !prev.isDisplayOnHomeBanner
+                  }))
+                }
+              >
+                <div className="slider"></div>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Titre de la bannière</label>
+              <input
+                type="text"
+                name="bannerTitleName"
+                value={formFields.bannerTitleName}
+                onChange={onChangeInput}
+              />
             </div>
 
 

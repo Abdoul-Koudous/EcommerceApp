@@ -69,6 +69,10 @@ const AddProduct = ({ onClose }) => {
   const [loadingMainImage, setLoadingMainImage] = useState(false);
   const [loadingExtraImages, setLoadingExtraImages] = useState(false);
 
+  const [bannerFiles, setBannerFiles] = useState([]);
+  const [bannerPreviews, setBannerPreviews] = useState([]);
+  const [loadingBanner, setLoadingBanner] = useState(false);
+
 
 
    // STATES : options (API) vs selections (utilisateur)
@@ -84,6 +88,7 @@ const [productWeight, setProductWeight] = useState([]);
 
   const [selectedCat, setSelectedCat] = useState("");
   const [selectedSubCat, setSelectedSubCat] = useState("");
+
 
   const [formFields, setFormFields] = useState({
     name: "",
@@ -107,6 +112,9 @@ const [productWeight, setProductWeight] = useState([]);
     productRam: [],
     size: [],
     productWeight: [],
+    bannerTitleName: "",
+    bannerimages: [],
+    isDisplayOnHomeBanner: false,
   });
 
 
@@ -157,7 +165,16 @@ useEffect(() => {
 
   const onChangeInput = (e) => {
     const { name, value } = e.target;
-    setFormFields((prev) => ({ ...prev, [name]: value }));
+
+    setFormFields((prev) => ({
+      ...prev,
+      [name]: value,
+
+      // 👇 seulement si vide
+      ...(name === "name" && !prev.bannerTitleName.trim() && {
+        bannerTitleName: value
+      })
+    }));
   };
 
   // States pour les fichiers et prévisualisations
@@ -195,6 +212,38 @@ const [extraImageFiles, setExtraImageFiles] = useState([]);
   }
 };
 
+const handleBannerChange = async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  try {
+    setLoadingBanner(true);
+
+    const urls = files.map(file => URL.createObjectURL(file));
+
+    setBannerFiles(prev => [...prev, ...files]);
+    setBannerPreviews(prev => [...prev, ...urls]);
+
+    setFormFields(prev => ({
+      ...prev,
+      bannerimages: [...(prev.bannerimages || []), ...urls]
+    }));
+
+  } finally {
+    setLoadingBanner(false);
+    e.target.value = "";
+  }
+};
+
+const removeBannerImage = (index) => {
+  setBannerFiles(prev => prev.filter((_, i) => i !== index));
+  setBannerPreviews(prev => prev.filter((_, i) => i !== index));
+
+  setFormFields(prev => ({
+    ...prev,
+    bannerimages: prev.bannerimages.filter((_, i) => i !== index)
+  }));
+};
 
 
 
@@ -244,12 +293,12 @@ const removeExtraImage = (index) => {
     return openToast("error", "L'ancien prix ne peut pas être négatif");
   if (formFields.rating < 0 || formFields.rating > 5)
     return openToast("error", "La note doit être comprise entre 0 et 5");
-  if (formFields.productRam.length === 0)
-    return openToast("error", "Veuillez sélectionner au moins une option de RAM");  
+  // if (formFields.productRam.length === 0)
+  //   return openToast("error", "Veuillez sélectionner au moins une option de RAM");  
   // if (formFields.size.length === 0)
   //   return openToast("error", "Veuillez sélectionner au moins une taille");
-  if (formFields.productWeight.length === 0)
-    return openToast("error", "Veuillez sélectionner au moins un poids");
+  // if (formFields.productWeight.length === 0)
+  //   return openToast("error", "Veuillez sélectionner au moins un poids");
   if (formFields.discount > 100)
     return openToast("error", "La remise ne peut pas dépasser 100%"); 
   if (Number(formFields.oldPrice) < Number(formFields.price))
@@ -258,6 +307,9 @@ const removeExtraImage = (index) => {
     return openToast("error", "Veuillez indiquer si le produit est en vedette");
   if (formFields.countIntStock % 1 !== 0)
     return openToast("error", "Le stock doit être un nombre entier");
+  if (formFields.isDisplayOnHomeBanner && bannerFiles.length === 0) {
+    return openToast("error", "Ajoute au moins une image banner");
+  }
   // 🔹 SUBMIT
   
 
@@ -279,12 +331,32 @@ const removeExtraImage = (index) => {
       throw new Error(uploadRes?.message || "Erreur upload images");
     }
 
+    let bannerUrls = [];
+
+    if (bannerFiles.length > 0) {
+      const bannerData = new FormData();
+      bannerFiles.forEach(file => {
+        bannerData.append("bannerimages", file);
+      });
+
+      const bannerRes = await uploadImages("/api/product/uploadBannerImages", bannerData);
+
+      if (!bannerRes || bannerRes.error) {
+        throw new Error("Erreur upload banner");
+      }
+
+      bannerUrls = bannerRes.images;
+    }
+
     // 🔹 PAYLOAD
     const payload = {
       ...formFields,
       images: uploadRes.images,
+      bannerimages: bannerUrls,
+       bannerTitleName: formFields.bannerTitleName?.trim() || formFields.name,
       category: formFields.catId,
       thirdSubCatId: formFields.thirdSubCatId || null,
+       isDisplayOnHomeBanner: formFields.isDisplayOnHomeBanner,
     };
 
     // 🔹 CREATE PRODUCT
@@ -658,6 +730,77 @@ const removeExtraImage = (index) => {
                 onChange={(e) => handleImageChange(e, false)}
               />
             </div>
+            <div className="image-upload">
+              <label>Images Banner</label>
+
+              <div className="extra-images">
+                
+                {/* Preview */}
+                {bannerPreviews.map((img, i) => (
+                  <div key={i} className="image-preview">
+                    <img src={img} alt="" />
+                    <button type="button" onClick={() => removeBannerImage(i)}>
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Box upload */}
+                <div
+                  className="image-box"
+                  onClick={() =>  {
+                    if (!loadingBanner) {
+                      document.getElementById("banner-img").click();
+                    }
+                  }}
+                >
+                  {loadingBanner ? (
+                    <CircularProgress/>
+                  ) : (
+                    <>
+                      <FaCloudUploadAlt />
+                      <span>Ajouter</span>
+                    </>
+                  )}
+                </div>
+
+              </div>
+
+              <input
+                id="banner-img"
+                type="file"
+                hidden
+                accept="image/*"
+                multiple
+                onChange={handleBannerChange}
+              />
+            </div>
+            <div className="form-group banner-toggle">
+              <label> Afficher dans le banner accueil</label>
+
+              <div
+                className={`switch ${formFields.isDisplayOnHomeBanner ? "active" : ""}`}
+                onClick={() =>
+                  setFormFields(prev => ({
+                    ...prev,
+                    isDisplayOnHomeBanner: !prev.isDisplayOnHomeBanner
+                  }))
+                }
+              >
+                <div className="slider"></div>
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Titre de la banniere</label>
+              <input
+                type="text"
+                name="bannerTitleName"
+                value={formFields.bannerTitleName}
+                onChange={onChangeInput}
+              />
+            </div>
+
+
 
 
             <button
