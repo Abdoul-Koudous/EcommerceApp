@@ -2,55 +2,123 @@ import { createContext, useEffect, useState, useContext } from "react";
 import { fetchDataFromApi } from "../pages/utils/api";
 import { ToastContext } from "../context/ToastContext";
 
+// Création du contexte
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [addresses, setAddresses] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  const { openToast } = useContext(ToastContext) || {};
+  const { openToast } = useContext(ToastContext);
 
-  // 🔥 Charger utilisateur
-  const loadUser = async () => {
+  // =========================
+  // 🔥 DEBUG GLOBAL PRODUCTS
+  // =========================
+  useEffect(() => {
+    console.log("📦 PRODUCTS STATE UPDATED:", products);
+  }, [products]);
+
+  // =========================
+  // USER
+  // =========================
+  const loadUser = () => {
     const token = localStorage.getItem("accesstoken");
 
     if (!token) {
+      console.log("❌ No token found");
       setUser(null);
       setAddresses([]);
       return;
     }
 
-    try {
-      setLoading(true);
+    fetchDataFromApi("/api/users/user-details")
+      .then((res) => {
+        console.log("👤 USER API RESPONSE:", res);
 
-      const res = await fetchDataFromApi("/api/users/user-details");
-
-      if (res?.error) {
+        if (res?.success) {
+          setUser(res.data);
+          setAddresses(res.data.address_details || []);
+        }
+      })
+      .catch((err) => {
+        console.error("❌ USER ERROR:", err);
         setUser(null);
         setAddresses([]);
-        if (openToast) openToast("error", res.message);
-        return;
-      }
+      });
+  };
 
-      if (res?.success) {
-        setUser(res.data);
-        setAddresses(res.data?.address_details || []);
-      }
+  // =========================
+  // CATEGORIES
+  // =========================
+  const loadCategories = () => {
+    fetchDataFromApi("/api/category")
+      .then((res) => {
+        console.log("📂 CATEGORIES RESPONSE:", res);
 
-    } catch (error) {
-      console.log(error);
-      setUser(null);
-      setAddresses([]);
-      if (openToast) openToast("error", "Erreur chargement utilisateur");
-    } finally {
-      setLoading(false);
+        if (res?.data) {
+          setCategories(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error("❌ CATEGORY ERROR:", err);
+        if (openToast)
+          openToast("error", "Impossible de charger les catégories");
+      });
+  };
+
+  // =========================
+  // PRODUCTS (🔥 CORRIGÉ ICI)
+  // =========================
+  const loadProducts = async () => {
+    try {
+      console.log("🚀 Loading products...");
+
+      const res = await fetchDataFromApi("/api/product/getAllProducts");
+
+      console.log("📦 RAW PRODUCTS API RESPONSE:", res);
+
+      // 🔥 CORRECTION ICI
+      if (res?.success && res?.products) {
+        console.log("✅ PRODUCTS FROM BACKEND:", res.products);
+        console.log("📊 NOMBRE DE PRODUITS:", res.products.length);
+
+        setProducts(res.products);
+      } else {
+        console.log("❌ FORMAT INVALIDE OU PAS DE PRODUITS");
+        setProducts([]);
+      }
+    } catch (err) {
+      console.error("❌ PRODUCTS ERROR:", err);
+      if (openToast)
+        openToast("error", "Impossible de charger les produits");
     }
   };
 
-  // 🔄 refresh manuel
-  const refreshUser = () => {
-    loadUser();
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  // =========================
+  // CART
+  // =========================
+  const loadCartItems = async () => {
+    try {
+      const res = await fetchDataFromApi("/api/cart/get");
+
+      console.log("🛒 CART RESPONSE:", res);
+
+      if (res?.success) {
+        console.log("✅ CART ITEMS:", res.data);
+        setCartItems(res.data);
+      } else {
+        console.log("❌ CART FAILED");
+      }
+    } catch (err) {
+      console.error("❌ CART ERROR:", err);
+    }
   };
 
   useEffect(() => {
@@ -64,9 +132,17 @@ export const UserProvider = ({ children }) => {
         setUser,
         addresses,
         setAddresses,
-        loading,
-        loadUser,
-        refreshUser, // 🔥 pratique
+
+        categories,
+        setCategories,
+        loadCategories,
+
+        cartItems,
+        loadCartItems,
+
+        products,
+        setProducts,
+        loadProducts,
       }}
     >
       {children}

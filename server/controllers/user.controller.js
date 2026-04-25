@@ -10,6 +10,7 @@ import fs from 'fs';
 import { match } from "assert";
 import { text } from "stream/consumers";
 import { error } from "console";
+import ReviewsModel from "../models/reviews.model.js";
 
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -148,6 +149,84 @@ export async function verifyEmailController(request, response) {
     }
 }
 
+
+export async function authWithGoogle(request, response){
+    const {name, email, password,avatar, mobile, role} = request.body;
+
+    try {
+        const existingUser = await UserModel.findOne({ email });
+
+        if (!existingUser) {
+            const user = await UserModel.create({
+                name: name,
+                mobile: mobile,
+                email: email,
+                password: "null",
+                avatar: avatar,
+                role: role,
+                verify_email: true,
+                signUpWithGoogle:true,
+            });
+            await user.save();
+            const accesstoken = await generatedAccessToken(user._id);
+            const refreshToken = await generatedRefreshToken(user._id);
+            await UserModel.findByIdAndUpdate(user?._id,{
+                last_login_date : new Date()
+            })
+
+            const cookiesOption = {
+                httpOnly : true,
+                secure : true,
+                sameSite : "None"
+            }
+            response.cookie('accessToken',accesstoken,cookiesOption)
+            response.cookie('refreshToken',refreshToken,cookiesOption)
+
+            return response.json({
+                message : "La connexion faite avec succès",
+                error: false,
+                success : true,
+                data : {
+                    accesstoken,
+                    refreshToken
+                }
+            })
+            
+        }else{
+           const accesstoken = await generatedAccessToken(existingUser._id);
+            const refreshToken = await generatedRefreshToken(existingUser._id);
+            await UserModel.findByIdAndUpdate(existingUser?._id,{
+                last_login_date : new Date()
+            })
+
+            const cookiesOption = {
+                httpOnly : true,
+                secure : true,
+                sameSite : "None"
+            }
+            response.cookie('accessToken',accesstoken,cookiesOption)
+            response.cookie('refreshToken',refreshToken,cookiesOption)
+
+            return response.json({
+                message : "La connexion faite avec succès",
+                error: false,
+                success : true,
+                data : {
+                    accesstoken,
+                    refreshToken
+                }
+            })
+        }
+        
+    } catch (error) {
+         return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+        
+    }
+}
 
 export async function loginUserController(request, response) {
    try {
@@ -573,26 +652,20 @@ export async function resetpassword(request, response) {
       });
     }
 
-    // Cas reset via OTP : vérifier que OTP est validé
-    if (!oldPassword) {
-      if (user.otp !== null || user.otpExpires !== null) {
-        return response.status(400).json({
-          message: "Veuillez d'abord vérifier votre OTP",
-          error: true,
-          success: false,
-        });
-      }
-    } else {
-      // Cas changement classique : vérifier l'ancien mot de passe
-      const checkPassword = await bcryptjs.compare(oldPassword, user.password);
-      if (!checkPassword) {
-        return response.status(400).json({
-          message: "Votre ancien mot de passe est incorrect",
-          error: true,
-          success: false,
-        });
-      }
+    if (user?.signUpWithGoogle === false) {
+         // Cas changement classique : vérifier l'ancien mot de passe
+        const checkPassword = await bcryptjs.compare(oldPassword, user.password);
+        if (!checkPassword) {
+            return response.status(400).json({
+            message: "Votre ancien mot de passe est incorrect",
+            error: true,
+            success: false,
+            });
+        }
+      
     }
+
+  
 
     // Vérifier que les nouveaux mots de passe correspondent
     if (newPassword !== confirmPassword) {
@@ -606,6 +679,7 @@ export async function resetpassword(request, response) {
     // Hash et mise à jour du mot de passe
     const salt = await bcryptjs.genSalt(10);
     user.password = await bcryptjs.hash(newPassword, salt);
+    user.signUpWithGoogle = false;
     await user.save();
 
     return response.status(200).json({
@@ -700,4 +774,57 @@ export async function UserDetails(request, response) {
         
     }
     
+}
+
+export async function addReview(request, response){
+    try {
+        const {image,userName, review, rating, userId,productId} = request.body;
+
+        const userReview = new ReviewsModel({
+            image: image,
+            userName: userName,
+            review: review,
+            rating: rating,
+            userId: userId,
+            productId:productId,
+        })
+        await userReview.save();
+
+        return response.json({
+            message: "Merci pour votre avis",
+            error: false,
+            success: true,
+            data: userReview
+        })
+        
+    } catch (error) {
+         return response.status(500).json({
+            message: "Il ya un probleme",
+            error: true,
+            success: false
+        })
+        
+    }
+}
+
+export async function getReviews(request, response){
+    try {
+        const { productId } = request.query;
+
+        const reviews = await ReviewsModel.find({ productId });
+
+        return response.status(200).json({
+            message: "Liste des avis",
+            error: false,
+            success: true,
+            reviews: reviews
+        });
+
+    } catch (error) {
+        return response.status(500).json({
+            message: "Il y a un problème",
+            error: true,
+            success: false
+        });
+    }
 }

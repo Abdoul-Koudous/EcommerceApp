@@ -1,8 +1,8 @@
-import React, { useState,useContext } from 'react'; 
-import { Link, useNavigate } from 'react-router-dom';
-import Search from '../search';
-import Navigation from './navigation';
-import CartPanel from '../cartpanel';
+import React, { useState, useContext, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Search from "../search";
+import Navigation from "./navigation";
+import CartPanel from "../cartpanel";
 import {
   FaHeart,
   FaShoppingCart,
@@ -11,28 +11,24 @@ import {
   FaBoxOpen,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { fetchDataFromApi } from '../../pages/utils/api';
+import { fetchDataFromApi } from "../../pages/utils/api";
 import "./header.scss";
-import { UserContext } from '../../UserContext/UserContext';
+import { UserContext } from "../../UserContext/UserContext";
+import { ToastContext } from "../../context/ToastContext";
 
 const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const [catData, setCatData] = useState([]);
+  const { user, cartItems, categories, loadCartItems} =
+    useContext(UserContext);
 
+  const {openToast} = useContext(ToastContext);
 
-   const cartItems = [
-      { image: "/od11.jpg",name: "Produit 1", quantity: 2, price: 1500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od31.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      
-  ];
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
 
   const toggleCart = () => setCartOpen(!cartOpen);
 
@@ -42,11 +38,13 @@ const Header = () => {
     try {
       // Appel backend pour supprimer cookies
       await fetchDataFromApi("/api/users/logout", { method: "POST" });
-      
+
       // Nettoyage localStorage
       localStorage.removeItem("accesstoken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userEmail");
+      setCatData(categories);
+      
 
       // Redirection vers accueil
       navigate("/");
@@ -54,8 +52,17 @@ const Header = () => {
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     }
-  }
- 
+  };
+
+  useEffect(() => {
+    if (user?._id) {
+      loadCartItems();
+    }
+  }, [user]);
+  useEffect(() => {
+    console.log("PANIER CONTEXT:", cartItems);
+  }, [cartItems]);
+
   return (
     <header>
       <div className="top-strip">
@@ -65,8 +72,16 @@ const Header = () => {
           </div>
           <div className="cont2">
             <ul>
-              <li><Link to="track-order" className='lien'>Suivre la commande</Link></li>
-              <li><Link to="help-center" className='lien'>Centre d'aide</Link></li>
+              <li>
+                <Link to="track-order" className="lien">
+                  Suivre la commande
+                </Link>
+              </li>
+              <li>
+                <Link to="help-center" className="lien">
+                  Centre d'aide
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -75,7 +90,9 @@ const Header = () => {
       <div className="header">
         <div className="container">
           <div className="cont1">
-            <Link to={"/"}><img src="/logo.png" alt="logo" /></Link>
+            <Link to={"/"}>
+              <img src="/logo.png" alt="logo" />
+            </Link>
           </div>
 
           <div className="cont2">
@@ -86,12 +103,20 @@ const Header = () => {
             <ul>
               {!isLoggedIn ? (
                 <div>
-                  <Link className='lien2' to="/login">Connexion</Link> |{" "}
-                  <Link className='lien2' to="/register">Enregistrement</Link>
+                  <Link className="lien2" to="/login">
+                    Connexion
+                  </Link>{" "}
+                  |{" "}
+                  <Link className="lien2" to="/register">
+                    Enregistrement
+                  </Link>
                 </div>
               ) : (
                 <li className="user-menu">
-                  <div className="user-info" onClick={() => setDropdownOpen(!dropdownOpen)}>
+                  <div
+                    className="user-info"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                  >
                     <img
                       src={user?.avatar || "/user.jpg"}
                       alt="User"
@@ -101,7 +126,6 @@ const Header = () => {
                     <div className="user-details">
                       <span className="user-name">{user?.name}</span>
                       <span className="user-email">{user?.email}</span>
-
                     </div>
                   </div>
 
@@ -149,7 +173,13 @@ const Header = () => {
       </div>
 
       <Navigation />
-      <CartPanel isOpen={cartOpen} onClose={toggleCart} cartItems={cartItems} />
+      <CartPanel
+        isOpen={cartOpen}
+        onClose={toggleCart}
+        cartItems={cartItems}
+        loadCartItems={loadCartItems}
+        openToast={openToast}
+      />
     </header>
   );
 };

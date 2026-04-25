@@ -23,7 +23,7 @@ const AdminSidebar = () => {
   const links = [
     { to: "/", label: "Dashboard", icon: <FaTachometerAlt /> },
     {
-      label: "Slide Accueil",
+      label: "Slides",
       icon: <FaShoppingCart />,
       subLinks: [
         { to: "/slides/lists", label: "Liste des slides" },
@@ -31,6 +31,23 @@ const AdminSidebar = () => {
         { to: "/slides/create", label: "Création de slides" },
       ],
     },
+
+    {
+      label: "Banniers",
+      icon: <FaShoppingCart />,
+      subLinks: [
+        { to: "/banners/lists", label: "Liste des bannieres" },
+      ],
+    },
+
+     {
+      label: "Blogs",
+      icon: <FaShoppingCart />,
+      subLinks: [
+        { to: "/blogs/lists", label: "Liste des blogs" },
+      ],
+    },
+
     {
       label: "Produits",
       icon: <FaBoxOpen />,

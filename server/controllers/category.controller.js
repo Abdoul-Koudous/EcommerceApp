@@ -300,6 +300,8 @@ export async function deleteCategory(request, response) {
         });
     }
 }
+
+
 export async function updatedCategory(request, response) {
     try {
         const { name, parentId } = request.body;

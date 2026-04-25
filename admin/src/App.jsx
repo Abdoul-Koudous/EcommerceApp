@@ -15,6 +15,8 @@ import AddRAMs from "./pages/products/addRAMs";
 import AddWEIGHT from "./pages/products/addWEIGHT";
 import AddSIZE from "./pages/products/addSIZE";
 import HomeSlidePage from "./pages/HomeSliderBanners";
+import BannerV1List from "./pages/Banners";
+import BlogList from "./pages/blog";
 
 function App() {
   return (
@@ -38,10 +40,26 @@ function App() {
           }
         />
         <Route
+          path="/banners/lists"
+          element={
+            <AdminLayout>
+              <BannerV1List/>
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/products/lists"
           element={
             <AdminLayout>
               <Products />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/blogs/lists"
+          element={
+            <AdminLayout>
+              <BlogList/>
             </AdminLayout>
           }
         />

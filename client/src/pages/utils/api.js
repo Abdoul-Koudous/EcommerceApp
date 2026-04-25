@@ -28,6 +28,18 @@ export const postData = async (url, formData) => {
   }
 };
 
+export const postDataFromApi = async (url, body) => {
+  try {
+    const { data } = await axios.post(apiUrl + url, body, {
+      headers: getHeaders(),
+    });
+    return data;
+  } catch (error) {
+    console.log(error);
+    return { error: true, message: error.message };
+  }
+};
+
 // ✅ GET
 export const fetchDataFromApi = async (url) => {
   try {

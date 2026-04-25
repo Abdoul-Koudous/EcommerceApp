@@ -18,7 +18,17 @@ const ProductItemView = ({ product }) => {
   const handleClosePopup = () => setShowPopup(false);
 
   // Déstructuration directe des données du produit
-  const { name, description, price, oldPrice, rating = 0, discount = 0, isNew = false, images = [] } = product;
+  const {
+  name,
+  description,
+  price,
+  oldPrice,
+  rating = 0,
+  discount = 0,
+  isNew = false,
+  images = [],
+  category,
+} = product;
 
   return (
     <>
@@ -52,6 +62,9 @@ const ProductItemView = ({ product }) => {
 
         {/* Détails du produit */}
         <div className="details">
+          <p className="category">
+          {category?.name || "Catégorie"}
+        </p>
           <h4>{name}</h4>
           <p className="desc">{description}</p>
 

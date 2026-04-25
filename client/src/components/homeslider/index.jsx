@@ -1,49 +1,44 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./homeslider.scss";
-
-const slides = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
-    title: "Promo sur l'électronique",
-    subtitle: "Jusqu’à -40% sur les ordinateurs et accessoires",
-    buttonText: "Découvrir",
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1500835556837-99ac94a94552?auto=format&fit=crop&w=1200&q=80",
-    title: "Beauté & Bien-être",
-    subtitle: "Prenez soin de vous avec nos produits de qualité",
-    buttonText: "Acheter maintenant",
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-    title: "Maison & Cuisine",
-    subtitle: "Des équipements modernes pour votre confort",
-    buttonText: "Voir les offres",
-  },
-];
+import { fetchDataFromApi } from "../../pages/utils/api";
 
 const HomeSlider = () => {
+  const [slides, setSlides] = useState([]);
   const [current, setCurrent] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const timerRef = useRef(null);
 
-  const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-
-  // Effet pour l’auto défilement
+  // 🔥 FETCH DATA
   useEffect(() => {
-    if (autoPlay) {
+    fetchDataFromApi("/api/homeSlide").then((res) => {
+      if (res?.data) {
+        // 🔥 transformer les données
+        const formattedSlides = res.data.map((item, index) => ({
+          id: item._id,
+          image: item.images?.[0], // ⚠️ on prend la 1ère image
+        }));
+
+        setSlides(formattedSlides);
+      }
+    });
+  }, []);
+
+  const nextSlide = () =>
+    setCurrent((prev) => (prev + 1) % slides.length);
+
+  const prevSlide = () =>
+    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+
+  // autoplay
+  useEffect(() => {
+    if (autoPlay && slides.length > 0) {
       timerRef.current = setInterval(nextSlide, 5000);
     }
 
     return () => clearInterval(timerRef.current);
-  }, [autoPlay]);
+  }, [autoPlay, slides]);
 
-  // Fonction qui désactive l’autoplay quand on clique
   const handleManualChange = (action) => {
     clearInterval(timerRef.current);
     setAutoPlay(false);
@@ -61,23 +56,26 @@ const HomeSlider = () => {
           }}
         >
           <div className="overlay"></div>
+
+          {/* 🔥 tu peux remettre du contenu si tu veux */}
           <div className="content">
-            <h2>{slide.title}</h2>
-            <p>{slide.subtitle}</p>
-            <button>{slide.buttonText}</button>
+            <h2>Promotion</h2>
+            <p>Découvrez nos offres</p>
+            <button>Decouvrir mainntenant</button>
           </div>
         </div>
       ))}
 
-      {/* Boutons de navigation */}
+      {/* Navigation */}
       <button className="prev" onClick={() => handleManualChange(prevSlide)}>
         <FaChevronLeft />
       </button>
+
       <button className="next" onClick={() => handleManualChange(nextSlide)}>
         <FaChevronRight />
       </button>
 
-      {/* Petits points */}
+      {/* Dots */}
       <div className="dots">
         {slides.map((_, idx) => (
           <span

@@ -3,7 +3,6 @@ import ProductItem from "../productitem";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./productslider.scss";
 import { fetchDataFromApi } from "../../pages/utils/api";
-import CircularProgress from "../../../../admin/src/components/CircularProgress/CircularProgress";
 import { ProductLoading } from "../ProductLoading";
 
 const ProductSlider = ({ categoryId = null, products = null }) => {

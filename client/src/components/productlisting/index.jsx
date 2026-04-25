@@ -8,108 +8,100 @@ import ProductItem from '../productitem';
 import ProductItemView from './ProductListView';
 
 import "./productlisting.scss";
-import { fetchDataFromApi } from '../../pages/utils/api';
-import CircularProgress from '../../../../admin/src/components/CircularProgress/CircularProgress';
+import { fetchDataFromApi, postData } from '../../pages/utils/api';
+import { ProductLoading } from '../ProductLoading';
+import PaginationPro from '../paginnationpro/paginationpro';
+
 
 const ProductListing = () => {
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [selectedSort, setSelectedSort] = useState("Trier par");
+
   const [viewMode, setViewMode] = useState("grid");
-  const [products, setProducts] = useState([]);
-  const [sortedProducts, setSortedProducts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const productsPerPage = 2; // tu peux changer
+  
 
-  // --- Récupération des produits ---
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const res = await fetchDataFromApi("/api/product/getAllProducts");
-        let fetchedProducts = res.products || res.data || res;
 
-        // Normalisation : garder images comme elles sont
-        fetchedProducts = fetchedProducts.map(p => ({
-          ...p,
-          images: p.images || []
-        }));
 
-        // Trier par produit le plus récent
-        fetchedProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        setProducts(fetchedProducts);
-        setSortedProducts(fetchedProducts);
-      } catch (err) {
-        console.error(err);
-        setProducts([]);
-        setSortedProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [isLoading, setIsLoading] = useState(false );
 
-    fetchProducts();
-  }, []);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+   
+const [selectedSort, setSelectedSort] = useState("Trier par");
+const [productsData, setProductsData] = useState({});
+const [page, setPage] = useState(1);
+const [itemsPerPage, setItemsPerPage] = useState(20);
+const [sortBy, setSortBy] = useState("createdAt");
+const [order, setOrder] = useState("desc");
+
+useEffect(() => {
+  postData("/api/product/sortBy", {
+    sortBy,
+    order,
+    page,
+    limit: itemsPerPage
+  }).then((res) => {
+    setProductsData(res);
+  });
+}, [page, sortBy, order]);
 
   const handleSortSelect = (option) => {
-    setSelectedSort(option);
-    setIsSortOpen(false);
+  setSelectedSort(option);
+  setIsSortOpen(false);
 
-    let sorted = [...products];
-    switch(option) {
-      case "Par nom : A → Z":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "Par nom : Z → A":
-        sorted.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case "Par prix : inférieur → supérieur":
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case "Par prix : supérieur → inférieur":
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        sorted = [...products];
-    }
+  let newSortBy = "createdAt";
+  let newOrder = "desc";
 
-    setSortedProducts(sorted);
-    setCurrentPage(1);
-  };
+  if (option === "Par nom : A → Z") {
+    newSortBy = "name";
+    newOrder = "asc";
+  }
 
-  // Pagination
-  const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  if (option === "Par nom : Z → A") {
+    newSortBy = "name";
+    newOrder = "desc";
+  }
 
-  const paginate = (pageNumber) => {
-    if (pageNumber < 1 || pageNumber > totalPages) return;
-    setCurrentPage(pageNumber);
-  };
+  if (option === "Par prix : inférieur → supérieur") {
+    newSortBy = "price";
+    newOrder = "asc";
+  }
 
-  // Pages visibles
-  const pageRange = 2;
-  const startPage = Math.max(1, currentPage - pageRange);
-  const endPage = Math.min(totalPages, currentPage + pageRange);
-  const visiblePages = [];
-  for (let i = startPage; i <= endPage; i++) visiblePages.push(i);
+  if (option === "Par prix : supérieur → inférieur") {
+    newSortBy = "price";
+    newOrder = "desc";
+  }
 
+  setSortBy(newSortBy);
+  setOrder(newOrder);
+};
+  
   return (
     <section className='productlisting'>
+      {console.log(productsData)}
       <div className="container1">
         <nav className="breadcrumbs">
           <ul>
             <li><a href="/">Accueil</a></li>
-            <li><a href="/categorie">Électronique</a></li>
+            <li><a href="/productlisting">Boutique</a></li>
             <li className="active">Produit</li>
           </ul>
         </nav>
       </div>
 
       <div className="container2">
-        <div className="sidebar"><SideBar /></div>
+        <div className="sidebar">
+          <SideBar 
+          productsData = {productsData} 
+          setProductsData = {setProductsData}
+          isLoading = {isLoading}
+          setIsLoading = {setIsLoading}
+          page = {page}
+          setPage = {setPage}
+          totalPages = {totalPages}
+          setTotalPages = {setTotalPages}
+          />
+        </div>
 
         <div className="right-cont">
           <div className="head">
@@ -124,7 +116,7 @@ const ProductListing = () => {
                 title="Vue Liste" 
                 onClick={() => setViewMode("list")} 
               />
-              <span className="product-count">{sortedProducts.length} produits</span>
+              <span className="product-count">Nous avons {productsData?.products?.length || 0} produits</span>
             </div>
 
             <div className="sort-section">
@@ -143,46 +135,38 @@ const ProductListing = () => {
           </div>
 
           <div className="bodi">
-            {loading ? (
-              <div className="loader">
-                <CircularProgress/>
-              </div>
-            ) : (
-              viewMode === "grid" ? (
-                <div className="product-grid">
-                  {currentProducts.map(p => <ProductItem key={p._id} product={p} />)}
+            {isLoading ? (
+                <ProductLoading />
+              ) : viewMode === "grid" ? (
+                <div key={viewMode} className="product-grid">
+                  {productsData?.products?.length > 0 ? (
+                    productsData.products.map((item) => (
+                      <ProductItem key={item._id} product={item} />
+                    ))
+                  ) : (
+                    <p>Aucun produit trouvé</p>
+                  )}
                 </div>
               ) : (
-                <div className="product-list">
-                  {currentProducts.map(p => <ProductItemView key={p._id} product={p} />)}
+                <div key={viewMode} className="product-list">
+                  {productsData?.products?.length > 0 ? (
+                    productsData.products.map((item) => (
+                      <ProductItemView key={item._id} product={item} />
+                    ))
+                  ) : (
+                    <p>Aucun produit trouvé</p>
+                  )}
                 </div>
-              )
-            )}
+              )}
           </div>
 
-          <div className="foot">
-            <div className="pagination">
-              <button onClick={() => paginate(1)} disabled={currentPage === 1}><FaAngleDoubleLeft /></button>
-              <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}><FaAngleLeft /></button>
+          <PaginationPro
+            page={page}
+            totalPages={productsData?.totalPages || 1}
+            setPage={setPage}
+          />
 
-              {startPage > 1 && <span className="dots">...</span>}
-
-              {visiblePages.map(num => (
-                <button 
-                  key={num} 
-                  onClick={() => paginate(num)} 
-                  className={currentPage === num ? "active" : ""}
-                >
-                  {num}
-                </button>
-              ))}
-
-              {endPage < totalPages && <span className="dots">...</span>}
-
-              <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages}><FaAngleRight /></button>
-              <button onClick={() => paginate(totalPages)} disabled={currentPage === totalPages}><FaAngleDoubleRight /></button>
-            </div>
-          </div>
+          
         </div>
       </div>
     </section>

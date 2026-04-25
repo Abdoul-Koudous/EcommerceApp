@@ -1,43 +1,47 @@
-import React, { useRef } from 'react';
-import BannerBox from '../bannerbox';
-import "./adsbannerslider.scss";
+import React, { useEffect, useState } from "react";
 
-const AdsBannerSlider = ({ items = 3 }) => {
-  // Tableau complet des bannières
-  const banners = [
-    "https://www.jiomart.com/images/cms/aw_rbslider/slides/1760377346_Celebrate_Diwali.jpg?im=Resize=(632,804)",
-    "https://www.jiomart.com/images/cms/aw_rbslider/slides/1759745377_HPMC_Hindi_new.jpg?im=Resize=(632,804)",
-    "https://www.jiomart.com/images/cms/aw_rbslider/slides/1760377381_Utensils_Storage_Dhanteras_HPMC_01.jpg?im=Resize=(632,804)",
-    "https://ma.jumia.is/cms/000_2025/000010_October/TeasingBlackFriday/SX.gif",
-    "https://ma.jumia.is/cms/000_2025/000010_October/ADS/Adidas/SX.jpg",
-  ];
+import { fetchDataFromApi } from "../../pages/utils/api";
+import "./adsBannerSlider.scss";
+import BannerBox from "./BannerBox";
 
-  // On garde seulement le nombre voulu d’items
-  const visibleBanners = banners.slice(0, items);
+const AdsBannerSlider = ({ catId, categoryName, categoryNames, limit = 4 }) => {
+  const [banners, setBanners] = useState([]);
 
-  const sliderRef = useRef(null);
+  useEffect(() => {
+    fetchDataFromApi("/api/bannerV1").then((res) => {
+      if (res?.data) {
+        let filtered = res.data;
 
-  const scrollLeft = () => {
-    sliderRef.current.scrollBy({ left: -400, behavior: "smooth" });
-  };
+        // 🔥 plusieurs catégories
+        if (categoryNames && categoryNames.length > 0) {
+          filtered = filtered.filter((b) =>
+            categoryNames.some(
+              (cat) => cat.toLowerCase() === b.categoryName.toLowerCase()
+            )
+          );
+        }
+        // 🔥 une seule catégorie
+        else if (categoryName) {
+          filtered = filtered.filter(
+            (b) => b.categoryName === categoryName
+          );
+        }
+        // 🔥 par ID
+        else if (catId) {
+          filtered = filtered.filter((b) => b.catId === catId);
+        }
 
-  const scrollRight = () => {
-    sliderRef.current.scrollBy({ left: 400, behavior: "smooth" });
-  };
+        setBanners(filtered.slice(0, limit));
+      }
+    });
+  }, [catId, categoryName, categoryNames, limit]);
 
   return (
-    <section className="ads-banner-slider">
-      <button className="banner-btn left" onClick={scrollLeft}>‹</button>
-
-      <div className="banner-container" ref={sliderRef}>
-        {visibleBanners.map((img, index) => (
-          <BannerBox key={index} img={img} />
-        ))}
-      </div>
-
-      <button className="banner-btn right" onClick={scrollRight}>›</button>
-    </section>
+    <div className="ads-slider">
+      {banners.map((banner) => (
+        <BannerBox key={banner._id} banner={banner} />
+      ))}
+    </div>
   );
 };
-
 export default AdsBannerSlider;

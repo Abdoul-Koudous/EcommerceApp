@@ -69,7 +69,7 @@ const HomeBannerV2 = () => {
         >
           <div className="slide-content">
             <motion.p
-              key={currentSlide.bannerTitleName}
+              key={`title-${currentSlide._id}`}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.6 }}
@@ -78,7 +78,7 @@ const HomeBannerV2 = () => {
             </motion.p>
 
             <motion.h2
-              key={currentSlide.name}
+              key={`name-${currentSlide._id}`}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.9, duration: 0.6 }}

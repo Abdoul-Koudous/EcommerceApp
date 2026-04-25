@@ -89,10 +89,14 @@ const AdminHeader = ({ onToggleSidebar }) => {
                 className="user-profile"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
               >
+                
                 <img
-                  src={user.avatar || "/user.jpg"}
-                  alt="User"
-                  className="avatar"
+                  src={user?.avatar || "/user.jpg"}
+                  alt="User avatar"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.target.src = "/user.jpg";
+                  }}
                 />
               </div>
 

@@ -1,21 +1,23 @@
 .blog-item {
-  width: 380px;
+  width: 360px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
   cursor: pointer;
   flex: 0 0 auto;
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
   }
 
+  // 🔹 IMAGE
   .blog-img {
+    position: relative;
     width: 100%;
-    height: 200px;
+    height: 220px;
     overflow: hidden;
 
     img {
@@ -26,45 +28,65 @@
     }
 
     &:hover img {
-      transform: scale(1.05);
+      transform: scale(1.08);
+    }
+
+    // 🔥 BADGE DATE
+    .date-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #e60023cc;
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 6px 10px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
     }
   }
 
+  // 🔹 CONTENT
   .blog-content {
-    padding: 15px 18px;
+    padding: 18px;
 
     .blog-title {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 600;
       color: #222;
-      margin-bottom: 6px;
-    }
-
-    .blog-date {
-      font-size: 0.9rem;
-      color: #888;
       margin-bottom: 10px;
+      line-height: 1.4;
     }
 
     .blog-desc {
-      font-size: 0.95rem;
-      color: #555;
+      font-size: 0.92rem;
+      color: #666;
       line-height: 1.5;
       margin-bottom: 15px;
     }
 
     .read-more {
-    //   background: #007bff;
-      border: none;
-      color: #000;
-      padding: 8px 10px;
-      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
       font-size: 0.9rem;
-      cursor: pointer;
-      transition: background 0.3s ease;
+      font-weight: 500;
+      color: #000;
+      transition: all 0.3s ease;
+
+      svg {
+        transition: transform 0.3s ease;
+      }
 
       &:hover {
-        background: rgb(130, 11, 11);
+        color: #e60023;
+      }
+
+      &:hover svg {
+        transform: translateX(5px);
       }
     }
   }

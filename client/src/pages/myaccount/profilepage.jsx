@@ -77,7 +77,14 @@ const ProfilePage = () => {
     }
     setSubmittingPassword(true);
     try {
-      const res = await postData(`/api/users/reset-password`, { ...passwordData, email: user.email });
+      if (!user?.email) {
+        return openToast("error", "Utilisateur non chargé");
+      }
+
+      const res = await postData(`/api/users/reset-password`, { 
+        ...passwordData, 
+        email: user.email 
+      });
       if (!res.success) return openToast("error", res.message);
       openToast("success", res.message || "Mot de passe mis à jour !");
       cancelPassword();
@@ -106,9 +113,9 @@ const ProfilePage = () => {
       setPreviews([res.avatar]);
       setUser({ ...user, avatar: res.avatar });
       openToast("success",res.message || "Avatar mis à jour !");
-    } catch {
+    } catch (err) {
       setUploading(false);
-      openToast("error", res.message || "Erreur upload");
+      openToast("error", err.message || "Erreur upload");
     }
   };
 
@@ -126,7 +133,15 @@ const ProfilePage = () => {
         <hr />
         <div className="profile-header">
           <div className="profile-avatar">
-            {uploading ? <CircularProgress /> : <img src={previews[0] || user?.avatar || "/user.jpg"} alt="User avatar" />}
+            {uploading ? <CircularProgress /> : <img
+                src={previews[0] || user?.avatar || "/user.jpg"}
+                alt="User avatar"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.target.src = "/user.jpg";
+                }}
+              />
+              }
             <label htmlFor="avatar-upload" className="change-avatar">Changer</label>
             <input id="avatar-upload" type="file" accept="image/*" hidden onChange={(e) => onChangeFile(e, "/api/users/user-avatar")} />
           </div>
@@ -148,13 +163,13 @@ const ProfilePage = () => {
 
             <PhoneInput
               international
-              defaultCountry="BJ"
+              defaultCountry="bj"
               value={profileData.mobile}
               onChange={(value) =>
                 setProfileData((prev) => ({ ...prev, mobile: value }))
               }
               disabled={!profileEdit}
-              placeholder=" "
+              placeholder="Numéro de téléphone"
             />
 
             <label>Téléphone</label>
@@ -182,6 +197,8 @@ const ProfilePage = () => {
         <hr />
         <form className="profile-form" onSubmit={handlePasswordSubmit}>
           {/* Ancien mot de passe */}
+          {
+          user?.signUpWithGoogle === false && 
           <div className="form-group">
             <FaLock className="input-icon" />
             <input
@@ -197,6 +214,8 @@ const ProfilePage = () => {
               {showOldPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
+          }
+          
 
           {/* Nouveau mot de passe */}
           <div className="form-group">

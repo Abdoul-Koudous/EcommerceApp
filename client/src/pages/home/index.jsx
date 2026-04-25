@@ -19,6 +19,9 @@ const Home = () => {
   const [loadingFeatured, setLoadingFeatured] = useState(true);
 
   useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
     // 🔹 Derniers produits
     fetchDataFromApi("/api/product/getAllProducts?sort=desc&limit=8")
       .then((res) => {
@@ -90,7 +93,8 @@ const Home = () => {
               <p>A partir de 20 000 FCFA</p>
             </div>
           </div>
-          <AdsBannerSlider items={5} />
+          <AdsBannerSlider categoryNames={["L'informatique", "Téléphones et tablettes", "Mode"]} limit={4} />
+          {/* <AdsBannerSlider categoryName="Téléphones et tablettes"  limit={2} /> */}
         </div>
       </section>
 
@@ -105,7 +109,7 @@ const Home = () => {
           ) : (
             <p>Aucun produit trouvé</p>
           )}
-          <AdsBannerSlider items={3} />
+          <AdsBannerSlider categoryName="Mode"  limit={4} />
         </div>
       </section>
 
@@ -120,7 +124,7 @@ const Home = () => {
           ) : (
             <p>Aucun produit populaire trouvé</p>
           )}
-          <AdsBannerSlider items={2} />
+          <AdsBannerSlider categoryName="L'informatique" limit={2} />
         </div>
       </section>
 

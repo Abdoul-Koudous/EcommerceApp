@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import "./homecatslider.scss";
 import { fetchDataFromApi } from "../../pages/utils/api";
 import { CategorySkeleton } from "../CategorySkeleton/CategorySkeleton.jsx";
+import { Link } from "react-router-dom";
 
 const HomeCatSlider = () => {
   const [categories, setCategories] = useState([]);
@@ -84,13 +85,17 @@ const HomeCatSlider = () => {
           </div>
         ) : mainCategories.length > 0 ? (
           mainCategories.map((cat) => (
-            <div key={cat._id} className="cat-card">
-              <img
-                src={cat.images?.[0] || "/default-cat.jpg"}
-                alt={cat.name}
-              />
-              <div className="cat-name">{cat.name}</div>
-            </div>
+            <Link
+    key={cat._id}
+    to={`/productlisting?catId=${cat._id}`}
+    className="cat-card"
+  >
+    <img
+      src={cat.images?.[0] || "/default-cat.jpg"}
+      alt={cat.name}
+    />
+    <div className="cat-name">{cat.name}</div>
+  </Link>
           ))
         ) : (
           <p className="empty-msg">Aucune catégorie trouvée</p>

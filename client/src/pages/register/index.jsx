@@ -6,11 +6,17 @@ import { ToastContext } from "../../context/ToastContext";
 import { postData } from "../utils/api";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { useNavigate } from "react-router";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import {firebaseApp} from "../../firebase";
+import { UserContext } from "../../UserContext/UserContext";
+import { useEffect } from "react";
+const auth = getAuth(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const { loadUser } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
   const navigate = useNavigate();
 
@@ -24,6 +30,10 @@ const Register = () => {
   const onChangeInput = (e) => {
     setFormFields({ ...formFields, [e.target.name]: e.target.value });
   };
+  useEffect(() => {
+      window.scrollTo(0, 0);
+    },[]);
+  
 
   // 📌 Action formulaire
   const handleSubmit = (e) => {
@@ -43,6 +53,59 @@ const Register = () => {
         }
       })
       .finally(() => setIsLoading(false));
+  };
+
+  // 📌 Authentification Google
+  const authWithGoogle = () => {
+    signInWithPopup(auth, googleProvider)
+    .then((result) => {
+      // This gives you a Google Access Token. You can use it to access the Google API.
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential.accessToken;
+      // The signed-in user info.
+      const user = result.user;
+      const fields = {
+        name: user.providerData[0].displayName,
+        email: user.providerData[0].email,
+        password: null,
+        avatar: user.providerData[0].photoURL,
+        mobile: user.providerData[0].phoneNumber,
+        role: "UTILISATEUR"
+      };
+
+       postData("/api/users/authWithGoogle", fields)
+      .then((res) => {
+        if (res.error) {
+          openToast("error", res.message);
+        } else {
+          openToast("success", res.message);
+          localStorage.setItem("userEmail", fields.email);
+          localStorage.setItem("accesstoken", res?.data?.accesstoken);
+          localStorage.setItem("refreshToken", res?.data?.refreshToken);
+          setTimeout(() => {
+            loadUser();
+          }, 50);
+
+          // 🚀 Redirection vers OTP
+          navigate("/");
+        }
+      })
+      .finally(() => setIsLoading(false));
+
+
+      console.log("Google user:", user);
+      // IdP data available using getAdditionalUserInfo(result)
+      // ...
+    }).catch((error) => {
+      // Handle Errors here.
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // The email of the user's account used.
+      const email = error.customData.email;
+      // The AuthCredential type that was used.
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      // ...
+    });
   };
 
   return (
@@ -105,9 +168,9 @@ const Register = () => {
 
         <div className="social-register">
           <p className="divider">ou continuer avec</p>
-          <button className="btn-google">
+          <button className="btn-google" onClick={authWithGoogle}>
             <FcGoogle className="google-icon" />
-            Google
+            Se connecter avec Google
           </button>
         </div>
 

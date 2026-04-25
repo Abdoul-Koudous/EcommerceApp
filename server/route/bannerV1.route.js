@@ -1,0 +1,28 @@
+import { Router } from "express";
+import auth from "../middlewares/auth.js";
+import upload from "../middlewares/multer.js";
+
+import {
+  addBanner,
+  deleteBanner,
+  getBanner,
+  getBanners,
+  removeImageFromCloudinary,
+  updatedBanner,
+  uploadImages,
+} from "../controllers/bannerV1.controller.js";
+
+const bannerV1Router = Router();
+
+bannerV1Router.post("/uploadImages", auth, upload.array("images"), uploadImages);
+bannerV1Router.post("/create", auth, addBanner);
+bannerV1Router.delete("/deleteImage", auth, removeImageFromCloudinary);
+bannerV1Router.get("/", getBanners);
+bannerV1Router.get("/:id", getBanner);
+
+bannerV1Router.put("/:id", auth, updatedBanner);
+bannerV1Router.delete("/:id", auth, deleteBanner);
+
+
+
+export default bannerV1Router;

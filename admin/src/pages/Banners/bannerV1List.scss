@@ -1,0 +1,95 @@
+.home-slide-page {
+  padding: 20px;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+
+        &.add {
+          background-color: #4caf50;
+          color: white;
+        }
+
+        &.delete-multiple {
+          background-color: #f44336;
+          color: white;
+        }
+      }
+    }
+  }
+
+  .table-container {
+    table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #f5f5f5;
+      }
+
+      .icon {
+        cursor: pointer;
+        font-size: 16px;
+
+        &.delete {
+          color: #f44336;
+        }
+      }
+    }
+
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+
+      .items-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        select {
+          padding: 5px;
+        }
+      }
+    }
+  }
+}
+
+/* IMAGE */
+.slide-image {
+  width: 80px;
+  height: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f2f2f2;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}

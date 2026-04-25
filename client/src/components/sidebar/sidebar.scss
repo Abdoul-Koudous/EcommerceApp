@@ -1,45 +1,4 @@
-// .sidebar-section {
-//   padding: 20px;
-//   background: #f8f9fa;
-//   border-radius: 10px;
-//   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-//   max-width: 400px;
-//   margin: 20px auto;
 
-//   .sidebar-header {
-//     display: flex;
-//     justify-content: space-between;
-//     align-items: center;
-
-//     h3 {
-//       font-size: 1.3rem;
-//       font-weight: 600;
-//       color: #222;
-//     }
-
-//     .filter-btn {
-//       display: flex;
-//       align-items: center;
-//       gap: 8px;
-//       background: rgb(130, 11, 11);
-//       color: #fff;
-//       border: none;
-//       padding: 8px 14px;
-//       border-radius: 5px;
-//       font-weight: 500;
-//       cursor: pointer;
-//       transition: background 0.3s ease;
-
-//       &:hover {
-//         background: #a00c0c;
-//       }
-
-//       svg {
-//         font-size: 14px;
-//       }
-//     }
-//   }
-// }
 .sidebar-section {
   width: 280px;
   background: #fff;
@@ -200,3 +159,10 @@
   }
   
 }
+
+.rating {
+    display: flex;
+    justify-content: center;
+    gap: 0.2rem;
+    margin-bottom: 0.5rem;
+  }

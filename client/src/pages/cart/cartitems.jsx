@@ -1,89 +1,180 @@
-import React from "react";
+import React, { useContext } from "react";
 import { FaTrash, FaStar } from "react-icons/fa";
+import { UserContext } from "../../UserContext/UserContext";
+import { deleteData, editData } from "../../pages/utils/api";
 import "./cartitems.scss";
 
-const CartItems = ({ items }) => {
+const CartItems = () => {
+  const { cartItems, loadCartItems } = useContext(UserContext);
+
   const handleRemove = (id) => {
-    console.log("Supprimer l'article avec id :", id);
+    deleteData(`/api/cart/delete-cart-item/${id}`)
+      .then(() => loadCartItems())
+      .catch(() => console.log("Erreur suppression"));
   };
 
-  const handleSelectChange = (id, field, value) => {
-    console.log(`Produit ${id} : ${field} changé à ${value}`);
+  const handleUpdate = (id, data) => {
+    editData("/api/cart/update-qty", {
+      _id: id,
+      ...data,
+    })
+      .then(() => loadCartItems())
+      .catch(() => console.log("Erreur update"));
   };
 
   return (
     <div className="cart-items">
-      {items.map((item) => {
+      {cartItems?.length === 0 && (
+        <div className="empty-cart">
+    <img
+      src="/empty-cart.png"
+      alt="Panier vide"
+      className="empty-cart-img"
+    />
+
+    <p className="empty-text">
+      Votre panier est vide pour le moment
+    </p>
+
+    <button
+      className="continue-btn"
+      onClick={() => window.history.back()}
+    >
+      Continuer les achats
+    </button>
+  </div>
+      )}
+
+      {cartItems?.length > 0 &&
+  cartItems.map((item) => {
         const reduction =
           item.oldPrice && item.price
             ? Math.round(((item.oldPrice - item.price) / item.oldPrice) * 100)
             : 0;
 
+        // ✅ ICI : maxQty par item
+        const maxQty = Math.min(item.countInStock || 1, 20);
+
         return (
-          <div className="cart-item" key={item.id}>
-            <img src={item.image || "/placeholder.png"} alt={item.name} />
+          <div className="cart-item" key={item._id}>
+            <img src={item.image || "/placeholder.png"} alt="" />
 
             <div className="item-details">
-              {/* Catégorie */}
-              <span className="item-category">{item.category || "Informatique"}</span>
+              <h4>{item.productTitle}</h4>
 
-              {/* Nom du produit */}
-              <h4 className="item-title">{item.name}</h4>
-
-              {/* Étoiles */}
               <div className="item-rating">
                 {[...Array(5)].map((_, i) => (
-                  <FaStar key={i} className={i < item.rating ? "star active" : "star"} />
+                  <FaStar
+                    key={i}
+                    className={i < (item.rating || 0) ? "star active" : "star"}
+                  />
                 ))}
               </div>
 
-              {/* Caractéristiques */}
+              {/* OPTIONS */}
               <div className="item-attributes">
-                <div className="attr">
-                  <label>Taille :</label>
-                  <select
-                    onChange={(e) =>
-                      handleSelectChange(item.id, "taille", e.target.value)
-                    }
-                  >
-                    {item.sizes?.map((s, i) => (
-                      <option key={i}>{s}</option>
-                    ))}
-                  </select>
-                </div>
+                {item.sizeOptions?.length > 0 && (
+                  <div className="attr">
+                    <label>Taille :</label>
+                    <select
+                      value={item.size || ""}
+                      onChange={(e) =>
+                        handleUpdate(item._id, { size: e.target.value })
+                      }
+                    >
+                      <option value="">Choisir</option>
+                      {item.sizeOptions.map((s, i) => (
+                        <option key={i} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-                <div className="attr">
-                  <label>Couleur :</label>
-                  <select
-                    onChange={(e) =>
-                      handleSelectChange(item.id, "couleur", e.target.value)
-                    }
-                  >
-                    {item.colors?.map((c, i) => (
-                      <option key={i}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+                {item.colorOptions?.length > 0 && (
+                  <div className="attr">
+                    <label>Couleur :</label>
+                    <select
+                      value={item.color || ""}
+                      onChange={(e) =>
+                        handleUpdate(item._id, { color: e.target.value })
+                      }
+                    >
+                      <option value="">Choisir</option>
+                      {item.colorOptions.map((c, i) => (
+                        <option key={i} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-                <div className="attr">
-                  <label>Quantité :</label>
-                  <select
-                    onChange={(e) =>
-                      handleSelectChange(item.id, "quantité", e.target.value)
-                    }
-                  >
-                    {[1, 2, 3, 4, 5].map((q) => (
-                      <option key={q}>{q}</option>
-                    ))}
-                  </select>
-                </div>
+                {item.ramOptions?.length > 0 && (
+                  <div className="attr">
+                    <label>RAM :</label>
+                    <select
+                      value={item.ram || ""}
+                      onChange={(e) =>
+                        handleUpdate(item._id, { ram: e.target.value })
+                      }
+                    >
+                      <option value="">Choisir</option>
+                      {item.ramOptions.map((r, i) => (
+                        <option key={i} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {item.weightOptions?.length > 0 && (
+                  <div className="attr">
+                    <label>Poids :</label>
+                    <select
+                      value={item.weight || ""}
+                      onChange={(e) =>
+                        handleUpdate(item._id, { weight: e.target.value })
+                      }
+                    >
+                      <option value="">Choisir</option>
+                      {item.weightOptions.map((w, i) => (
+                        <option key={i} value={w}>
+                          {w}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
-              {/* Prix */}
+              {/* QUANTITY FIX */}
+              <div className="attr">
+                <label>Quantité :</label>
+                <select
+                  value={item.quantity}
+                  onChange={(e) =>
+                    handleUpdate(item._id, { qty: e.target.value })
+                  }
+                >
+                  {[...Array(maxQty)].map((_, i) => {
+                    const q = i + 1;
+                    return (
+                      <option key={q} value={q}>
+                        {q}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
               <div className="item-prices">
                 <span className="current-price">
                   {item.price.toLocaleString()} FCFA
                 </span>
+
                 {item.oldPrice && (
                   <>
                     <span className="old-price">
@@ -95,8 +186,10 @@ const CartItems = ({ items }) => {
               </div>
             </div>
 
-            {/* Supprimer */}
-            <FaTrash className="delete-icon" onClick={() => handleRemove(item.id)} />
+            <FaTrash
+              className="delete-icon"
+              onClick={() => handleRemove(item._id)}
+            />
           </div>
         );
       })}

@@ -10,7 +10,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 999 !important;
   padding: 20px;
 }
 
@@ -211,7 +211,7 @@
 }
 
 /* bouton panier */
-.add-to-cart {
+.add-cart {
   background: #e63946;
   color: #fff;
   border: none;
@@ -223,7 +223,7 @@
   align-items: center;
 }
 
-.add-to-cart:hover {
+.add-cart:hover {
   background: #c92030;
 }
 

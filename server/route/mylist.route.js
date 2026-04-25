@@ -8,6 +8,6 @@ myListRouter.post("/add", auth, addToMyListController);
 myListRouter.get("/", auth, getMyListController);
 
 
-myListRouter.delete("/:id", auth, deleteToMyListController);
+myListRouter.delete("/remove/:productId", auth, deleteToMyListController);
 
 export default myListRouter;

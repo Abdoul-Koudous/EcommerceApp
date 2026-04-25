@@ -1,329 +1,502 @@
-import React, { useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+
 import "./productdetail.scss";
 import { FaStar, FaHeart, FaCartPlus, FaBalanceScale } from "react-icons/fa";
 import ProductZoom from "../../components/productzoom";
 import ProductSlider from "../../components/productslider";
+import CircularProgress from "../../components/CircularProgress/CircularProgress";
+import Reviews from "./reviews";
+import { UserContext } from "../../UserContext/UserContext";
+import { postData, editData, fetchDataFromApi } from "../utils/api";
+import { ToastContext } from "../../context/ToastContext";
 
 const ProductDetails = () => {
-  // Exemple de données du produit
-  const product = {
-    id: 1,
-    title: "Ordinateur connectée Pro",
-    brand: "ProBrand",
-    desc: "Ordinateur intelligente avec capteur cardiaque, waterproof, autonomie 7 jours.",
-    price: 15000,
-    oldPrice: 20000,
-    rating: 5,
-    reviews: 12,
-    stock: true,
-    category: "Électronique",
-    size: "M",
-    colors: ["Black", "Blue"],
-    material: "Silicone",
-    shippingDays: 3,
-    images: [
-      "/od11.jpg",
-      "/od12.jpg",
-      "/od13.jpg",
-      "/od21.jpg",
-      "/od22.jpg",
-      "/od31.jpg",
-      "/od32.jpg",
-    ],
-  };
+  const { id } = useParams();
+
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [reviewsCount, setReviewsCount] = useState(0);
 
   const [quantity, setQuantity] = useState(1);
-  const handleIncrement = () => setQuantity(quantity + 1);
-  const handleDecrement = () => setQuantity(quantity > 1 ? quantity - 1 : 1);
-  const [selectedSize, setSelectedSize] = useState("M");
-    const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-    const [activeTab, setActiveTab] = useState(0);
-    const [selectedRating, setSelectedRating] = useState(0);
+  const [loadingCart, setLoadingCart] = useState(false);
 
+  // caractéristiques dynamiques (comme popup)
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedRam, setSelectedRam] = useState(null);
+  const [selectedWeight, setSelectedWeight] = useState(null);
 
+  const [activeTab, setActiveTab] = useState(0);
+  const [selectedRating, setSelectedRating] = useState(0);
 
+  const { user, cartItems, loadCartItems } = useContext(UserContext);
+  const { openToast } = useContext(ToastContext);
+
+  const currentCartItem = cartItems?.find(
+    (item) => item.productId === product?._id,
+  );
+  const handleAddToCart = () => {
+    setLoadingCart(true);
+    if (!user?._id) {
+      openToast("error", "Veuillez vous connecter");
+      return;
+    }
+
+    const hasOptions =
+      product.size?.length ||
+      product.colors?.length ||
+      product.productRam?.length ||
+      product.productWeight?.length;
+
+    if (
+      hasOptions &&
+      !selectedSize &&
+      !selectedColor &&
+      !selectedRam &&
+      !selectedWeight
+    ) {
+      openToast("error", "Choisissez les options");
+      return;
+    }
+
+    const data = {
+      productTitle: product.name,
+      image: product.images?.[0] || "",
+      price: product.price,
+      oldPrice: product.oldPrice,
+      discount: product.discount,
+      productId: product._id,
+      quantity,
+      userId: user._id,
+      rating: product.rating,
+      countInStock: product.countIntStock,
+      brand: product.brand,
+
+      size: selectedSize,
+      color: selectedColor,
+      ram: selectedRam,
+      weight: selectedWeight,
+
+      sizeOptions: product.size || [],
+      colorOptions: product.colors || [],
+      ramOptions: product.productRam || [],
+      weightOptions: product.productWeight || [],
+    };
+
+    postData("/api/cart/add", data).then((res) => {
+      setLoadingCart(false);
+      if (res?.success) {
+        openToast("success", "Produit ajouté");
+        loadCartItems();
+      } else {
+        openToast("error", res?.message);
+      }
+    });
+  };
+  const handleUpdateCart = () => {
+    if (!currentCartItem?._id) return;
+    setLoadingCart(true);
+
+    editData("/api/cart/update-qty", {
+      _id: currentCartItem._id,
+      qty: quantity,
+      size: selectedSize,
+      color: selectedColor,
+      ram: selectedRam,
+      weight: selectedWeight,
+    }).then((res) => {
+      setLoadingCart(false);
+      if (res?.success) {
+        openToast("success", "Panier mis à jour");
+        loadCartItems();
+      }
+    });
+  };
+
+  const handleIncrement = () => {
+    setQuantity((q) => Math.min(q + 1, product?.countIntStock || 1));
+  };
+
+  const handleDecrement = () => {
+    setQuantity((q) => Math.max(1, q - 1));
+  };
+  // FETCH PRODUIT
+  useEffect(() => {
+    const getProduct = async () => {
+      try {
+        setLoading(true);
+        const res = await fetchDataFromApi(`/api/product/${id}`);
+        const data = res.product || res.data;
+
+        setProduct(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getProduct();
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const getReviewsCount = async () => {
+      try {
+        const res = await fetchDataFromApi(
+          `/api/users/getReviews?productId=${id}`,
+        );
+
+        if (res?.success) {
+          setReviewsCount(res.reviews.length);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    getReviewsCount();
+  }, [id]);
+
+  // INIT caractéristiques (comme popup)
+  useEffect(() => {
+    if (!product) return;
+
+    if (product.size?.length > 0) setSelectedSize(product.size[0]);
+    if (product.colors?.length > 0) setSelectedColor(product.colors[0]);
+    if (product.productRam?.length > 0) setSelectedRam(product.productRam[0]);
+    if (product.productWeight?.length > 0)
+      setSelectedWeight(product.productWeight[0]);
+  }, [product]);
+
+  useEffect(() => {
+    if (!product || !currentCartItem) return;
+
+    setQuantity(currentCartItem.quantity);
+    setSelectedSize(currentCartItem.size || null);
+    setSelectedColor(currentCartItem.color || null);
+    setSelectedRam(currentCartItem.ram || null);
+    setSelectedWeight(currentCartItem.weight || null);
+  }, [product, currentCartItem]);
 
   return (
     <section className="productdetails">
-      {/* Fil d’Ariane */}
-      <div className="container1">
-        <nav className="breadcrumbs">
-          <ul>
-            <li><a href="/">Accueil</a></li>
-            <li><a href="/categorie">{product.category}</a></li>
-            <li className="active">{product.title}</li>
-          </ul>
-        </nav>
-      </div>
-
-      {/* Contenu principal */}
-      <div className="container2">
-        {/* Zoom + miniatures */}
-        <div className="productzoomcont">
-          <ProductZoom images={product.images} />
+      {/* BREADCRUMB */}
+      {!loading && product && (
+        <div className="container1">
+          <nav className="breadcrumbs">
+            <ul>
+              <li>
+                <a href="/">Accueil</a>
+              </li>
+              <li>
+                <Link to={`/productlisting?catId=${product.catId?._id || product.catId}`}>
+  {product.catName}
+</Link>
+              </li>
+              <li className="active">{product.name}</li>
+            </ul>
+          </nav>
         </div>
+      )}
 
-        {/* Détails du produit */}
-        <div className="productcont">
-          {/* 1️⃣ Titre */}
-          <h2 className="product-title">{product.title}</h2>
+      {/* MAIN */}
+      <div className="container2">
+        {loading && (
+          <div className="loader-wrapper">
+            <CircularProgress />
+          </div>
+        )}
 
-          {/* 2️⃣ Brand + étoiles + reviews */}
-          <div className="brand-rating">
-            <span className="brand">Brand: {product.brand}</span>
-            <div className="rating">
-              {[...Array(5)].map((_, i) => (
-                <FaStar key={i} color={i < product.rating ? "#FFD700" : "#ccc"} size={16} />
-              ))}
-              <span className="reviews">({product.reviews} reviews)</span>
+        {!loading && product && (
+          <>
+            {/* IMAGE */}
+            <div className="productzoomcont">
+              <ProductZoom images={product?.images || []} />
             </div>
-          </div>
+            {/* INFOS */}
+            <div className="productcont">
+              <h2 className="product-title">{product.name}</h2>
 
-          {/* 3️⃣ Prix + disponibilité */}
-          <div className="price-stock">
-            {product.oldPrice && <span className="old-price">{product.oldPrice} FCFA</span>}
-            <span className="price">{product.price} FCFA</span>
-            <span className="stock">{product.stock ? "In stock" : "Out of stock"}</span>
-          </div>
+              {/* BRAND + RATING */}
+              <div className="brand-rating">
+                <span className="brand">Brand: {product.brand}</span>
 
-          {/* 4️⃣ Description courte */}
-          <p className="desc">{product.desc}</p>
+                <div className="rating">
+                  {[...Array(5)].map((_, i) => (
+                    <FaStar
+                      key={i}
+                      color={i < product.rating ? "#FFD700" : "#ccc"}
+                      size={16}
+                    />
+                  ))}
+                  <span className="reviews">({reviewsCount} avis)</span>
+                </div>
+              </div>
 
-          {/* 5️⃣ Caractéristiques sélectionnables */}
-                <div className="characteristics">
-                {/* Taille */}
-                <div className="option-group">
+              {/* PRICE */}
+              <div className="price-stock">
+                {product.oldPrice && (
+                  <span className="old-price">{product.oldPrice} FCFA</span>
+                )}
+                <span className="price">{product.price} FCFA</span>
+
+                <span className="stock">
+                  {product.countIntStock > 0 ? "In stock" : "Out of stock"}
+                </span>
+              </div>
+
+              {/* DESCRIPTION */}
+              {product.description && (
+                <p className="desc">{product.description}</p>
+              )}
+
+              {/* OPTIONS (comme popup) */}
+              <div className="characteristics">
+                {product.size?.length > 0 && (
+                  <div className="option-group">
                     <span className="option-label">Size:</span>
-                    {["S", "M", "L", "XL"].map((size) => (
-                    <button
-                        key={size}
+                    {product.size.map((size, i) => (
+                      <button
+                        key={i}
                         className={`option-btn ${size === selectedSize ? "active" : ""}`}
                         onClick={() => setSelectedSize(size)}
-                    >
+                      >
                         {size}
-                    </button>
+                      </button>
                     ))}
-                </div>
+                  </div>
+                )}
 
-                {/* Couleur */}
-                <div className="option-group">
+                {product.colors?.length > 0 && (
+                  <div className="option-group">
                     <span className="option-label">Colors:</span>
-                    {product.colors.map((color) => (
-                    <button
-                        key={color}
+                    {product.colors.map((color, i) => (
+                      <button
+                        key={i}
                         className={`option-btn ${color === selectedColor ? "active" : ""}`}
                         style={{ backgroundColor: color.toLowerCase() }}
                         onClick={() => setSelectedColor(color)}
-                    >
+                      >
                         {color === selectedColor ? "✓" : ""}
-                    </button>
+                      </button>
                     ))}
+                  </div>
+                )}
+
+                {product.productRam?.length > 0 && (
+                  <div className="option-group">
+                    <span className="option-label">RAM:</span>
+                    {product.productRam.map((ram, i) => (
+                      <button
+                        key={i}
+                        className={`option-btn ${ram === selectedRam ? "active" : ""}`}
+                        onClick={() => setSelectedRam(ram)}
+                      >
+                        {ram}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {product.productWeight?.length > 0 && (
+                  <div className="option-group">
+                    <span className="option-label">Weight:</span>
+                    {product.productWeight.map((w, i) => (
+                      <button
+                        key={i}
+                        className={`option-btn ${w === selectedWeight ? "active" : ""}`}
+                        onClick={() => setSelectedWeight(w)}
+                      >
+                        {w}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* sélection dynamique */}
+                <div className="selected-characteristics">
+                  {[selectedSize, selectedColor, selectedRam, selectedWeight]
+                    .filter(Boolean)
+                    .join(" | ")}
                 </div>
+              </div>
+
+              {/* QUANTITY */}
+              <div className="cart-actions">
+                <div className="quantity">
+                  <button onClick={handleDecrement}>-</button>
+                  <span>{quantity}</span>
+                  <button onClick={handleIncrement}>+</button>
                 </div>
-
-
-          {/* 6️⃣ Free shipping */}
-          <div className="shipping">Free shipping: {product.shippingDays} days</div>
-
-          {/* 7️⃣ Compteur + Ajouter au panier */}
-          <div className="cart-actions">
-            <div className="quantity">
-              <button onClick={handleDecrement}>-</button>
-              <span>{quantity}</span>
-              <button onClick={handleIncrement}>+</button>
-            </div>
-            <button className="add-to-cart">
-              <FaCartPlus /> Ajouter au panier
-            </button>
-          </div>
-
-          {/* 8️⃣ Favoris + Comparer */}
-          <div className="extra-actions">
-            <button className="wishlist">
-              <FaHeart /> Ajouter aux favoris
-            </button>
-            <button className="compare">
-              <FaBalanceScale /> Add to compare
-            </button>
-          </div>
-        </div>
-      </div>
-      {/* 9️⃣ Bloc Tabs */}
-        <div className="product-tabs">
-        {/* Tabs header */}
-        <div className="tabs-header">
-            {["Description", "Informations supplémentaires", `Avis (${product.reviews})`].map(
-            (tab, index) => (
                 <button
+                  className="add-cart"
+                  onClick={currentCartItem ? handleUpdateCart : handleAddToCart}
+                  disabled={loadingCart}
+                >
+                  {loadingCart ? (
+                    <CircularProgress />
+                  ) : (
+                    <>
+                      <FaCartPlus />
+                      {currentCartItem ? "Mettre à jour" : "Ajouter au panier"}
+                    </>
+                  )}
+                </button>
+              </div>
+              {/* ACTIONS */}
+              <div className="extra-actions">
+                <button className="wishlist">
+                  <FaHeart /> Favoris
+                </button>
+
+                <button className="compare">
+                  <FaBalanceScale /> Comparer
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* TABS */}
+      {!loading && product && (
+        <div className="product-tabs">
+          <div className="tabs-header">
+            {[
+              "Description",
+              "Informations supplémentaires",
+              `Avis (${reviewsCount})`,
+            ].map((tab, index) => (
+              <button
                 key={index}
                 className={`tab-btn ${activeTab === index ? "active" : ""}`}
                 onClick={() => setActiveTab(index)}
-                >
+              >
                 {tab}
-                </button>
-            )
-            )}
-        </div>
-
-        {/* Tabs content */}
-      <div className="tabs-content">
-        {/* 🟩 Onglet 1 : Description */}
-        {activeTab === 0 && (
-          <div className="tab-description">
-            <p>{product.desc}</p>
-          </div>
-        )}
-
-        {/* 🟦 Onglet 2 : Informations supplémentaires */}
-        {activeTab === 1 && (
-          <div className="tab-info">
-            <table>
-              <tbody>
-                <tr>
-                  <th>Taille</th>
-                  <td>{selectedSize}</td>
-                </tr>
-                <tr>
-                  <th>Couleur</th>
-                  <td>{selectedColor}</td>
-                </tr>
-                <tr>
-                  <th>Matériau</th>
-                  <td>{product.material}</td>
-                </tr>
-                <tr>
-                  <th>Marque</th>
-                  <td>{product.brand}</td>
-                </tr>
-                <tr>
-                  <th>Poids</th>
-                  <td>{product.weight || "1.2 kg"}</td>
-                </tr>
-                <tr>
-                  <th>Garantie</th>
-                  <td>{product.warranty || "6 mois"}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* 🟥 Onglet 3 : Avis */}
-        {activeTab === 2 && (
-        <div className="tab-reviews">
-          {/* Formulaire d’avis */}
-          <div className="review-form">
-            <h4>Laisser un avis</h4>
-
-            {/* Champs Nom + Email */}
-            <div className="form-row">
-              <input type="text" placeholder="Votre nom" />
-              <input type="email" placeholder="Votre email" />
-            </div>
-
-            {/* Champ commentaire */}
-            <textarea placeholder="Votre commentaire..." rows="4"></textarea>
-
-            {/* Étoiles interactives */}
-            <div className="star-rating">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  className={`star ${star <= selectedRating ? "active" : ""}`}
-                  onClick={() => setSelectedRating(star)}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-
-            {/* Checkbox */}
-            <div className="save-info">
-              <input type="checkbox" id="save-info" />
-              <label htmlFor="save-info">
-                Enregistrer mon nom et mon email pour les prochains commentaires.
-              </label>
-            </div>
-
-            <button className="btn-submit">Soumettre</button>
-          </div>
-
-          {/* Liste des avis */}
-          <div className="reviews-list">
-            <h4>{product.reviews} avis</h4>
-
-            {[
-              {
-                name: "Jean Dupont",
-                date: "25 Octobre 2025",
-                comment: "Super produit, très bonne qualité !",
-                rating: 5,
-                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCzK6DKnIE7MM_7cuaQAJlpxUHYs8yKDT3yg&s",
-              },
-              {
-                name: "Awa Diop",
-                date: "22 Octobre 2025",
-                comment: "Bon rapport qualité-prix, livraison rapide.",
-                rating: 4,
-                img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-              },
-              {
-                name: "Awa Diop",
-                date: "22 Octobre 2025",
-                comment: "Bon rapport qualité-prix, livraison rapide.",
-                rating: 4,
-                img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-              },
-              {
-                name: "Awa Diop",
-                date: "22 Octobre 2025",
-                comment: "Bon rapport qualité-prix, livraison rapide.",
-                rating: 4,
-                img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-              },
-              {
-                name: "Awa Diop",
-                date: "22 Octobre 2025",
-                comment: "Bon rapport qualité-prix, livraison rapide.",
-                rating: 4,
-                img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-              },
-              {
-                name: "Awa Diop",
-                date: "22 Octobre 2025",
-                comment: "Bon rapport qualité-prix, livraison rapide.",
-                rating: 4,
-                img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-              },
-            ].map((review, i) => (
-              <div className="review-item" key={i}>
-                <img src={review.img} alt={review.name} className="review-avatar" />
-
-                <div className="review-content">
-                  <h5>{review.name}</h5>
-                  <span className="review-date">{review.date}</span>
-                  <p>{review.comment}</p>
-                </div>
-
-                <div className="review-rating">
-                  {"★".repeat(review.rating)}
-                  {"☆".repeat(5 - review.rating)}
-                </div>
-              </div>
+              </button>
             ))}
+          </div>
+
+          <div className="tabs-content">
+            {activeTab === 0 && (
+              <div className="tab-description">
+                <p>{product.description}</p>
+              </div>
+            )}
+
+            {activeTab === 1 && (
+              <div className="tab-info">
+                <table>
+                  <tbody>
+                    {/* IDENTITÉ PRODUIT */}
+                    <tr>
+                      <th>Nom</th>
+                      <td>{product.name}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Marque</th>
+                      <td>{product.brand}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Catégorie</th>
+                      <td>{product.catName}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Sous-catégorie</th>
+                      <td>{product.subCat || "-"}</td>
+                    </tr>
+
+                    {/* PRIX */}
+                    <tr>
+                      <th>Prix</th>
+                      <td>{product.price} FCFA</td>
+                    </tr>
+
+                    <tr>
+                      <th>Ancien prix</th>
+                      <td>{product.oldPrice || "-"}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Réduction</th>
+                      <td>{product.discount || 0}%</td>
+                    </tr>
+
+                    {/* STOCK */}
+                    <tr>
+                      <th>Stock</th>
+                      <td>
+                        {product.countIntStock > 0
+                          ? `${product.countIntStock} disponible(s)`
+                          : "Rupture de stock"}
+                      </td>
+                    </tr>
+
+                    {/* VARIANTES */}
+                    {product.size?.length > 0 && (
+                      <tr>
+                        <th>Tailles</th>
+                        <td>{product.size.join(", ")}</td>
+                      </tr>
+                    )}
+
+                    {product.colors?.length > 0 && (
+                      <tr>
+                        <th>Couleurs</th>
+                        <td>{product.colors.join(", ")}</td>
+                      </tr>
+                    )}
+
+                    {product.productRam?.length > 0 && (
+                      <tr>
+                        <th>RAM</th>
+                        <td>{product.productRam.join(", ")}</td>
+                      </tr>
+                    )}
+
+                    {product.productWeight?.length > 0 && (
+                      <tr>
+                        <th>Poids</th>
+                        <td>{product.productWeight.join(", ")}</td>
+                      </tr>
+                    )}
+
+                    {/* DATES */}
+                    <tr>
+                      <th>Date création</th>
+                      <td>
+                        {product.createdAt
+                          ? new Date(product.createdAt).toLocaleDateString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeTab === 2 && (
+              <Reviews
+                product={product}
+                user={user}
+                setReviewsCount={setReviewsCount}
+              />
+            )}
           </div>
         </div>
       )}
 
-          </div>
-
-              </div>
-
-              <div className="similairecont">
-                  <h2>Produits similaires</h2>
-                  <ProductSlider/>
-              </div>
-
+      {/* SIMILAR PRODUCTS */}
+      <div className="similairecont">
+        <h2>Produits similaires</h2>
+        {product && <ProductSlider categoryId={product.catId} />}
+      </div>
     </section>
   );
 };

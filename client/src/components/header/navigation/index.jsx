@@ -9,6 +9,9 @@ import "./navigation.scss";
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const closeDrawer = () => {
+  setIsOpen(false);
+};
 
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
@@ -44,7 +47,7 @@ const Navigation = () => {
       </nav>
 
       {/* ✅ Drawer des catégories */}
-      <CategoryPanel isOpen={isOpen} onClose={toggleDrawer} />
+      <CategoryPanel isOpen={isOpen} onClose={closeDrawer} />
     </>
   );
 };

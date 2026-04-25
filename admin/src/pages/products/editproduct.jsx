@@ -1,12 +1,17 @@
-import React, { useEffect, useState, useContext, useRef,useMemo } from "react";
-import { FaCloudUploadAlt,FaTimes, FaPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import React, { useEffect, useState, useContext, useRef, useMemo } from "react";
+import {
+  FaCloudUploadAlt,
+  FaTimes,
+  FaPlus,
+  FaChevronDown,
+  FaChevronUp,
+} from "react-icons/fa";
 import "./addproduct.scss";
 import { UserContext } from "../../UserContext/UserContext";
 import { editData, fetchDataFromApi, uploadImages } from "../utils/api";
 import HoverRating from "../../components/HoverRating/HoverRating";
 import { ToastContext } from "../../context/ToastContext";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
-
 
 // Dropdown multi-sélection
 const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
@@ -22,7 +27,10 @@ const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
         setOpen(false);
       }
     };
@@ -34,13 +42,27 @@ const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
     <div className="multi-select" ref={containerRef}>
       <label>{label}</label>
       <div className="selected-values" onClick={() => setOpen(!open)}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", color: "#222" }}>
-          {selectedValues && selectedValues.length > 0
-            ? selectedValues.map((val) => <span key={val} className="tag">{val}</span>)
-            : <span>Sélectionne...</span>}
-
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "4px",
+            color: "#222",
+          }}
+        >
+          {selectedValues && selectedValues.length > 0 ? (
+            selectedValues.map((val) => (
+              <span key={val} className="tag">
+                {val}
+              </span>
+            ))
+          ) : (
+            <span>Sélectionne...</span>
+          )}
         </div>
-        <span className="icon">{open ? <FaChevronUp /> : <FaChevronDown />}</span>
+        <span className="icon">
+          {open ? <FaChevronUp /> : <FaChevronDown />}
+        </span>
       </div>
 
       {open && (
@@ -60,7 +82,6 @@ const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
   );
 };
 
-
 const EditProduct = ({ product, onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
   const { categories } = useContext(UserContext);
@@ -70,27 +91,26 @@ const EditProduct = ({ product, onClose }) => {
   const [loadingMainImage, setLoadingMainImage] = useState(false);
   const [loadingExtraImages, setLoadingExtraImages] = useState(false);
 
+  // STATES
+  const [mainImageFile, setMainImageFile] = useState(null);
+  const [extraImageFiles, setExtraImageFiles] = useState([]); // nouveaux File
+  const [extraImagePreviews, setExtraImagePreviews] = useState([]); // blob URLs pour preview
+  const [existingExtraImages, setExistingExtraImages] = useState([]); // URLs Cloudinary existantes
 
-// STATES
-const [mainImageFile, setMainImageFile] = useState(null);
-const [extraImageFiles, setExtraImageFiles] = useState([]);       // nouveaux File
-const [extraImagePreviews, setExtraImagePreviews] = useState([]); // blob URLs pour preview
-const [existingExtraImages, setExistingExtraImages] = useState([]); // URLs Cloudinary existantes
+  // STATES : options (API) vs selections (utilisateur)
+  const [ramOptions, setRamOptions] = useState([]);
+  const [sizeOptions, setSizeOptions] = useState([]);
+  const [weightOptions, setWeightOptions] = useState([]);
 
-   // STATES : options (API) vs selections (utilisateur)
-const [ramOptions, setRamOptions] = useState([]);
-const [sizeOptions, setSizeOptions] = useState([]);
-const [weightOptions, setWeightOptions] = useState([]);
+  const [bannerFiles, setBannerFiles] = useState([]);
+  const [bannerPreviews, setBannerPreviews] = useState([]);
+  const [existingBannerImages, setExistingBannerImages] = useState([]);
+  const [loadingBanner, setLoadingBanner] = useState(false);
 
-const [bannerFiles, setBannerFiles] = useState([]);
-const [bannerPreviews, setBannerPreviews] = useState([]);
-const [existingBannerImages, setExistingBannerImages] = useState([]);
-const [loadingBanner, setLoadingBanner] = useState(false);
+  const [productRam, setProductRam] = useState([]);
+  const [productSize, setProductSize] = useState([]);
+  const [productWeight, setProductWeight] = useState([]);
 
-const [productRam, setProductRam] = useState([]);
-const [productSize, setProductSize] = useState([]);
-const [productWeight, setProductWeight] = useState([]);
-  
   const [selectedThirdSubCat, setSelectedThirdSubCat] = useState("");
 
   const [selectedCat, setSelectedCat] = useState("");
@@ -123,161 +143,153 @@ const [productWeight, setProductWeight] = useState([]);
   });
 
   useEffect(() => {
-  if (!product) return;
+    if (!product) return;
 
-  setFormFields({
-    name: product.name || "",
-    description: product.description || "",
-    brand: product.brand || "",
-    price: product.price || 0,
-    oldPrice: product.oldPrice || 0,
-    discount: product.discount || 0,
-    countIntStock: product.countIntStock || 0,
-    rating: product.rating || 0,
-    isFeatured: product.isFeatured ?? false,
-    catId: product.catId || "",
-    catName: product.catName || "",
-    subCatId: product.subCatId || "",
-    subCat: product.subCat || "",
-    thirdSubCatId: product.thirdSubCatId || "",
-    thirdsubCat: product.thirdsubCat || "",
-    productRam: product.productRam || [],
-    size: product.size || [],
-    productWeight: product.productWeight || [],
-    mainImage: product.images?.[0] || null,
-    extraImages: [],  // vide, les existantes vont dans existingExtraImages
-    bannerTitleName: product.bannerTitleName || "",
-    isDisplayOnHomeBanner: product.isDisplayOnHomeBanner ?? false,
-  });
+    setFormFields({
+      name: product.name || "",
+      description: product.description || "",
+      brand: product.brand || "",
+      price: product.price || 0,
+      oldPrice: product.oldPrice || 0,
+      discount: product.discount || 0,
+      countIntStock: product.countIntStock || 0,
+      rating: product.rating || 0,
+      isFeatured: product.isFeatured ?? false,
+      catId: product.catId || "",
+      catName: product.catName || "",
+      subCatId: product.subCatId || "",
+      subCat: product.subCat || "",
+      thirdSubCatId: product.thirdSubCatId || "",
+      thirdsubCat: product.thirdsubCat || "",
+      productRam: product.productRam || [],
+      size: product.size || [],
+      productWeight: product.productWeight || [],
+      mainImage: product.images?.[0] || null,
+      extraImages: [], // vide, les existantes vont dans existingExtraImages
+      bannerTitleName: product.bannerTitleName || "",
+      isDisplayOnHomeBanner: product.isDisplayOnHomeBanner ?? false,
+    });
 
-  setExistingExtraImages(product.images?.slice(1) || []);
-  setExistingBannerImages(product.bannerimages || []);
-  setSelectedCat(product.catId || "");
-  setSelectedSubCat(product.subCatId || "");
-  setSelectedThirdSubCat(product.thirdSubCatId || "");
+    setExistingExtraImages(product.images?.slice(1) || []);
+    setExistingBannerImages(product.bannerimages || []);
+    setSelectedCat(product.catId || "");
+    setSelectedSubCat(product.subCatId || "");
+    setSelectedThirdSubCat(product.thirdSubCatId || "");
 
-  // Initialiser les selections dropdown
-  setProductRam(product.productRam || []);
-  setProductSize(product.size || []);
-  setProductWeight(product.productWeight || []);
-}, [product]);
+    // Initialiser les selections dropdown
+    setProductRam(product.productRam || []);
+    setProductSize(product.size || []);
+    setProductWeight(product.productWeight || []);
+  }, [product]);
 
-useEffect(() => {
-  // RAM
-  fetchDataFromApi("/api/product/productRAM").then((res) => {
-    // console.log("RAM response:", res); 
-    if (res?.error === false) {
-      setRamOptions(res.productRAMs?.map((item) => item.name) || []);
-    }
-  });
+  useEffect(() => {
+    // RAM
+    fetchDataFromApi("/api/product/productRAM").then((res) => {
+      // console.log("RAM response:", res);
+      if (res?.error === false) {
+        setRamOptions(res.productRAMs?.map((item) => item.name) || []);
+      }
+    });
 
-  // SIZE
-  fetchDataFromApi("/api/product/productSIZE").then((res) => {
-    // console.log("SIZE response:", res);  
-    if (res?.error === false) {
-      setSizeOptions(res.productSIZEs?.map((item) => item.name) || []);
-    }
-  });
+    // SIZE
+    fetchDataFromApi("/api/product/productSIZE").then((res) => {
+      // console.log("SIZE response:", res);
+      if (res?.error === false) {
+        setSizeOptions(res.productSIZEs?.map((item) => item.name) || []);
+      }
+    });
 
-  // WEIGHT
-  fetchDataFromApi("/api/product/productWEIGHT").then((res) => {
-    // console.log("WEIGHT response:", res); 
-    if (res?.error === false) {
-      setWeightOptions(res.productWEIGHTs?.map((item) => item.name) || []);
-    }
-  });
-}, []);
+    // WEIGHT
+    fetchDataFromApi("/api/product/productWEIGHT").then((res) => {
+      // console.log("WEIGHT response:", res);
+      if (res?.error === false) {
+        setWeightOptions(res.productWEIGHTs?.map((item) => item.name) || []);
+      }
+    });
+  }, []);
 
+  const mainCategories = categories || [];
 
-const mainCategories = categories || [];
+  const subCategories = useMemo(() => {
+    return mainCategories.find((c) => c._id === selectedCat)?.children || [];
+  }, [mainCategories, selectedCat]);
 
-const subCategories = useMemo(() => {
-  return mainCategories.find(c => c._id === selectedCat)?.children || [];
-}, [mainCategories, selectedCat]);
-
-const thirdSubCategories = useMemo(() => {
-  return subCategories.find(sc => sc._id === selectedSubCat)?.children || [];
-}, [subCategories, selectedSubCat]);
-
-
-
-
-  
-
+  const thirdSubCategories = useMemo(() => {
+    return (
+      subCategories.find((sc) => sc._id === selectedSubCat)?.children || []
+    );
+  }, [subCategories, selectedSubCat]);
 
   const onChangeInput = (e) => {
     const { name, value } = e.target;
     setFormFields((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Changer les images (prévisualisation)
+  const handleImageChange = async (e, main = false) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-// Changer les images (prévisualisation)
-const handleImageChange = async (e, main = false) => {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
+    try {
+      if (main) setLoadingMainImage(true);
+      else setLoadingExtraImages(true);
 
-  try {
-    if (main) setLoadingMainImage(true);
-    else setLoadingExtraImages(true);
-
-    if (main) {
-      const file = files[0];
-      setMainImageFile(file);
-      setFormFields(prev => ({ ...prev, mainImage: URL.createObjectURL(file) }));
-    } else {
-      const previews = files.map(f => URL.createObjectURL(f));
-      setExtraImageFiles(prev => [...prev, ...files]);
-      setExtraImagePreviews(prev => [...prev, ...previews]);
-      // NE PAS toucher formFields.extraImages ici
+      if (main) {
+        const file = files[0];
+        setMainImageFile(file);
+        setFormFields((prev) => ({
+          ...prev,
+          mainImage: URL.createObjectURL(file),
+        }));
+      } else {
+        const previews = files.map((f) => URL.createObjectURL(f));
+        setExtraImageFiles((prev) => [...prev, ...files]);
+        setExtraImagePreviews((prev) => [...prev, ...previews]);
+        // NE PAS toucher formFields.extraImages ici
+      }
+    } finally {
+      if (main) setLoadingMainImage(false);
+      else setLoadingExtraImages(false);
+      e.target.value = "";
     }
-  } finally {
-    if (main) setLoadingMainImage(false);
-    else setLoadingExtraImages(false);
-    e.target.value = "";
-  }
-};
-
-
-useEffect(() => {
-  return () => {
-    extraImagePreviews.forEach(URL.revokeObjectURL);
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
 
+  useEffect(() => {
+    return () => {
+      extraImagePreviews.forEach(URL.revokeObjectURL);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-const handleBannerChange = (e) => {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
+  const handleBannerChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-  const previews = files.map(f => URL.createObjectURL(f));
+    const previews = files.map((f) => URL.createObjectURL(f));
 
-  setBannerFiles(prev => [...prev, ...files]);
-  setBannerPreviews(prev => [...prev, ...previews]);
-};
+    setBannerFiles((prev) => [...prev, ...files]);
+    setBannerPreviews((prev) => [...prev, ...previews]);
+  };
 
-const removeExistingBanner = (index) => {
-  setExistingBannerImages(prev => prev.filter((_, i) => i !== index));
-};
+  const removeExistingBanner = (index) => {
+    setExistingBannerImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
-const removeNewBanner = (index) => {
-  setBannerFiles(prev => prev.filter((_, i) => i !== index));
-  setBannerPreviews(prev => prev.filter((_, i) => i !== index));
-};
+  const removeNewBanner = (index) => {
+    setBannerFiles((prev) => prev.filter((_, i) => i !== index));
+    setBannerPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
-// Supprimer une image secondaire
-const removeExistingImage = (index) => {
-  setExistingExtraImages(prev => prev.filter((_, i) => i !== index));
-};
+  // Supprimer une image secondaire
+  const removeExistingImage = (index) => {
+    setExistingExtraImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
-const removeNewImage = (index) => {
-  URL.revokeObjectURL(extraImagePreviews[index]);
-  setExtraImageFiles(prev => prev.filter((_, i) => i !== index));
-  setExtraImagePreviews(prev => prev.filter((_, i) => i !== index));
-};
-
-
-  
+  const removeNewImage = (index) => {
+    URL.revokeObjectURL(extraImagePreviews[index]);
+    setExtraImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setExtraImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleClose = () => {
     setIsClosing(true);
@@ -285,135 +297,146 @@ const removeNewImage = (index) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // 🔹 VALIDATION
-  if (!formFields.name.trim())
-    return openToast("error", "Le nom du produit est obligatoire");
-  if (!formFields.description.trim())
-    return openToast("error", "La description du produit est obligatoire"); 
+    // 🔹 VALIDATION
+    if (!formFields.name.trim())
+      return openToast("error", "Le nom du produit est obligatoire");
+    if (!formFields.description.trim())
+      return openToast("error", "La description du produit est obligatoire");
 
-  if (!formFields.catId)
-    return openToast("error", "Veuillez sélectionner une catégorie");
+    if (!formFields.catId)
+      return openToast("error", "Veuillez sélectionner une catégorie");
 
-  if (!formFields.mainImage && !mainImageFile)
-  return openToast("error", "Veuillez ajouter une image principale");
+    if (!formFields.mainImage && !mainImageFile)
+      return openToast("error", "Veuillez ajouter une image principale");
 
- const hasOldImages = product?.images?.length > 1;
+    const hasOldImages = product?.images?.length > 1;
 
-
-if (existingExtraImages.length === 0 && extraImageFiles.length === 0) {
-  return openToast("error", "Veuillez ajouter au moins une image secondaire");
-}
-  if (!formFields.brand.trim())
-    return openToast("error", "La marque du produit est obligatoire");
-
-  if (formFields.countIntStock <= 0)
-    return openToast("error", "Le stock doit être supérieur à zéro");
-  if (formFields.discount < 0)
-    return openToast("error", "La remise ne peut pas être négative");
-  if (formFields.price < 0)
-    return openToast("error", "Le prix ne peut pas être négatif");  
-  if (formFields.oldPrice < 0)
-    return openToast("error", "L'ancien prix ne peut pas être négatif");
-  if (formFields.rating < 0 || formFields.rating > 5)
-    return openToast("error", "La note doit être comprise entre 0 et 5");
-  // if (formFields.productRam.length === 0)
-  //   return openToast("error", "Veuillez sélectionner au moins une option de RAM");  
-  // if (formFields.size.length === 0)
-  //   return openToast("error", "Veuillez sélectionner au moins une taille");
-  if (formFields.productWeight.length === 0)
-    return openToast("error", "Veuillez sélectionner au moins un poids");
-  if (formFields.discount > 100)
-    return openToast("error", "La remise ne peut pas dépasser 100%"); 
-  if (formFields.oldPrice > 0 && formFields.oldPrice < formFields.price)
-    return openToast("error", "L'ancien prix doit être supérieur au prix actuel");
-  if (!Number.isInteger(Number(formFields.countIntStock)))
-    return openToast("error", "Le stock doit être un nombre entier");
-  
-  // 🔹 SUBMIT
-  
-
-  
-
-
-
-  try {
-    setLoadingSubmit(true);
-    let finalImages = [];
-
-    // 1. Image principale
-    if (mainImageFile) {
-      const fd = new FormData();
-      fd.append("images", mainImageFile);
-      const uploadRes = await uploadImages("/api/product/uploadImages", fd);
-      finalImages.push(uploadRes.images[0]);
-    } else {
-      finalImages.push(formFields.mainImage);
+    if (existingExtraImages.length === 0 && extraImageFiles.length === 0) {
+      return openToast(
+        "error",
+        "Veuillez ajouter au moins une image secondaire",
+      );
     }
+    if (!formFields.brand.trim())
+      return openToast("error", "La marque du produit est obligatoire");
 
-    // 2. Images existantes (deja sur Cloudinary)
-    finalImages.push(...existingExtraImages);
+    if (formFields.countIntStock <= 0)
+      return openToast("error", "Le stock doit être supérieur à zéro");
+    if (formFields.discount < 0)
+      return openToast("error", "La remise ne peut pas être négative");
+    if (formFields.price < 0)
+      return openToast("error", "Le prix ne peut pas être négatif");
+    if (formFields.oldPrice < 0)
+      return openToast("error", "L'ancien prix ne peut pas être négatif");
+    if (formFields.rating < 0 || formFields.rating > 5)
+      return openToast("error", "La note doit être comprise entre 0 et 5");
+    // if (formFields.productRam.length === 0)
+    //   return openToast("error", "Veuillez sélectionner au moins une option de RAM");
+    // if (formFields.size.length === 0)
+    //   return openToast("error", "Veuillez sélectionner au moins une taille");
+    // if (formFields.productWeight.length === 0)
+    //   return openToast("error", "Veuillez sélectionner au moins un poids");
+    if (formFields.discount > 100)
+      return openToast("error", "La remise ne peut pas dépasser 100%");
+    if (formFields.oldPrice > 0 && formFields.oldPrice < formFields.price)
+      return openToast(
+        "error",
+        "L'ancien prix doit être supérieur au prix actuel",
+      );
+    if (!Number.isInteger(Number(formFields.countIntStock)))
+      return openToast("error", "Le stock doit être un nombre entier");
 
-    // 3. Nouvelles images (a uploader)
-    if (extraImageFiles.length > 0) {
-      const fd = new FormData();
-      extraImageFiles.forEach(f => fd.append("images", f));
-      const uploadRes = await uploadImages("/api/product/uploadImages", fd);
-      finalImages.push(...uploadRes.images);
+    // 🔹 SUBMIT
+
+    try {
+      setLoadingSubmit(true);
+      let finalImages = [];
+
+      // 1. Image principale
+      if (mainImageFile) {
+        const fd = new FormData();
+        fd.append("images", mainImageFile);
+        const uploadRes = await uploadImages("/api/product/uploadImages", fd);
+        finalImages.push(uploadRes.images[0]);
+      } else {
+        finalImages.push(formFields.mainImage);
+      }
+
+      // 2. Images existantes (deja sur Cloudinary)
+      finalImages.push(...existingExtraImages);
+
+      // 3. Nouvelles images (a uploader)
+      if (extraImageFiles.length > 0) {
+        const fd = new FormData();
+        extraImageFiles.forEach((f) => fd.append("images", f));
+        const uploadRes = await uploadImages("/api/product/uploadImages", fd);
+        finalImages.push(...uploadRes.images);
+      }
+      let bannerUrls = [...existingBannerImages];
+
+      if (bannerFiles.length > 0) {
+        const fd = new FormData();
+        bannerFiles.forEach((f) => fd.append("bannerimages", f));
+
+        const res = await uploadImages("/api/product/uploadBannerImages", fd);
+
+        if (!res || res.error) throw new Error("Erreur upload banner");
+
+        bannerUrls.push(...res.images);
+      }
+
+      // Aucune blob URL dans finalImages
+      const { extraImages, mainImage, ...cleanFields } = formFields;
+      const payload = {
+        ...cleanFields,
+        images: finalImages,
+        bannerimages: bannerUrls,
+        bannerTitleName: formFields.bannerTitleName?.trim() || formFields.name,
+      };
+      const res = await editData(
+        `/api/product/updateProduct/${product._id}`,
+        payload,
+      );
+
+      if (!res?.success) throw new Error(res?.message || "Erreur");
+      openToast("success", res?.message || "Produit mis a jour");
+      setTimeout(handleClose, 500);
+    } catch (error) {
+      openToast("error", error.message || "Erreur serveur");
+    } finally {
+      setLoadingSubmit(false);
     }
-    let bannerUrls = [...existingBannerImages];
+  };
 
-    if (bannerFiles.length > 0) {
-      const fd = new FormData();
-      bannerFiles.forEach(f => fd.append("bannerimages", f));
-
-      const res = await uploadImages("/api/product/uploadBannerImages", fd);
-
-      if (!res || res.error) throw new Error("Erreur upload banner");
-
-      bannerUrls.push(...res.images);
+  useEffect(() => {
+    if (
+      selectedThirdSubCat &&
+      !thirdSubCategories.find((t) => t._id === selectedThirdSubCat)
+    ) {
+      setSelectedThirdSubCat("");
+      setFormFields((prev) => ({
+        ...prev,
+        thirdSubCatId: "",
+        thirdsubCat: "",
+      }));
     }
+  }, [thirdSubCategories, selectedThirdSubCat]);
 
-    // Aucune blob URL dans finalImages
-    const { extraImages, mainImage, ...cleanFields } = formFields;
-    const payload = {
-      ...cleanFields,
-      images: finalImages,
-      bannerimages: bannerUrls,
-      bannerTitleName: formFields.bannerTitleName?.trim() || formFields.name
-    };
-    const res = await editData(`/api/product/updateProduct/${product._id}`, payload);
+  useEffect(() => {
+    const price = Number(formFields.price);
+    const oldPrice = Number(formFields.oldPrice);
 
-    if (!res?.success) throw new Error(res?.message || "Erreur");
-    openToast("success", res?.message || "Produit mis a jour");
-    setTimeout(handleClose, 500);
-  } catch (error) {
-    openToast("error", error.message || "Erreur serveur");
-  } finally {
-    setLoadingSubmit(false);
-  }
-};
+    if (oldPrice > 0 && price >= 0 && oldPrice >= price) {
+      const discount = Math.round(((oldPrice - price) / oldPrice) * 100);
 
-useEffect(() => {
-  
-  if (
-    selectedThirdSubCat &&
-    !thirdSubCategories.find(t => t._id === selectedThirdSubCat)
-  ) {
-    setSelectedThirdSubCat("");
-    setFormFields(prev => ({
-      ...prev,
-      thirdSubCatId: "",
-      thirdsubCat: ""
-    }));
-  }
-}, [thirdSubCategories, selectedThirdSubCat]);
-
-  
-
- 
-  
+      setFormFields((prev) => ({
+        ...prev,
+        discount: discount,
+      }));
+    }
+  }, [formFields.price, formFields.oldPrice]);
 
   return (
     <div className="fullscreen-dialog">
@@ -424,7 +447,6 @@ useEffect(() => {
               <FaTimes />
             </button>
             <h2>Modifier le produit</h2>
-
           </div>
         </div>
 
@@ -452,95 +474,94 @@ useEffect(() => {
             <div className="row">
               <div className="form-group">
                 <label>Catégorie</label>
-              <select
-                value={selectedCat}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const selected = mainCategories.find((c) => c._id === value)?.name || "";
+                <select
+                  value={selectedCat}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const selected =
+                      mainCategories.find((c) => c._id === value)?.name || "";
 
-                  setSelectedCat(value);
-                  setSelectedSubCat("");
-                  setSelectedThirdSubCat(""); // ✅ ICI
+                    setSelectedCat(value);
+                    setSelectedSubCat("");
+                    setSelectedThirdSubCat(""); // ✅ ICI
 
-                  setFormFields((prev) => ({
-                    ...prev,
-                    catId: value,
-                    catName: selected,
-                    subCatId: "",
-                    subCat: "",
-                    thirdSubCatId: "",
-                    thirdsubCat: "",
-                  }));
-                }}
-
-              >
-
-                <option value="">Sélectionne...</option>
-                {mainCategories.map((c) => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
-                ))}
-              </select>
+                    setFormFields((prev) => ({
+                      ...prev,
+                      catId: value,
+                      catName: selected,
+                      subCatId: "",
+                      subCat: "",
+                      thirdSubCatId: "",
+                      thirdsubCat: "",
+                    }));
+                  }}
+                >
+                  <option value="">Sélectionne...</option>
+                  {mainCategories.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
-
-
                 <label>Sous-catégorie</label>
-              <select
-                name="subCatId"
-                value={selectedSubCat}
-                disabled={!selectedCat}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const selected = subCategories.find((sc) => sc._id === value)?.name || "";
+                <select
+                  name="subCatId"
+                  value={selectedSubCat}
+                  disabled={!selectedCat}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const selected =
+                      subCategories.find((sc) => sc._id === value)?.name || "";
 
-                  setSelectedSubCat(value);
-                  setSelectedThirdSubCat(""); // ✅ ICI
+                    setSelectedSubCat(value);
+                    setSelectedThirdSubCat(""); // ✅ ICI
 
-                  setFormFields((prev) => ({
-                    ...prev,
-                    subCatId: value,
-                    subCat: selected,
-                    thirdSubCatId: "",
-                    thirdsubCat: "",
-                  }));
-                }}
-
-              >
-
-                <option value="">Sélectionne...</option>
-                {subCategories.map((sc) => (
-                  <option key={sc._id} value={sc._id}>{sc.name}</option>
-                ))}
-              </select>
+                    setFormFields((prev) => ({
+                      ...prev,
+                      subCatId: value,
+                      subCat: selected,
+                      thirdSubCatId: "",
+                      thirdsubCat: "",
+                    }));
+                  }}
+                >
+                  <option value="">Sélectionne...</option>
+                  {subCategories.map((sc) => (
+                    <option key={sc._id} value={sc._id}>
+                      {sc.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
-
                 <label>Sous-sous-catégorie</label>
-              <select
-                name="thirdSubCatId"
-               
-                disabled={!selectedSubCat}
-                value={formFields.thirdSubCatId}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const selectedName = thirdSubCategories.find(t => t._id === value)?.name || "";
+                <select
+                  name="thirdSubCatId"
+                  disabled={!selectedSubCat}
+                  value={formFields.thirdSubCatId}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const selectedName =
+                      thirdSubCategories.find((t) => t._id === value)?.name ||
+                      "";
 
-                  setFormFields(prev => ({
-                    ...prev,
-                    thirdSubCatId: value,
-                    thirdsubCat: selectedName
-                  }));
-                }}
-
-              >
-                <option value="">Sélectionne...</option>
-                {thirdSubCategories.map((tsc) => (
-                  <option key={tsc._id} value={tsc._id}>{tsc.name}</option>
-                ))}
-              </select>
+                    setFormFields((prev) => ({
+                      ...prev,
+                      thirdSubCatId: value,
+                      thirdsubCat: selectedName,
+                    }));
+                  }}
+                >
+                  <option value="">Sélectionne...</option>
+                  {thirdSubCategories.map((tsc) => (
+                    <option key={tsc._id} value={tsc._id}>
+                      {tsc.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-
             </div>
 
             {/* Prix */}
@@ -576,7 +597,6 @@ useEffect(() => {
               </div>
             </div>
 
-
             {/* Infos */}
             <div className="row">
               <div className="form-group">
@@ -584,17 +604,15 @@ useEffect(() => {
                 <select
                   value={String(formFields.isFeatured)}
                   onChange={(e) =>
-                    setFormFields(prev => ({
+                    setFormFields((prev) => ({
                       ...prev,
-                      isFeatured: e.target.value === "true"
+                      isFeatured: e.target.value === "true",
                     }))
                   }
                 >
                   <option value="true">Oui</option>
                   <option value="false">Non</option>
                 </select>
-
-
               </div>
 
               <div className="form-group">
@@ -623,13 +641,12 @@ useEffect(() => {
                   type="number"
                   name="discount"
                   value={formFields.discount}
-                  onChange={onChangeInput}
+                  readOnly
                 />
               </div>
             </div>
 
-
-           {/* Multi-selections + Rating */}
+            {/* Multi-selections + Rating */}
             <div className="row">
               <div className="form-group">
                 <DropdownMultiSelect
@@ -672,7 +689,10 @@ useEffect(() => {
             {/* Image principale */}
             <div className="image-upload">
               <label>Image principale</label>
-              <div className="image-box" onClick={() => document.getElementById("main-img").click()}>
+              <div
+                className="image-box"
+                onClick={() => document.getElementById("main-img").click()}
+              >
                 {loadingMainImage ? (
                   <CircularProgress />
                 ) : formFields.mainImage ? (
@@ -690,7 +710,6 @@ useEffect(() => {
               />
             </div>
 
-
             {/* Images secondaires */}
             <div className="image-upload">
               <label>Images secondaires</label>
@@ -699,7 +718,10 @@ useEffect(() => {
                 {/* Existantes (Cloudinary) */}
                 {existingExtraImages.map((img, i) => (
                   <div key={`existing-${i}`} className="image-preview">
-                    <img src={img || "/placeholder.svg"} alt={`existante ${i}`} />
+                    <img
+                      src={img || "/placeholder.svg"}
+                      alt={`existante ${i}`}
+                    />
                     <button onClick={() => removeExistingImage(i)}>
                       <FaTimes />
                     </button>
@@ -709,14 +731,18 @@ useEffect(() => {
                 {/* Nouvelles (blob previews) */}
                 {extraImagePreviews.map((img, i) => (
                   <div key={`new-${i}`} className="image-preview">
-                    <img src={img || "/placeholder.svg"} alt={`nouvelle ${i}`} />
+                    <img
+                      src={img || "/placeholder.svg"}
+                      alt={`nouvelle ${i}`}
+                    />
                     <button onClick={() => removeNewImage(i)}>
                       <FaTimes />
                     </button>
                   </div>
                 ))}
 
-                <div className="image-box"
+                <div
+                  className="image-box"
                   onClick={() => document.getElementById("extra-img").click()}
                   style={{
                     display: "flex",
@@ -746,24 +772,36 @@ useEffect(() => {
                     <CircularProgress size={30} />
                   ) : (
                     <>
-                      <FaCloudUploadAlt style={{ fontSize: "32px", color: "#1976d2" }} />
-                      <span style={{ fontSize: "12px", color: "#666", textAlign: "center" }}>
+                      <FaCloudUploadAlt
+                        style={{ fontSize: "32px", color: "#1976d2" }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          textAlign: "center",
+                        }}
+                      >
                         Ajouter des images
                       </span>
                     </>
                   )}
                 </div>
-                <input id="extra-img" type="file" hidden multiple accept="image/*"
-                  onChange={(e) => handleImageChange(e, false)} />
+                <input
+                  id="extra-img"
+                  type="file"
+                  hidden
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, false)}
+                />
               </div>
-              
             </div>
 
             <div className="image-upload">
               <label>Images Banner</label>
 
               <div className="extra-images">
-
                 {/* EXISTANTES */}
                 {existingBannerImages.map((img, i) => (
                   <div key={i} className="image-preview">
@@ -784,10 +822,12 @@ useEffect(() => {
                   </div>
                 ))}
 
-                <div className="image-box" onClick={() => document.getElementById("banner-img").click()}>
+                <div
+                  className="image-box"
+                  onClick={() => document.getElementById("banner-img").click()}
+                >
                   {loadingBanner ? <CircularProgress /> : <FaCloudUploadAlt />}
                 </div>
-
               </div>
 
               <input
@@ -806,9 +846,9 @@ useEffect(() => {
               <div
                 className={`switch ${formFields.isDisplayOnHomeBanner ? "active" : ""}`}
                 onClick={() =>
-                  setFormFields(prev => ({
+                  setFormFields((prev) => ({
                     ...prev,
-                    isDisplayOnHomeBanner: !prev.isDisplayOnHomeBanner
+                    isDisplayOnHomeBanner: !prev.isDisplayOnHomeBanner,
                   }))
                 }
               >
@@ -826,12 +866,13 @@ useEffect(() => {
               />
             </div>
 
-
-            <button type="submit" className="publish-btn" disabled={loadingSubmit}>
+            <button
+              type="submit"
+              className="publish-btn"
+              disabled={loadingSubmit}
+            >
               {loadingSubmit ? <CircularProgress /> : "Mettre à jour"}
             </button>
-
-
           </form>
         </div>
       </div>

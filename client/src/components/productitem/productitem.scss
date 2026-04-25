@@ -163,3 +163,80 @@
     background-position: -200% 0;
   }
 }
+
+.add-to-cart {
+  margin-top: auto; // pousse le bouton en bas de la card
+  width: 100%;
+  padding: 10px 0;
+ 
+  background: transparent !important;
+  color: #d62828 !important;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #d62828 !important;
+  gap: 8px;
+  cursor: pointer;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  transition: background 0.3s ease, transform 0.2s ease;
+
+  svg {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background: #000 !important;
+    transform: translateY(-2px);
+  }
+}
+.add-to-cart {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.product-item:hover .add-to-cart {
+  opacity: 1;
+  transform: translateY(0);
+}
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin:0 auto;
+  gap:20px;
+ 
+
+
+  button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: #e63946;
+    color: #fff;
+    font-size: 1rem;
+    border-top-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: #d62828;
+    }
+  }
+
+  span {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+.icon.favorite.active {
+  background: #e63946 !important;
+}
+
+.icon.favorite.active svg {
+  color: #fff !important;
+  fill: #fff !important;
+}

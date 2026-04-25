@@ -32,6 +32,10 @@ const AccountLayout = () => {
             src={user?.avatar || "/user.jpg"}
             alt="User"
             className="avatar"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.target.src = "/user.jpg";
+            }}
           />
 
           <h3>{user?.name}</h3>
@@ -55,6 +59,7 @@ const AccountLayout = () => {
               </NavLink>
             </li>
           ))}
+          
         </ul>
       </aside>
 

@@ -1,12 +1,45 @@
-import React, { useState } from "react";
-import { FaStar, FaSearch, FaEye, FaExchangeAlt, FaHeart } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import {
+  FaShoppingCart,
+  FaStar,
+  FaSearch,
+  FaEye,
+  FaExchangeAlt,
+  FaHeart,
+  FaPlus,
+  FaMinus,
+} from "react-icons/fa";
 import "./productitem.scss";
 import ProductPopup from "../productmodal";
+import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { UserContext } from "../../UserContext/UserContext";
+import { ToastContext } from "../../context/ToastContext";
+import { deleteData, editData, postData } from "../../pages/utils/api";
+import CircularProgress from "../CircularProgress/CircularProgress";
 
 const ProductItem = ({ product }) => {
   const [hovered, setHovered] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const navigate = useNavigate();
+  const { user, cartItems, loadCartItems } = useContext(UserContext);
+  const { openToast } = useContext(ToastContext);
+  const [catData, setCatData] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteId, setFavoriteId] = useState(null);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  const truncateDescription = (desc, maxLength = 100) => {
+    if (!desc) return "";
+    return desc.length > maxLength
+      ? desc.substring(0, maxLength) + "..."
+      : desc;
+  };
 
   // 🔹 Images provenant uniquement de la base
   const images = product.images || [];
@@ -14,7 +47,9 @@ const ProductItem = ({ product }) => {
   const truncateName = (name, maxWords = 3) => {
     if (!name) return "";
     const words = name.split(" ");
-    return words.length <= maxWords ? name : words.slice(0, maxWords).join(" ") + "...";
+    return words.length <= maxWords
+      ? name
+      : words.slice(0, maxWords).join(" ") + "...";
   };
 
   const isNewProduct = (date) => {
@@ -25,6 +60,249 @@ const ProductItem = ({ product }) => {
     return diffDays <= 7; // produit nouveau si <= 7 jours
   };
 
+  const addToCart = (productId, userId, quantity, options = {}) => {
+    if (userId === undefined) {
+      openToast("error", "Veuillez vous connecter pour ajouter au panier");
+      return false;
+    }
+
+    const data = {
+      productTitle: product.name,
+      image: product.images[0] || "",
+      price: product.price,
+      oldPrice: product.oldPrice,
+      discount: product.discount,
+      productId,
+      quantity,
+      userId,
+      rating: product.rating,
+      countInStock: product.countIntStock,
+      brand: product.brand,
+
+      // OPTIONS CHOISIES
+      size: options.size,
+      color: options.color,
+      ram: options.ram,
+      weight: options.weight,
+
+      // OPTIONS DISPONIBLES
+      sizeOptions: product.size || [],
+      colorOptions: product.colors || [],
+      ramOptions: product.productRam || [],
+      weightOptions: product.productWeight || [],
+    };
+    setCartLoading(true);
+
+    postData("/api/cart/add", data)
+      .then((res) => {
+        if (res?.success) {
+          openToast("success", res?.message || "Produit ajouté au panier");
+          setIsAdded(true);
+          loadCartItems();
+        } else {
+          openToast(
+            "error",
+            res?.message || "Erreur lors de l'ajout au panier",
+          );
+        }
+      })
+      .catch(() => {
+        openToast("error", "Erreur réseau lors de l'ajout au panier");
+      })
+      .finally(() => {
+        setCartLoading(false);
+      });
+  };
+
+  const currentCartItem = cartItems?.find(
+    (item) => item.productId === product._id,
+  );
+
+  useEffect(() => {
+    if (currentCartItem) {
+      setQuantity(currentCartItem.quantity);
+      setIsAdded(true);
+    } else {
+      setQuantity(1);
+      setIsAdded(false);
+    }
+  }, [cartItems, currentCartItem]);
+
+  const minusQty = () => {
+    if (loading) return;
+
+    if (!currentCartItem?._id) {
+      console.log("Cart item introuvable");
+      return;
+    }
+
+    const oldQty = quantity;
+
+    setLoading(true);
+
+    // CAS 1 : diminution simple
+    if (quantity > 1) {
+      const newQty = quantity - 1;
+
+      setQuantity(newQty);
+
+      editData("/api/cart/update-qty", {
+        _id: currentCartItem._id,
+        qty: newQty,
+      })
+        .then((res) => {
+          if (res?.success) {
+            loadCartItems();
+          } else {
+            setQuantity(oldQty); // rollback
+            openToast("error", "Erreur mise à jour");
+          }
+        })
+        .catch(() => {
+          setQuantity(oldQty); // rollback
+          openToast("error", "Erreur serveur");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+
+      return;
+    }
+
+    // CAS 2 : suppression si qty = 1
+    deleteData(`/api/cart/delete-cart-item/${currentCartItem._id}`)
+      .then((res) => {
+        if (res?.success) {
+          openToast("success", "Produit retiré du panier");
+          setIsAdded(false);
+          setQuantity(1);
+          loadCartItems();
+        } else {
+          openToast("error", "Erreur suppression");
+        }
+      })
+      .catch(() => {
+        openToast("error", "Erreur serveur");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+  const addQty = () => {
+    if (loading) return;
+
+    if (!currentCartItem?._id) {
+      console.log("Cart item introuvable");
+      return;
+    }
+
+    if (quantity >= product.countIntStock) {
+      openToast("error", "Stock insuffisant");
+      return;
+    }
+
+    const oldQty = quantity;
+    const newQty = quantity + 1;
+
+    setLoading(true);
+    setQuantity(newQty);
+
+    editData("/api/cart/update-qty", {
+      _id: currentCartItem._id,
+      qty: newQty,
+    })
+      .then((res) => {
+        if (res?.success) {
+          openToast("success", res?.message || "Quantité mise à jour");
+          loadCartItems();
+        } else {
+          setQuantity(oldQty); // rollback
+          openToast("error", "Erreur mise à jour");
+        }
+      })
+      .catch(() => {
+        setQuantity(oldQty); // rollback
+        openToast("error", "Erreur serveur");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const hasOptions =
+    product.size?.length > 0 ||
+    product.colors?.length > 0 ||
+    product.productRam?.length > 0 ||
+    product.productWeight?.length > 0;
+
+  const handleAddClick = () => {
+    if (hasOptions) {
+      openToast("error", "Veuillez choisir les options");
+      setShowPopup(true);
+    } else {
+      addToCart(product._id, user?._id, quantity);
+    }
+  };
+
+  const handleAddToMyList = () => {
+  if (!user?._id) {
+    openToast("error", "Veuillez vous connecter");
+    return;
+  }
+
+  if (favoriteLoading) return;
+
+  setFavoriteLoading(true);
+
+  // 🔥 SUPPRESSION (si déjà en favoris)
+  if (isFavorite) {
+    deleteData(`/api/mylist/remove/${product._id}`)
+      .then((res) => {
+        if (res?.success) {
+          setIsFavorite(false);
+          openToast("success", res?.message || "Retiré des favoris");
+        } else {
+          openToast("error", res?.message || "Erreur suppression");
+        }
+      })
+      .catch(() => {
+        openToast("error", "Erreur serveur");
+      })
+      .finally(() => {
+        setFavoriteLoading(false);
+      });
+
+    return;
+  }
+
+  // 🔥 AJOUT
+  const data = {
+    productId: product._id,
+    productTitle: product.name,
+    image: product.images?.[0] || "",
+    rating: product.rating,
+    price: product.price,
+    oldPrice: product.oldPrice,
+    brand: product.brand,
+    discount: product.discount,
+  };
+
+  postData("/api/mylist/add", data)
+    .then((res) => {
+      if (res?.success) {
+        setIsFavorite(true);
+        openToast("success", res?.message || "Ajouté aux favoris ❤️");
+      } else {
+        openToast("error", res?.message || "Erreur ajout");
+      }
+    })
+    .catch(() => {
+      openToast("error", "Erreur serveur");
+    })
+    .finally(() => {
+      setFavoriteLoading(false);
+    });
+};
   return (
     <>
       <div
@@ -32,29 +310,63 @@ const ProductItem = ({ product }) => {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div className="img-box">
+        <div
+          className="img-box"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/product/${product._id}`);
+          }}
+        >
           {images.length > 0 ? (
-    <>
-      {!imageLoaded && <div className="skeleton-image"></div>}
-      <img
-        src={hovered && images[1] ? images[1] : images[0]}
-        alt={product.name}
-        style={{ display: imageLoaded ? "block" : "none" }}
-        onLoad={() => setImageLoaded(true)}
-      />
-    </>
-  ) : (
-    <div className="no-image">Pas d'image</div>
-  )}
+            <>
+              {!imageLoaded && <div className="skeleton-image"></div>}
+              <img
+                src={hovered && images[1] ? images[1] : images[0]}
+                alt={product.name}
+                style={{ display: imageLoaded ? "block" : "none" }}
+                onLoad={() => setImageLoaded(true)}
+              />
+            </>
+          ) : (
+            <div className="no-image">Pas d'image</div>
+          )}
 
-          {product.discount > 0 && <div className="discount-badge">-{product.discount}%</div>}
-          {isNewProduct(product.dateCreated) && <div className="new-badge">Nouveau</div>}
+          {product.discount > 0 && (
+            <div className="discount-badge">-{product.discount}%</div>
+          )}
+          {isNewProduct(product.dateCreated) && (
+            <div className="new-badge">Nouveau</div>
+          )}
 
           <div className={`icon-overlay ${hovered ? "show" : ""}`}>
-            <button className="icon compare"><FaExchangeAlt /></button>
-            <button className="icon view" onClick={() => setShowPopup(true)}><FaEye /></button>
-            <button className="icon zoom"><FaSearch /></button>
-            <button className="icon favorite"><FaHeart /></button>
+            <button
+              className="icon compare"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FaExchangeAlt />
+            </button>
+            <button
+              className="icon view"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPopup(true);
+              }}
+            >
+              <FaEye />
+            </button>
+            <button className="icon zoom" onClick={(e) => e.stopPropagation()}>
+              <FaSearch />
+            </button>
+            <button
+              className={`icon favorite ${isFavorite ? "active" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToMyList();
+              }}
+              disabled={favoriteLoading}
+            >
+              <FaHeart />
+            </button>
           </div>
         </div>
 
@@ -63,18 +375,57 @@ const ProductItem = ({ product }) => {
 
         <div className="rating">
           {[...Array(5)].map((_, i) => (
-            <FaStar key={i} color={i < (product.rating || 0) ? "#FFD700" : "#ccc"} size={16} />
+            <FaStar
+              key={i}
+              color={i < (product.rating || 0) ? "#FFD700" : "#ccc"}
+              size={16}
+            />
           ))}
         </div>
 
         <div className="price-box">
-          {product.oldPrice && <span className="old-price">{product.oldPrice} FCFA</span>}
+          {product.oldPrice && (
+            <span className="old-price">{product.oldPrice} FCFA</span>
+          )}
           <span className="price">{product.price} FCFA</span>
         </div>
+        {isAdded === false ? (
+          <button
+            className="add-to-cart"
+            onClick={handleAddClick}
+            disabled={cartLoading}
+          >
+            {cartLoading ? (
+              <span className="btn-loader">
+                <CircularProgress />
+              </span>
+            ) : (
+              <>
+                <FaShoppingCart />
+                <span>Ajouter au panier</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <div className="quantity-selector">
+            <button onClick={minusQty} disabled={loading}>
+              <FaMinus />
+            </button>
+            <span>{quantity}</span>
+            <button onClick={addQty} disabled={loading}>
+              <FaPlus />
+            </button>
+          </div>
+        )}
       </div>
 
       {showPopup && (
-        <ProductPopup product={product} onClose={() => setShowPopup(false)} />
+        <ProductPopup
+          product={product}
+          onClose={() => setShowPopup(false)}
+          addToCart={addToCart}
+          user={user}
+        />
       )}
     </>
   );

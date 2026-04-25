@@ -9,7 +9,7 @@ import {
 import ProductZoom from "../productzoom";
 import "./productpopup.scss";
 
-const ProductPopup = ({ product, onClose }) => {
+const ProductPopup = ({ product, onClose, addToCart, user }) => {
   const [quantity, setQuantity] = useState(1);
 
   // ✅ STATES pour les caractéristiques
@@ -19,13 +19,42 @@ const ProductPopup = ({ product, onClose }) => {
   const [selectedWeight, setSelectedWeight] = useState(null);
 
   // ✅ INIT : prendre la première option disponible par défaut
-  useEffect(() => {
-    if (product.size?.length > 0) setSelectedSize(product.size[0]);
-    if (product.colors?.length > 0) setSelectedColor(product.colors[0]);
-    if (product.productRam?.length > 0) setSelectedRam(product.productRam[0]);
-    if (product.productWeight?.length > 0)
-      setSelectedWeight(product.productWeight[0]);
-  }, [product]);
+  const handleAddToCart = () => {
+    console.log("CLICK ADD", {
+  selectedSize,
+  selectedColor,
+  selectedRam,
+  selectedWeight,
+});
+  if (product.size?.length > 0 && !selectedSize) {
+    alert("Choisissez une taille");
+    return;
+  }
+
+  if (product.colors?.length > 0 && !selectedColor) {
+    alert("Choisissez une couleur");
+    return;
+  }
+
+  if (product.productRam?.length > 0 && !selectedRam) {
+    alert("Choisissez une RAM");
+    return;
+  }
+
+  if (product.productWeight?.length > 0 && !selectedWeight) {
+    alert("Choisissez un poids");
+    return;
+  }
+
+  addToCart(product._id, user?._id, quantity, {
+    size: selectedSize,
+    color: selectedColor,
+    ram: selectedRam,
+    weight: selectedWeight,
+  });
+
+  onClose(); // fermer popup après ajout
+};
 
   // Quantité
   const handleIncrement = () => setQuantity(quantity + 1);
@@ -163,9 +192,9 @@ const ProductPopup = ({ product, onClose }) => {
                 <button onClick={handleIncrement}>+</button>
               </div>
 
-              <button className="add-to-cart">
-                <FaCartPlus /> Ajouter au panier
-              </button>
+              <button className="add-cart" onClick={handleAddToCart}>
+  <FaCartPlus /> Ajouter au panier
+</button>
             </div>
 
             {/* Actions */}

@@ -2,7 +2,7 @@ import React from "react";
 import "./CircularProgress.scss";
 
 const CircularProgress = () => {
-  return <div className="loader"></div>;
+  return <div className="chargement"></div>;
 };
 
 export default CircularProgress;

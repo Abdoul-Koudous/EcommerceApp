@@ -132,12 +132,20 @@
       font-size: 0.9rem;
       color: #777;
       margin-bottom: 10px;
+
+      display: -webkit-box;
+      -webkit-line-clamp: 3;   // nombre de lignes affichées
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .rating {
       display: flex;
+      justify-content: flex-start; // ✅ important
+      align-items: center;
       gap: 3px;
       margin-bottom: 10px;
+      width: 100%;
     }
 
     .price-box {
@@ -159,21 +167,33 @@
     }
 
     .add-to-cart-btn {
-      padding: 10px 15px;
+      padding: 10px 12px;   // plus compact
+      font-size: 0.85rem;
+      width: fit-content;  // ✅ IMPORTANT (ne prend plus toute la largeur)
+      max-width: 185px;    // optionnel (contrôle propre)
+      
       background: #e63946;
       color: #fff;
       border: none;
-      border-radius: 6px;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
       cursor: pointer;
-      font-weight: 600;
+
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      transition: background 0.3s;
+      gap: 6px;
+
+      transition: all 0.2s ease;
 
       &:hover {
         background: #d62828;
       }
     }
   }
+}
+.category {
+  font-size: 0.85rem;
+  color: #777;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
