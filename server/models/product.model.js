@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
-import { type } from "os";
-import { ref } from "process";
 
-const productSchema = mongoose.Schema({
+const productSchema = mongoose.Schema(
+  {
     name: { type: String, required: true },
     description: { type: String, required: true },
     images: [{ type: String, required: true }],
@@ -15,20 +14,29 @@ const productSchema = mongoose.Schema({
     subCat: { type: String, default: "" },
     thirdsubCat: { type: String, default: "" },
     thirdSubCatId: { type: String, default: "" },
-    category:{type: mongoose.Schema.Types.ObjectId, ref: "Categorie", required: true},
+
+    // ✅ ICI c’est BON
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Categorie",
+      required: true,
+    },
+
     countIntStock: { type: Number, required: true },
     rating: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
     discount: { type: Number, required: true },
-    sale: { type: Number, default: 0 }, 
+    sale: { type: Number, default: 0 },
     productRam: [{ type: String, default: null }],
     size: [{ type: String, default: null }],
     productWeight: [{ type: String, default: null }],
-    bannerimages: [{ type: String, default: []  }],
+    bannerimages: [{ type: String, default: [] }],
     bannerTitleName: { type: String, required: true },
     dateCreated: { type: Date, default: Date.now },
     isDisplayOnHomeBanner: { type: Boolean, default: false },
-}, { timestamps: true });
+  },
+  { timestamps: true },
+);
 
 const ProductModel = mongoose.model("Produits", productSchema);
 export default ProductModel;

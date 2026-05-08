@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { fetchDataFromApi } from "../../pages/utils/api";
-import "./adsBannerSlider.scss";
+import "./adsbannerslider.scss";
 import BannerBox from "./BannerBox";
 
 const AdsBannerSlider = ({ catId, categoryName, categoryNames, limit = 4 }) => {

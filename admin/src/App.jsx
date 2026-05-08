@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.scss";
-
 // Pages
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/products";
@@ -20,7 +19,7 @@ import BlogList from "./pages/blog";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin"> {/* ✅ seul changement */}
       <Routes>
         {/* === Pages avec layout admin === */}
         <Route
@@ -119,13 +118,11 @@ function App() {
             </AdminLayout>
           }
         />
-
         {/* === Pages publiques === */}
         <Route path="/login" element={<AuthPage defaultForm="login" />} />
         <Route path="/register" element={<AuthPage defaultForm="register" />} />
         <Route path="/otp" element={<AuthPage defaultForm="otp" />} />
         <Route path="/reset-password" element={<AuthPage defaultForm="reset" />} />
-
       </Routes>
     </BrowserRouter>
   );

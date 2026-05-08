@@ -10,7 +10,8 @@ import HomeBannerV2 from "../../components/homesliderv2/index.jsx";
 import BannerBoxv2 from "../../components/bannerboxv2/index.jsx";
 import "./home.scss";
 import { fetchDataFromApi } from "../utils/api.js";
-import CircularProgress from "../../../../admin/src/components/CircularProgress/CircularProgress.jsx";
+import CircularProgress from "../../components/CircularProgress/CircularProgress";
+
 
 const Home = () => {
   const [latestProducts, setLatestProducts] = useState([]);

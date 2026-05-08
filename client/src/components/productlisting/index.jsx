@@ -5,12 +5,13 @@ import {
 } from "react-icons/fa";
 import SideBar from '../sidebar';
 import ProductItem from '../productitem';
-import ProductItemView from './ProductListView';
+
 
 import "./productlisting.scss";
 import { fetchDataFromApi, postData } from '../../pages/utils/api';
 import { ProductLoading } from '../ProductLoading';
 import PaginationPro from '../paginnationpro/paginationpro';
+import ProductItemView from './productlistview';
 
 
 const ProductListing = () => {

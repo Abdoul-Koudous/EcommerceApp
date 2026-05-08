@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchDataFromApi } from "../utils/api";
-import "./productdetails.scss";
+import "./productDetails.scss";
 import ProductZoom from "../../components/productzoom";
 import { FaTag, FaBuilding, FaListAlt, FaPercent, FaMemory, FaRuler, FaWeightHanging, FaCalendarAlt, FaStar } from "react-icons/fa";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";

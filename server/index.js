@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
-import connectDb from "./config/connectDB.js";
+import connectDB from "./config/connectDB.js";
 import userRouter from './route/user.route.js'
 import categoryRouter from "./route/category.route.js";
 import productRouter from "./route/product.route.js";
@@ -18,7 +18,7 @@ import blogRouter from "./route/blog.route.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 // 🧩 Middlewares globaux
 app.use(cors());
@@ -50,8 +50,11 @@ app.use('/api/bannerV1', bannerV1Router);
 app.use('/api/blog', blogRouter);
 
 // 🔗 Connexion à MongoDB + Lancement du serveur
-connectDb().then(() => {
-  app.listen(PORT, () => {
+connectDB().then(() => {
+  app.listen(PORT, "0.0.0.0",() => {
     console.log(`✅ Serveur en cours d'exécution sur le port ${PORT}`);
   });
 });
+// docker compose -f docker-compose.prod.yml down
+// docker compose -f docker-compose.prod.yml build --no-cache
+// docker compose -f docker-compose.prod.yml up

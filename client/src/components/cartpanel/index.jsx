@@ -1,6 +1,6 @@
 import React from "react";
 import { FaTrash } from "react-icons/fa";
-import "./cartpanel.scss";
+import "./cartPanel.scss";
 import { deleteData } from "../../pages/utils/api";
 import { useNavigate, Link } from "react-router-dom";
 

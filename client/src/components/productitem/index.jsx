@@ -254,7 +254,7 @@ const ProductItem = ({ product }) => {
 
   setFavoriteLoading(true);
 
-  // 🔥 SUPPRESSION (si déjà en favoris)
+  //  SUPPRESSION (si déjà en favoris)
   if (isFavorite) {
     deleteData(`/api/mylist/remove/${product._id}`)
       .then((res) => {
@@ -275,7 +275,7 @@ const ProductItem = ({ product }) => {
     return;
   }
 
-  // 🔥 AJOUT
+  //  AJOUT
   const data = {
     productId: product._id,
     productTitle: product.name,
