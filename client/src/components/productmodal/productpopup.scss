@@ -111,8 +111,16 @@
 }
 
 .stock {
-  color: #28a745;
   font-size: 0.9rem;
+  font-weight: 600;
+
+  &.in-stock {
+    color: #2e7d32;
+  }
+
+  &.out-of-stock {
+    color: #d32f2f;
+  }
 }
 
 /* DESC */
@@ -199,9 +207,14 @@
   border: none;
   width: 32px;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
-.quantity button:hover {
+.quantity button:hover:not(:disabled) {
   background: #e63946;
   color: #fff;
 }
@@ -221,9 +234,15 @@
   display: flex;
   gap: 5px;
   align-items: center;
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 }
 
-.add-cart:hover {
+.add-cart:hover:not(:disabled) {
   background: #c92030;
 }
 

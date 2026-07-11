@@ -4,7 +4,7 @@ import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import { editData, postData, uploadImage } from "../utils/api";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
-import { FaUser, FaEnvelope, FaPhone, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 
@@ -22,9 +22,8 @@ const ProfilePage = () => {
   const [previews, setPreviews] = useState([]);
 
   const [profileData, setProfileData] = useState({ name: "", mobile: "" });
-  const [passwordData, setPasswordData] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordData, setPasswordData] = useState({ newPassword: "", confirmPassword: "" });
 
-  const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordBlock, setShowPasswordBlock] = useState(false);
@@ -51,7 +50,7 @@ const ProfilePage = () => {
 
   const cancelPassword = () => {
     setPasswordEdit(false);
-    setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    setPasswordData({ newPassword: "", confirmPassword: "" });
   };
 
   const handleProfileSubmit = async (e) => {
@@ -81,9 +80,9 @@ const ProfilePage = () => {
         return openToast("error", "Utilisateur non chargé");
       }
 
-      const res = await postData(`/api/users/reset-password`, { 
-        ...passwordData, 
-        email: user.email 
+      const res = await postData(`/api/users/reset-password`, {
+        ...passwordData,
+        email: user.email
       });
       if (!res.success) return openToast("error", res.message);
       openToast("success", res.message || "Mot de passe mis à jour !");
@@ -159,7 +158,7 @@ const ProfilePage = () => {
             <label>Email</label>
           </div>
           <div className="form-group phone-group">
-            
+
 
             <PhoneInput
               international
@@ -196,27 +195,6 @@ const ProfilePage = () => {
         <h2>Changer mon mot de passe</h2>
         <hr />
         <form className="profile-form" onSubmit={handlePasswordSubmit}>
-          {/* Ancien mot de passe */}
-          {
-          user?.signUpWithGoogle === false && 
-          <div className="form-group">
-            <FaLock className="input-icon" />
-            <input
-              type={showOldPassword ? "text" : "password"}
-              name="oldPassword"
-              placeholder=" "
-              value={passwordData.oldPassword}
-              onChange={handlePasswordChange}
-              disabled={!passwordEdit}
-            />
-            <label>Ancien mot de passe</label>
-            <span className="toggle-password" onClick={() => setShowOldPassword(!showOldPassword)}>
-              {showOldPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
-          </div>
-          }
-          
-
           {/* Nouveau mot de passe */}
           <div className="form-group">
             <FaLock className="input-icon" />

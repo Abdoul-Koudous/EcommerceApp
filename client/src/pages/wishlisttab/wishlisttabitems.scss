@@ -20,11 +20,12 @@
     }
 
     img {
-      width: 100px;
-      height: 100px;
+      width: 160px;
+      height: 160px;
       object-fit: cover;
       border-radius: 8px;
       flex-shrink: 0;
+      cursor: pointer;
       transition: transform 0.2s ease;
 
       &:hover {
@@ -46,9 +47,14 @@
       }
 
       .item-title {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: #222;
+        cursor: pointer;
+
+        &:hover {
+          color: #e63946;
+        }
       }
 
       .item-rating {
@@ -65,44 +71,6 @@
         }
       }
 
-      .item-attributes {
-        display: flex;
-        gap: 1rem;
-        margin-top: 0.3rem;
-        flex-wrap: wrap;
-
-        .attr {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-
-          label {
-            font-size: 0.85rem;
-            color: #555;
-          }
-
-          select {
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 0.3rem 0.4rem;
-            font-size: 0.85rem;
-            background: #fafafa;
-            cursor: pointer;
-            transition: all 0.2s ease;
-
-            &:hover {
-              border-color: #e63946;
-            }
-
-            &:focus {
-              outline: none;
-              border-color: #e63946;
-              background: #fff;
-            }
-          }
-        }
-      }
-
       .item-prices {
         margin-top: 0.6rem;
         display: flex;
@@ -112,7 +80,7 @@
         .current-price {
           color: #e63946;
           font-weight: 700;
-          font-size: 1rem;
+          font-size: 1.1rem;
         }
 
         .old-price {
@@ -142,6 +110,11 @@
       &:hover {
         color: #c62b38;
       }
+
+      &.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
     }
   }
 
@@ -153,12 +126,8 @@
       text-align: center;
 
       img {
-        width: 120px;
-        height: 120px;
-      }
-
-      .item-attributes {
-        justify-content: center;
+        width: 180px;
+        height: 180px;
       }
 
       .delete-icon {
@@ -167,16 +136,3 @@
     }
   }
 }
-.btn-add {
-        background: #e63946;
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background 0.2s ease;
-
-        &:hover {
-          background: #b71c1c;
-        }
-      }

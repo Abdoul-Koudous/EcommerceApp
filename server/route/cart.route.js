@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 
-import { addToCartItemController, deleteCartItemQtyController, getCartItemController, updateCartItemController } from '../controllers/cart.controller.js';
+import { addToCartItemController, deleteCartItemQtyController, emptyCartController, getCartItemController, updateCartItemController } from '../controllers/cart.controller.js';
 import auth from '../middlewares/auth.js';
 
 
@@ -11,5 +11,5 @@ cartRouter.post('/add',auth,addToCartItemController);
 cartRouter.get('/get',auth,getCartItemController);
 cartRouter.put('/update-qty',auth,updateCartItemController);
 cartRouter.delete('/delete-cart-item/:id',auth,deleteCartItemQtyController);
-
+cartRouter.delete('/emptyCart/:id',auth,emptyCartController);    
 export default cartRouter

@@ -11,6 +11,7 @@ export const UserProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [products, setProducts] = useState([]);
+  const [myListItems, setMyListItems] = useState([]);
 
   const { openToast } = useContext(ToastContext);
 
@@ -41,6 +42,13 @@ export const UserProvider = ({ children }) => {
         if (res?.success) {
           setUser(res.data);
           setAddresses(res.data.address_details || []);
+        } else {
+          // Token présent mais invalide côté serveur → on nettoie
+          console.log("❌ Token invalide, nettoyage");
+          localStorage.removeItem("accesstoken");
+          localStorage.removeItem("refreshToken");
+          setUser(null);
+          setAddresses([]);
         }
       })
       .catch((err) => {
@@ -92,8 +100,7 @@ export const UserProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("❌ PRODUCTS ERROR:", err);
-      if (openToast)
-        openToast("error", "Impossible de charger les produits");
+      if (openToast) openToast("error", "Impossible de charger les produits");
     }
   };
 
@@ -121,9 +128,36 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // =========================
+  // MY LIST / FAVORIS
+  // =========================
+  const loadMyListItems = async () => {
+    try {
+      const res = await fetchDataFromApi("/api/mylist");
+
+      console.log("❤️ MY LIST RESPONSE:", res);
+
+      if (res?.success) {
+        console.log("✅ MY LIST ITEMS:", res.data);
+        setMyListItems(res.data);
+      } else {
+        console.log("❌ MY LIST FAILED");
+      }
+    } catch (err) {
+      console.error("❌ MY LIST ERROR:", err);
+    }
+  };
+
   useEffect(() => {
     loadUser();
   }, []);
+
+  useEffect(() => {
+    if (user?._id) {
+      loadCartItems();
+      loadMyListItems();
+    }
+  }, [user]);
 
   return (
     <UserContext.Provider
@@ -139,6 +173,8 @@ export const UserProvider = ({ children }) => {
 
         cartItems,
         loadCartItems,
+        myListItems,
+        loadMyListItems,
 
         products,
         setProducts,

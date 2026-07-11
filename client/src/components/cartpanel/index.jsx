@@ -3,17 +3,19 @@ import { FaTrash } from "react-icons/fa";
 import "./cartPanel.scss";
 import { deleteData } from "../../pages/utils/api";
 import { useNavigate, Link } from "react-router-dom";
+import { useContext } from "react";
+import { UserContext } from "../../UserContext/UserContext";
+
 
 const CartPanel = ({
   isOpen,
   onClose,
-  cartItems,
-  loadCartItems,
   openToast,
 }) => {
   const shipping = 500; // Prix d'expédition fixe
   const taxRate = 0.18; // Exemple 18% de taxes
   const navigate = useNavigate();
+  const { cartItems, loadCartItems } = useContext(UserContext);
 
   const handleRemoveItem = (id) => {
     if (!id) return;

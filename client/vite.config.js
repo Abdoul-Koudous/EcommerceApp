@@ -1,13 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/',          // ← client reste à la racine, pas besoin de changer
+  base: '/',
   server: {
-    host: true,       // ← OBLIGATOIRE sinon Docker ne peut pas accéder
+    host: true,
     port: 5173,
     strictPort: true,
+    allowedHosts: "all",
+    watch: {
+      usePolling: true,
+      interval: 1000
+    }
   }
 })

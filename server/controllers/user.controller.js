@@ -633,7 +633,7 @@ export async function verifyForgotPasswordOtp(request, response) {
 
 export async function resetpassword(request, response) {
   try {
-    const { email, oldPassword, newPassword, confirmPassword } = request.body;
+    const { email, newPassword, confirmPassword } = request.body;
 
     if (!email || !newPassword || !confirmPassword) {
       return response.status(400).json({
@@ -652,21 +652,6 @@ export async function resetpassword(request, response) {
       });
     }
 
-    if (user?.signUpWithGoogle === false) {
-         // Cas changement classique : vérifier l'ancien mot de passe
-        const checkPassword = await bcryptjs.compare(oldPassword, user.password);
-        if (!checkPassword) {
-            return response.status(400).json({
-            message: "Votre ancien mot de passe est incorrect",
-            error: true,
-            success: false,
-            });
-        }
-      
-    }
-
-  
-
     // Vérifier que les nouveaux mots de passe correspondent
     if (newPassword !== confirmPassword) {
       return response.status(400).json({
@@ -676,7 +661,7 @@ export async function resetpassword(request, response) {
       });
     }
 
-    // Hash et mise à jour du mot de passe
+    // Hash et mise à jour du mot de passe (plus de vérification de l'ancien mot de passe)
     const salt = await bcryptjs.genSalt(10);
     user.password = await bcryptjs.hash(newPassword, salt);
     user.signUpWithGoogle = false;

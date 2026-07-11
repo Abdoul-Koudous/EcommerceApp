@@ -16,6 +16,7 @@ import Verify from "./pages/verify";
 import ForgotPassword from "./pages/forgotpassword";
 import ResetPassword from "./pages/resetpassword";
 import Checkout from "./pages/checkout";
+import OrderSuccess from "./pages/order-success";
 
 // === Compte client ===
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/resetpassword" element={<ResetPassword />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order/success" element={<OrderSuccess />} />
 
           {/* === COMPTE UTILISATEUR PROTÉGÉ === */}
           <Route

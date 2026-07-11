@@ -23,7 +23,8 @@ const ProductItem = ({ product }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const navigate = useNavigate();
-  const { user, cartItems, loadCartItems } = useContext(UserContext);
+  const { user, cartItems, loadCartItems, loadMyListItems, myListItems } =
+    useContext(UserContext);
   const { openToast } = useContext(ToastContext);
   const [catData, setCatData] = useState([]);
   const [quantity, setQuantity] = useState(1);
@@ -245,24 +246,59 @@ const ProductItem = ({ product }) => {
   };
 
   const handleAddToMyList = () => {
-  if (!user?._id) {
-    openToast("error", "Veuillez vous connecter");
-    return;
-  }
+    if (!user?._id) {
+      openToast("error", "Veuillez vous connecter");
+      return;
+    }
 
-  if (favoriteLoading) return;
+    if (favoriteLoading) return;
 
-  setFavoriteLoading(true);
+    setFavoriteLoading(true);
 
-  //  SUPPRESSION (si déjà en favoris)
-  if (isFavorite) {
-    deleteData(`/api/mylist/remove/${product._id}`)
+    //  SUPPRESSION (si déjà en favoris)
+    if (isFavorite) {
+      deleteData(`/api/mylist/remove/${product._id}`)
+        .then((res) => {
+          if (res?.success) {
+            setIsFavorite(false);
+            // 🔥 UPDATE CONTEXT
+            loadMyListItems();
+            openToast("success", res?.message || "Retiré des favoris");
+          } else {
+            openToast("error", res?.message || "Erreur suppression");
+          }
+        })
+        .catch(() => {
+          openToast("error", "Erreur serveur");
+        })
+        .finally(() => {
+          setFavoriteLoading(false);
+        });
+
+      return;
+    }
+
+    //  AJOUT
+    const data = {
+      productId: product._id,
+      productTitle: product.name,
+      image: product.images?.[0] || "",
+      rating: product.rating,
+      price: product.price,
+      oldPrice: product.oldPrice,
+      brand: product.brand,
+      discount: product.discount,
+    };
+
+    postData("/api/mylist/add", data)
       .then((res) => {
         if (res?.success) {
-          setIsFavorite(false);
-          openToast("success", res?.message || "Retiré des favoris");
+          setIsFavorite(true);
+          // 🔥 UPDATE CONTEXT
+          loadMyListItems();
+          openToast("success", res?.message || "Ajouté aux favoris ❤️");
         } else {
-          openToast("error", res?.message || "Erreur suppression");
+          openToast("error", res?.message || "Erreur ajout");
         }
       })
       .catch(() => {
@@ -271,38 +307,13 @@ const ProductItem = ({ product }) => {
       .finally(() => {
         setFavoriteLoading(false);
       });
-
-    return;
-  }
-
-  //  AJOUT
-  const data = {
-    productId: product._id,
-    productTitle: product.name,
-    image: product.images?.[0] || "",
-    rating: product.rating,
-    price: product.price,
-    oldPrice: product.oldPrice,
-    brand: product.brand,
-    discount: product.discount,
   };
 
-  postData("/api/mylist/add", data)
-    .then((res) => {
-      if (res?.success) {
-        setIsFavorite(true);
-        openToast("success", res?.message || "Ajouté aux favoris ❤️");
-      } else {
-        openToast("error", res?.message || "Erreur ajout");
-      }
-    })
-    .catch(() => {
-      openToast("error", "Erreur serveur");
-    })
-    .finally(() => {
-      setFavoriteLoading(false);
-    });
-};
+  useEffect(() => {
+    const exists = myListItems?.some((item) => item.productId === product._id);
+
+    setIsFavorite(exists);
+  }, [myListItems, product._id]);
   return (
     <>
       <div

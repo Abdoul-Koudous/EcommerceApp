@@ -18,46 +18,57 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
   const [selectedRam, setSelectedRam] = useState(null);
   const [selectedWeight, setSelectedWeight] = useState(null);
 
+  const isOutOfStock = !product?.countIntStock || product.countIntStock <= 0;
+
   // ✅ INIT : prendre la première option disponible par défaut
   const handleAddToCart = () => {
     console.log("CLICK ADD", {
-  selectedSize,
-  selectedColor,
-  selectedRam,
-  selectedWeight,
-});
-  if (product.size?.length > 0 && !selectedSize) {
-    alert("Choisissez une taille");
-    return;
-  }
+      selectedSize,
+      selectedColor,
+      selectedRam,
+      selectedWeight,
+    });
 
-  if (product.colors?.length > 0 && !selectedColor) {
-    alert("Choisissez une couleur");
-    return;
-  }
+    if (isOutOfStock) {
+      alert("Ce produit est en rupture de stock");
+      return;
+    }
 
-  if (product.productRam?.length > 0 && !selectedRam) {
-    alert("Choisissez une RAM");
-    return;
-  }
+    if (product.size?.length > 0 && !selectedSize) {
+      alert("Choisissez une taille");
+      return;
+    }
 
-  if (product.productWeight?.length > 0 && !selectedWeight) {
-    alert("Choisissez un poids");
-    return;
-  }
+    if (product.colors?.length > 0 && !selectedColor) {
+      alert("Choisissez une couleur");
+      return;
+    }
 
-  addToCart(product._id, user?._id, quantity, {
-    size: selectedSize,
-    color: selectedColor,
-    ram: selectedRam,
-    weight: selectedWeight,
-  });
+    if (product.productRam?.length > 0 && !selectedRam) {
+      alert("Choisissez une RAM");
+      return;
+    }
 
-  onClose(); // fermer popup après ajout
-};
+    if (product.productWeight?.length > 0 && !selectedWeight) {
+      alert("Choisissez un poids");
+      return;
+    }
+
+    addToCart(product._id, user?._id, quantity, {
+      size: selectedSize,
+      color: selectedColor,
+      ram: selectedRam,
+      weight: selectedWeight,
+    });
+
+    onClose(); // fermer popup après ajout
+  };
 
   // Quantité
-  const handleIncrement = () => setQuantity(quantity + 1);
+  const handleIncrement = () => {
+    if (isOutOfStock) return;
+    setQuantity((q) => Math.min(q + 1, product.countIntStock));
+  };
   const handleDecrement = () =>
     setQuantity(quantity > 1 ? quantity - 1 : 1);
 
@@ -102,7 +113,7 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
               {product.oldPrice && <span className="old-price">{product.oldPrice} FCFA</span>}
               {product.price && <span className="price">{product.price} FCFA</span>}
               {product.countIntStock != null && (
-                <span className="stock">
+                <span className={`stock ${product.countIntStock > 0 ? "in-stock" : "out-of-stock"}`}>
                   {product.countIntStock > 0
                     ? `En stock (${product.countIntStock})`
                     : "Indisponible"}
@@ -187,14 +198,14 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
             {/* Quantité */}
             <div className="cart-actions">
               <div className="quantity">
-                <button onClick={handleDecrement}>-</button>
+                <button onClick={handleDecrement} disabled={isOutOfStock}>-</button>
                 <span>{quantity}</span>
-                <button onClick={handleIncrement}>+</button>
+                <button onClick={handleIncrement} disabled={isOutOfStock}>+</button>
               </div>
 
-              <button className="add-cart" onClick={handleAddToCart}>
-  <FaCartPlus /> Ajouter au panier
-</button>
+              <button className="add-cart" onClick={handleAddToCart} disabled={isOutOfStock}>
+                <FaCartPlus /> Ajouter au panier
+              </button>
             </div>
 
             {/* Actions */}

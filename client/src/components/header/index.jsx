@@ -21,18 +21,17 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const [catData, setCatData] = useState([]);
-  const { user, cartItems, categories, loadCartItems} =
-    useContext(UserContext);
+  const { user, cartItems, categories, myListItems } = useContext(UserContext);
 
-  const {openToast} = useContext(ToastContext);
+  const { openToast } = useContext(ToastContext);
+
+  const isLoggedIn = !!user?._id;
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
   const toggleCart = () => setCartOpen(!cartOpen);
-
-  const isLoggedIn = !!localStorage.getItem("accesstoken");
 
   const logout = async () => {
     try {
@@ -44,7 +43,6 @@ const Header = () => {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userEmail");
       setCatData(categories);
-      
 
       // Redirection vers accueil
       navigate("/");
@@ -54,11 +52,6 @@ const Header = () => {
     }
   };
 
-  useEffect(() => {
-    if (user?._id) {
-      loadCartItems();
-    }
-  }, [user]);
   useEffect(() => {
     console.log("PANIER CONTEXT:", cartItems);
   }, [cartItems]);
@@ -152,9 +145,9 @@ const Header = () => {
                 </li>
               )}
 
-              <li className="iconBox">
+              <li className="iconBox" onClick={() => navigate("/account/wishlist")}>
                 <FaHeart className="icon" />
-                <span className="count">3</span>
+                <span className="count">{myListItems.length}</span>
                 <span className="tooltip">Souhaits</span>
               </li>
               <li className="iconBox">
@@ -173,13 +166,7 @@ const Header = () => {
       </div>
 
       <Navigation />
-      <CartPanel
-        isOpen={cartOpen}
-        onClose={toggleCart}
-        cartItems={cartItems}
-        loadCartItems={loadCartItems}
-        openToast={openToast}
-      />
+      <CartPanel isOpen={cartOpen} onClose={toggleCart} openToast={openToast} />
     </header>
   );
 };

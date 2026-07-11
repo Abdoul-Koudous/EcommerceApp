@@ -85,6 +85,7 @@ export const deleteToMyListController = async (req, res) => {
     });
   }
 };
+
 export const getMyListController = async (request, response) => {
     try {
         const userId = request.userId;

@@ -36,10 +36,15 @@ const ProductDetails = () => {
   const currentCartItem = cartItems?.find(
     (item) => item.productId === product?._id,
   );
+
   const handleAddToCart = () => {
-    setLoadingCart(true);
     if (!user?._id) {
       openToast("error", "Veuillez vous connecter");
+      return;
+    }
+
+    if (!product?.countIntStock || product.countIntStock <= 0) {
+      openToast("error", "Ce produit est en rupture de stock");
       return;
     }
 
@@ -59,6 +64,8 @@ const ProductDetails = () => {
       openToast("error", "Choisissez les options");
       return;
     }
+
+    setLoadingCart(true);
 
     const data = {
       productTitle: product.name,
@@ -94,8 +101,15 @@ const ProductDetails = () => {
       }
     });
   };
+
   const handleUpdateCart = () => {
     if (!currentCartItem?._id) return;
+
+    if (!product?.countIntStock || product.countIntStock <= 0) {
+      openToast("error", "Ce produit est en rupture de stock");
+      return;
+    }
+
     setLoadingCart(true);
 
     editData("/api/cart/update-qty", {
@@ -115,29 +129,27 @@ const ProductDetails = () => {
   };
 
   const handleIncrement = () => {
-    setQuantity((q) => Math.min(q + 1, product?.countIntStock || 1));
+    if (!product?.countIntStock) return;
+    setQuantity((q) => Math.min(q + 1, product.countIntStock));
   };
 
   const handleDecrement = () => {
     setQuantity((q) => Math.max(1, q - 1));
   };
   // FETCH PRODUIT
+  const getProduct = async () => {
+    try {
+      const res = await fetchDataFromApi(`/api/product/${id}`);
+      const data = res.product || res.data;
+      setProduct(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const getProduct = async () => {
-      try {
-        setLoading(true);
-        const res = await fetchDataFromApi(`/api/product/${id}`);
-        const data = res.product || res.data;
-
-        setProduct(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getProduct();
+    setLoading(true);
+    getProduct().finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
@@ -192,9 +204,11 @@ const ProductDetails = () => {
                 <a href="/">Accueil</a>
               </li>
               <li>
-                <Link to={`/productlisting?catId=${product.catId?._id || product.catId}`}>
-  {product.catName}
-</Link>
+                <Link
+                  to={`/productlisting?catId=${product.catId?._id || product.catId}`}
+                >
+                  {product.catName}
+                </Link>
               </li>
               <li className="active">{product.name}</li>
             </ul>
@@ -243,8 +257,12 @@ const ProductDetails = () => {
                 )}
                 <span className="price">{product.price} FCFA</span>
 
-                <span className="stock">
-                  {product.countIntStock > 0 ? "In stock" : "Out of stock"}
+                <span
+                  className={`stock ${product.countIntStock > 0 ? "in-stock" : "out-of-stock"}`}
+                >
+                  {product.countIntStock > 0
+                    ? `En stock (${product.countIntStock} disponible${product.countIntStock > 1 ? "s" : ""})`
+                    : "Rupture de stock"}
                 </span>
               </div>
 
@@ -327,14 +345,18 @@ const ProductDetails = () => {
               {/* QUANTITY */}
               <div className="cart-actions">
                 <div className="quantity">
-                  <button onClick={handleDecrement}>-</button>
+                  <button onClick={handleDecrement} disabled={!product.countIntStock}>
+                    -
+                  </button>
                   <span>{quantity}</span>
-                  <button onClick={handleIncrement}>+</button>
+                  <button onClick={handleIncrement} disabled={!product.countIntStock}>
+                    +
+                  </button>
                 </div>
                 <button
                   className="add-cart"
                   onClick={currentCartItem ? handleUpdateCart : handleAddToCart}
-                  disabled={loadingCart}
+                  disabled={loadingCart || !product.countIntStock}
                 >
                   {loadingCart ? (
                     <CircularProgress />
@@ -431,7 +453,13 @@ const ProductDetails = () => {
                     {/* STOCK */}
                     <tr>
                       <th>Stock</th>
-                      <td>
+                      <td
+                        className={
+                          product.countIntStock > 0
+                            ? "in-stock"
+                            : "out-of-stock"
+                        }
+                      >
                         {product.countIntStock > 0
                           ? `${product.countIntStock} disponible(s)`
                           : "Rupture de stock"}

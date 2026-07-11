@@ -1,8 +1,19 @@
 .orders-tab {
+  .orders-count {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0 0 1rem;
+
+    .orders-count-number {
+      color: #c62b38;
+      font-weight: 700;
+    }
+  }
+
   .orders-wrapper {
     max-height: 75vh;
     overflow-y: auto;
-    max-width: 1010px;
+    max-width: 900px;
 
     scrollbar-width: thin;
     scrollbar-color: #c62b38 transparent;
@@ -22,71 +33,66 @@
 
   .orders-table {
     display: block;
-    min-width: 1200px;
   }
 
   .table-header,
-  .order-summary {
+  .order-row {
     display: grid;
-    grid-template-columns: 
-      40px 120px 120px 150px 120px 200px 100px 120px 180px 100px 120px 100px;
+    grid-template-columns: 170px 130px 130px 120px 170px 50px;
     padding: 1rem;
     align-items: center;
     white-space: nowrap;
   }
 
+  .table-header {
+    font-weight: 600;
+    color: #666;
+    font-size: 0.85rem;
+  }
+
   .order-row {
     border-top: 1px solid #eee;
+    transition: background 0.2s ease;
 
-    .order-summary {
-      cursor: pointer;
-      transition: all 0.2s ease;
-      background: #fff;
+    &:hover { background: #f9f9f9; }
 
-      &:hover { background: #f9f9f9; }
-      &.active { background: #fff6f7; }
+    span { margin-left: 10px; overflow: hidden; text-overflow: ellipsis; }
 
-      span { margin-left: 10px; overflow: hidden; text-overflow: ellipsis; }
-
-      .arrow-icon {  display: inline-block; justify-content: center; align-items: center;transition: transform 0.25s ease, color 0.25s ease; color: #777;
-        svg { width: 18px; height: 18px; }
-      }
-
-      &.active .arrow-icon { transform: rotate(180deg); color: #e63946; }
-
-      .status {
-        font-weight: 600;
-        &.delivered { color: #2ecc71; }
-        &.pending { color: #e67e22; }
-      }
+    // Statut logistique
+    .status {
+      font-weight: 600;
+      &.received { color: #7f8c8d; }
+      &.preparing { color: #e67e22; }
+      &.shipped { color: #2980b9; }
+      &.delivered { color: #2ecc71; }
+      &.cancelled { color: #e63946; }
     }
 
-    .order-details {
-      background: #fcfcfc;
-      padding: 0.5rem 1rem 1rem;
-      animation: slideDown 0.3s ease forwards;
+    // Statut de paiement (badge distinct du statut logistique)
+    .payment-status {
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      display: inline-block;
+      text-align: center;
 
-      table {
-        width: 100%;
-        min-width: 800px;
-        border-collapse: collapse;
+      &.paid { color: #1e8449; background: #eafaf1; }
+      &.cod { color: #b9770e; background: #fef5e7; }
+      &.failed { color: #922b21; background: #fdedec; }
+    }
 
-        th, td {
-          padding: 0.6rem;
-          text-align: left;
-          border-bottom: 1px solid #eee;
-          white-space: nowrap;
-        }
+    .btn-view-order {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #c62b38;
+      font-size: 1.1rem;
+      padding: 0.3rem;
+      border-radius: 6px;
+      transition: background 0.2s ease;
 
-        th { background: #f0f0f0; font-weight: 600; }
-
-        .product-image { width: 50px; height: 50px; object-fit: contain; }
-      }
+      &:hover { background: #fff0f1; }
     }
   }
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
 }
