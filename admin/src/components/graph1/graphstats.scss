@@ -67,3 +67,22 @@
     }
   }
 }
+.points {
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+    margin-right: 12px;
+
+    &.active {
+      opacity: 1;
+      font-weight: 600;
+    }
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}

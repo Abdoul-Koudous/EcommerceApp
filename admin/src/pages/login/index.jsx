@@ -32,6 +32,22 @@ const LoginForm = () => {
       const res = await postData("/api/users/login", { email, password });
 
       if (res?.success) {
+        // Vérification du rôle : seuls les comptes ADMIN peuvent accéder au dashboard admin
+        if (res.data.role !== "ADMIN") {
+          openToast("error", "Accès réservé aux administrateurs");
+
+          // On nettoie les cookies déjà posés par le backend (accessToken/refreshToken httpOnly)
+          // pour éviter qu'un compte non-admin reste connecté silencieusement sur ce domaine
+          try {
+            await postData("/api/users/logout", {});
+          } catch {
+            // pas bloquant si ça échoue, l'utilisateur n'ira de toute façon pas plus loin
+          }
+
+          setLoading(false);
+          return;
+        }
+
         openToast("success", res.message);
         localStorage.setItem("accesstoken", res.data.accesstoken);
         localStorage.setItem("refreshToken", res.data.refreshToken);

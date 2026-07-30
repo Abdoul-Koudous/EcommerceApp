@@ -73,7 +73,7 @@
   padding: 1.5rem 1.8rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  overflow: hidden;
+  /* overflow: hidden retiré : coupait le tableau produits déplié à l'intérieur d'orders-tab */
 
   /* Titre (si ton composant en a un) */
   h2, h3 {

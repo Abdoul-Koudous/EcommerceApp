@@ -188,7 +188,8 @@ export async function authWithGoogle(request, response){
                 success : true,
                 data : {
                     accesstoken,
-                    refreshToken
+                    refreshToken,
+                    role: user.role
                 }
             })
             
@@ -213,7 +214,8 @@ export async function authWithGoogle(request, response){
                 success : true,
                 data : {
                     accesstoken,
-                    refreshToken
+                    refreshToken,
+                    role: existingUser.role
                 }
             })
         }
@@ -289,7 +291,8 @@ export async function loginUserController(request, response) {
             success : true,
             data : {
                 accesstoken,
-                refreshToken
+                refreshToken,
+                role: user.role
             }
         })
    } catch (error) {
@@ -808,6 +811,105 @@ export async function getReviews(request, response){
     } catch (error) {
         return response.status(500).json({
             message: "Il y a un problème",
+            error: true,
+            success: false
+        });
+    }
+}
+
+export async function getAllUsersController(request, response) {
+    try {
+        const page = parseInt(request.query.page) || 1;
+        const limit = parseInt(request.query.limit) || 10;
+        const search = request.query.search || "";
+
+        const filter = search
+            ? {
+                  $or: [
+                      { name: { $regex: search, $options: "i" } },
+                      { email: { $regex: search, $options: "i" } },
+                      { mobile: { $regex: search, $options: "i" } },
+                  ],
+              }
+            : {};
+
+        const total = await UserModel.countDocuments(filter);
+
+        const users = await UserModel.find(filter)
+            .select("-password -refresh_token -otp -otpExpires")
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        return response.status(200).json({
+            message: "Liste des utilisateurs",
+            error: false,
+            success: true,
+            data: users,
+            totalCount: total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false,
+        });
+    }
+}
+export async function deleteUserController(request, response) {
+    try {
+        const { id } = request.params;
+
+        const deletedUser = await UserModel.findByIdAndDelete(id);
+
+        if (!deletedUser) {
+            return response.status(404).json({
+                message: "Utilisateur introuvable",
+                error: true,
+                success: false
+            });
+        }
+
+        return response.status(200).json({
+            message: "Utilisateur supprimé avec succès",
+            error: false,
+            success: true
+        });
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+
+export async function deleteMultipleUsersController(request, response) {
+    try {
+        const { ids } = request.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return response.status(400).json({
+                message: "Aucun identifiant fourni",
+                error: true,
+                success: false
+            });
+        }
+
+        await UserModel.deleteMany({ _id: { $in: ids } });
+
+        return response.status(200).json({
+            message: "Utilisateurs supprimés avec succès",
+            error: false,
+            success: true
+        });
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
             error: true,
             success: false
         });

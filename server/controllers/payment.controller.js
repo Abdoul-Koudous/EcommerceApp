@@ -4,6 +4,7 @@ import crypto from "crypto";
 import OrderModel from "../models/order.model.js";
 import CartProductModel from "../models/cartproduct.model.js";
 import ProductModel from "../models/product.model.js";
+import AddressModel from "../models/address.model.js";
 import kkiapayClient from "../config/kkiapay.js";
 
 // 📉 Décrémente le stock des produits commandés (utilisé par les trois méthodes de paiement)
@@ -18,6 +19,32 @@ const decrementStock = async (products) => {
   if (bulkOps.length > 0) {
     await ProductModel.bulkWrite(bulkOps);
   }
+};
+
+// 📸 Résout une adresse du carnet de l'utilisateur et renvoie un snapshot
+// prêt à être stocké tel quel dans order.delivery_address.
+// Vérifie au passage que l'adresse appartient bien à ce userId (sécurité :
+// on ne veut pas qu'un utilisateur puisse livrer avec l'adresse d'un autre
+// simplement en devinant/passant son ObjectId).
+const resolveDeliverySnapshot = async (userId, addressId) => {
+  const addressDoc = await AddressModel.findOne({ _id: addressId, userId });
+
+  if (!addressDoc) {
+    return null;
+  }
+
+  return {
+    addressId: addressDoc._id,
+    name: addressDoc.name,
+    mobile: addressDoc.mobile,
+    address_line1: addressDoc.address_line1,
+    landmark: addressDoc.landmark,
+    city: addressDoc.city,
+    state: addressDoc.state,
+    pincode: addressDoc.pincode,
+    country: addressDoc.country,
+    addressType: addressDoc.addressType,
+  };
 };
 
 export const verifyPaymentController = async (req, res) => {
@@ -41,6 +68,17 @@ export const verifyPaymentController = async (req, res) => {
         error: true,
         success: false,
         message: "Le paiement n'a pas été approuvé",
+      });
+    }
+
+    // 📸 Résolution + snapshot de l'adresse de livraison choisie
+    const delivery_address = await resolveDeliverySnapshot(userId, addressId);
+
+    if (!delivery_address) {
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: "Adresse de livraison introuvable",
       });
     }
 
@@ -80,7 +118,7 @@ export const verifyPaymentController = async (req, res) => {
       paymentId: String(transaction.id),
       payment_status: "Payée",
       order_status: "Reçue",
-      delivery_address: addressId,
+      delivery_address,
       subTotalAmt,
       shippingAmt,
       taxAmt,
@@ -137,6 +175,17 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       });
     }
 
+    // 📸 Résolution + snapshot de l'adresse de livraison choisie
+    const delivery_address = await resolveDeliverySnapshot(userId, addressId);
+
+    if (!delivery_address) {
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: "Adresse de livraison introuvable",
+      });
+    }
+
     const cartItems = await CartProductModel.find({ userId });
 
     if (!cartItems || cartItems.length === 0) {
@@ -172,7 +221,7 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       paymentId: String(transaction.transactionId),
       payment_status: "Payée",
       order_status: "Reçue",
-      delivery_address: addressId,
+      delivery_address,
       subTotalAmt,
       shippingAmt,
       taxAmt,
@@ -215,6 +264,17 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       });
     }
 
+    // 📸 Résolution + snapshot de l'adresse de livraison choisie
+    const delivery_address = await resolveDeliverySnapshot(userId, addressId);
+
+    if (!delivery_address) {
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: "Adresse de livraison introuvable",
+      });
+    }
+
     const cartItems = await CartProductModel.find({ userId });
 
     if (!cartItems || cartItems.length === 0) {
@@ -250,7 +310,7 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       paymentId: null,
       payment_status: "À payer à la livraison",
       order_status: "Reçue",
-      delivery_address: addressId,
+      delivery_address,
       subTotalAmt,
       shippingAmt,
       taxAmt,

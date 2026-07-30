@@ -94,7 +94,9 @@ const OrdersTabPage = () => {
       {selectedOrder && (
         <OrderDetailsPanel
           order={selectedOrder}
+          userName={user?.name}
           userEmail={user?.email}
+          userMobile={user?.mobile}
           onClose={() => setSelectedOrder(null)}
         />
       )}

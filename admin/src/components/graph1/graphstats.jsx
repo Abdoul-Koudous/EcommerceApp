@@ -1,68 +1,99 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
+import CircularProgress from "../CircularProgress/CircularProgress";
 import "./graphstats.scss";
+import { fetchDataFromApi } from "../../pages/utils/api";
 
-const data = [
-  { name: "Janv", clients: 400, ventes: 240 },
-  { name: "Févr", clients: 300, ventes: 139 },
-  { name: "Mars", clients: 500, ventes: 400 },
-  { name: "Avr", clients: 278, ventes: 390 },
-  { name: "Mai", clients: 489, ventes: 480 },
-  { name: "Juin", clients: 239, ventes: 380 },
-  { name: "Juil", clients: 349, ventes: 430 },
-  { name: "Août", clients: 420, ventes: 460 },
-  { name: "Sept", clients: 510, ventes: 500 },
-  { name: "Oct", clients: 470, ventes: 410 },
-  { name: "Nov", clients: 530, ventes: 490 },
-  { name: "Déc", clients: 600, ventes: 550 },
-];
-
+const METRICS = {
+  ventes: { label: "Totals de Vents", color: "#3b82f6", dotClass: "sales" },
+  clients: { label: "Totals clients", color: "#10b981", dotClass: "customer" },
+};
 
 const GraphStats = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [activeMetric, setActiveMetric] = useState("ventes");
+
+  useEffect(() => {
+    fetchDataFromApi("/api/dashboard/monthly-stats")
+      .then((res) => {
+        if (res?.success) {
+          setData(res.data);
+        } else {
+          setError(true);
+        }
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="graph-container loading">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  if (error || !data.length) {
+    return (
+      <div className="graph-container">
+        <p>Impossible de charger les statistiques.</p>
+      </div>
+    );
+  }
+
+  const { label, color } = METRICS[activeMetric];
+
   return (
     <div className="graph-container">
       <h2>📊 Évolution des ventes & clients</h2>
+
       <div className="points">
-        <span className="customer"></span>
-        Totals clients
-        <span className="sales"></span>
-        Totals de Vents
+        {Object.entries(METRICS).map(([key, meta]) => (
+          <span
+            key={key}
+            className={`legend-item ${activeMetric === key ? "active" : ""}`}
+            onClick={() => setActiveMetric(key)}
+          >
+            <span className={meta.dotClass}></span>
+            {meta.label}
+          </span>
+        ))}
       </div>
+
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart
+        <BarChart
+          key={activeMetric}
           data={data}
-          margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+          margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis dataKey="name" stroke="#555" />
-          <YAxis stroke="#555" />
-          <Tooltip />
-          <Legend />
-          <Line
-            type="monotone"
-            dataKey="ventes"
-            stroke="#3b82f6"
-            strokeWidth={2}
-            activeDot={{ r: 7 }}
-            name="Ventes (en unités)"
+          <YAxis
+            stroke="#555"
+            allowDecimals={false}
+            width={70}
+            tickFormatter={(value) => value.toLocaleString()}
           />
-          <Line
-            type="monotone"
-            dataKey="clients"
-            stroke="#10b981"
-            strokeWidth={2}
-            name="Clients"
+          <Tooltip formatter={(value) => value.toLocaleString()} />
+          <Bar
+            dataKey={activeMetric}
+            fill={color}
+            name={label}
+            radius={[6, 6, 0, 0]}
+            isAnimationActive={false}
           />
-        </LineChart>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

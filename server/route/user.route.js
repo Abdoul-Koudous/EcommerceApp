@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import {
-    
     addReview,
     authWithGoogle,
+    deleteMultipleUsersController,
+    deleteUserController,
     forgotPasswordController,
+    getAllUsersController,
     getReviews,
     loginUserController,
     logoutController,
@@ -19,6 +21,7 @@ import {
 } from '../controllers/user.controller.js';
 
 import auth from '../middlewares/auth.js';
+import adminAuth from '../middlewares/adminAuth.js';
 import upload from '../middlewares/multer.js';
 
 const userRouter = Router();
@@ -41,7 +44,14 @@ userRouter.get('/user-details', auth, UserDetails);
 userRouter.post('/addReview', auth, addReview);
 userRouter.get('/getReviews', auth, getReviews);
 
-// ROUTE DYNAMIQUE À LA FIN
+// Liste des utilisateurs (admin, paginée + recherche)
+userRouter.get('/lists', auth, adminAuth, getAllUsersController);
+
+// Suppression multiple AVANT la route dynamique /:id
+userRouter.delete('/deleteMultipleUsers', auth, adminAuth, deleteMultipleUsersController);
+
+// ROUTES DYNAMIQUES À LA FIN
 userRouter.put('/:id', auth, updateUserDetails);
+userRouter.delete('/:id', auth, adminAuth, deleteUserController);
 
 export default userRouter;

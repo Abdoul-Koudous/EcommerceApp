@@ -16,6 +16,7 @@ import bannerV1Router from "./route/bannerV1.route.js";
 import blogRouter from "./route/blog.route.js";
 import orderRouter from "./route/order.route.js";
 import paymentRouter from "./route/payment.route.js";
+import dashboardRouter from "./route/dashboard.route.js";
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use('/api/bannerV1', bannerV1Router);
 app.use('/api/blog', blogRouter);
 app.use('/api/order', orderRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 // 🔗 Connexion à MongoDB + Lancement du serveur
 connectDB().then(() => {

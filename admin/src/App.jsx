@@ -16,10 +16,13 @@ import AddSIZE from "./pages/products/addSIZE";
 import HomeSlidePage from "./pages/HomeSliderBanners";
 import BannerV1List from "./pages/Banners";
 import BlogList from "./pages/blog";
+import Users from "./pages/Users/Users";
 
 function App() {
   return (
-    <BrowserRouter basename="/admin"> {/* ✅ seul changement */}
+    <BrowserRouter basename="/admin">
+      {" "}
+      {/* ✅ seul changement */}
       <Routes>
         {/* === Pages avec layout admin === */}
         <Route
@@ -34,7 +37,7 @@ function App() {
           path="/slides/lists"
           element={
             <AdminLayout>
-              <HomeSlidePage/>
+              <HomeSlidePage />
             </AdminLayout>
           }
         />
@@ -42,7 +45,7 @@ function App() {
           path="/banners/lists"
           element={
             <AdminLayout>
-              <BannerV1List/>
+              <BannerV1List />
             </AdminLayout>
           }
         />
@@ -58,7 +61,7 @@ function App() {
           path="/blogs/lists"
           element={
             <AdminLayout>
-              <BlogList/>
+              <BlogList />
             </AdminLayout>
           }
         />
@@ -74,7 +77,7 @@ function App() {
           path="/products/WEIGHT/add"
           element={
             <AdminLayout>
-              <AddWEIGHT/>
+              <AddWEIGHT />
             </AdminLayout>
           }
         />
@@ -82,7 +85,7 @@ function App() {
           path="/products/SIZE/add"
           element={
             <AdminLayout>
-              <AddSIZE/>
+              <AddSIZE />
             </AdminLayout>
           }
         />
@@ -98,7 +101,7 @@ function App() {
           path="/categories/lists"
           element={
             <AdminLayout>
-              <CategoriesPage/>
+              <CategoriesPage />
             </AdminLayout>
           }
         />
@@ -106,7 +109,7 @@ function App() {
           path="/subCategories/lists"
           element={
             <AdminLayout>
-              <SubCategoriesPage/>
+              <SubCategoriesPage />
             </AdminLayout>
           }
         />
@@ -114,7 +117,16 @@ function App() {
           path="/profile"
           element={
             <AdminLayout>
-              <Profile/>
+              <Profile />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/users"
+          element={
+            <AdminLayout>
+              <Users />
             </AdminLayout>
           }
         />
@@ -122,7 +134,10 @@ function App() {
         <Route path="/login" element={<AuthPage defaultForm="login" />} />
         <Route path="/register" element={<AuthPage defaultForm="register" />} />
         <Route path="/otp" element={<AuthPage defaultForm="otp" />} />
-        <Route path="/reset-password" element={<AuthPage defaultForm="reset" />} />
+        <Route
+          path="/reset-password"
+          element={<AuthPage defaultForm="reset" />}
+        />
       </Routes>
     </BrowserRouter>
   );

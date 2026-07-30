@@ -36,9 +36,23 @@ const orderSchema = new mongoose.Schema(
       enum: ["Reçue", "En préparation", "Expédiée", "Livrée", "Annulée"],
       default: "Reçue",
     },
+    // 📸 Snapshot figé de l'adresse de livraison au moment de la commande.
+    // On NE référence plus une Address par ObjectId : on copie son contenu.
+    // Ainsi, si l'utilisateur modifie ou supprime sa fiche adresse plus tard,
+    // l'historique de commande reste intact et fidèle à ce qui a réellement
+    // été utilisé pour la livraison. Le destinataire peut être différent du
+    // titulaire du compte (ex: cadeau, livraison bureau, etc.).
     delivery_address: {
-      type: mongoose.Schema.ObjectId,
-      ref: "Address",
+      addressId: { type: mongoose.Schema.ObjectId, ref: "Address" }, // traçabilité uniquement
+      name: { type: String, required: true }, // nom du DESTINATAIRE
+      mobile: { type: String, required: true },
+      address_line1: { type: String, required: true },
+      landmark: { type: String, default: "" },
+      city: { type: String, default: "" },
+      state: { type: String, default: "" },
+      pincode: { type: String, default: "" },
+      country: { type: String, default: "" },
+      addressType: { type: String, default: "" },
     },
     subTotalAmt: {
       type: Number,
