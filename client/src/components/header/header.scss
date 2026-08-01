@@ -1,156 +1,187 @@
-header .top-strip{
-    background-color: #fff;
+@use "../../styles/breakpoints" as *;
+@use "../../styles/mixins" as *;
+
+header {
+  .top-strip {
+    background-color: var(--color-surface);
     margin-top: 5px;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
 
-    .container{
-        margin: 0 auto;
-        width: 90%;
-        padding: 5px 60px;
+    .container {
+      margin: 0 auto;
+      width: 90%;
+      padding: 5px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      @include respond("tablet") {
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 20px;
+      }
+
+      .cont1 p {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text);
+
+        @include respond("mobile") {
+          font-size: 12px;
+          text-align: center;
+        }
+      }
+
+      ul {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
-        
 
-        .cont1{
-            p{
-            font-size: 14px;
+        li {
+          list-style: none;
+          padding: 0 10px;
+          cursor: pointer;
+
+          .lien {
+            @include link-hover;
+            font-size: 13px;
+            text-decoration: none;
             font-weight: 500;
-            }
+            color: var(--color-text);
+          }
         }
-        
-        ul{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            
-            li{
-                list-style: none;
-                padding: 0px 10px;
-                cursor: pointer;
-                .lien{
-                    font-size: 13px;
-                    text-decoration: none;
-                    transition: 0.2s ease-in-out;
-                    font-weight: 500;
-                    color: black;
-                    &:hover{
-                        color: rgb(130, 11, 11);
-                    
-                }
-                }
-                
-                
-            }
-        }
+      }
     }
+  }
 
-} 
-
-header .header .container {
-    background-color: #fff;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  .header .container {
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    .cont1{
-        width: 30%;
-        img{
-            width: 110px;
-        }  
+    padding: 12px 0;
+
+    @include respond("laptop") {
+      flex-wrap: wrap;
+      gap: 15px;
     }
-    .cont2{
-        width: 40%;
+
+    .cont1 {
+      width: 30%;
+
+      @include respond("laptop") {
+        width: auto;
+      }
+
+      img {
+        width: 110px;
+
+        @include respond("mobile") {
+          width: 85px;
+        }
+      }
     }
-   .cont3 {
-        width: 30%;
 
-        ul {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+    .cont2 {
+      width: 40%;
 
-            li {
-            list-style: none;
-            cursor: pointer;
-            padding: 0 10px;
-            position: relative; // nécessaire pour positionner le compteur
+      @include respond("laptop") {
+        order: 3;
+        width: 100%;
+      }
+    }
 
-            .lien {
-                font-size: 13px;
-                text-decoration: none;
-                transition: 0.2s ease-in-out;
-                font-weight: 500;
-                color: black;
+    .cont3 {
+      width: 30%;
 
-                &:hover {
-                color: rgb(130, 11, 11);
-                }
+      @include respond("laptop") {
+        width: auto;
+      }
+
+      ul {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        li {
+          list-style: none;
+          cursor: pointer;
+          padding: 0 10px;
+          position: relative;
+
+          .lien {
+            @include link-hover;
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 500;
+            color: var(--color-text);
+          }
+
+          .icon {
+            font-size: 22px;
+            color: var(--color-text);
+            transition: transform var(--transition-fast), color var(--transition-fast);
+          }
+
+          .icon:hover {
+            transform: scale(1.2);
+            color: var(--color-primary);
+          }
+
+          .count {
+            position: absolute;
+            top: -6px;
+            right: 2px;
+            background-color: var(--color-primary);
+            color: var(--color-text-on-primary);
+            border-radius: 50%;
+            font-size: 11px;
+            padding: 2px 5px;
+            font-weight: bold;
+          }
+
+          .tooltip {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-tooltip-bg);
+            color: var(--color-text-on-primary);
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-fast), transform var(--transition-fast);
+
+            @include respond("tablet") {
+              display: none;
             }
+          }
 
-            /* Icônes (cœur, chariot, comparaison) */
-            .icon {
-                font-size: 22px;
-                transition: transform 0.2s ease;
-            }
-
-            .icon:hover {
-                transform: scale(1.2);
-                color: rgb(130, 11, 11);
-            }
-
-            /* Compteur rouge */
-            .count {
-                position: absolute;
-                top: -6px;
-                right: 2px;
-                background-color: rgb(130, 11, 11);
-                color: #fff;
-                border-radius: 50%;
-                font-size: 11px;
-                padding: 2px 5px;
-                font-weight: bold;
-            }
-            /* ✅ Tooltip */
-            .tooltip {
-                position: absolute;
-                bottom: -25px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 0, 0, 0.8);
-                color: #fff;
-                font-size: 11px;
-                padding: 3px 6px;
-                border-radius: 5px;
-                white-space: nowrap;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.2s ease, transform 0.2s ease;
-            }
-
-            &:hover .tooltip {
-                opacity: 1;
-                transform: translateX(-50%) translateY(2px);
-            }
-            }
+          &:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(2px);
+          }
         }
-        }
-        .lien2 {
-                font-size: 13px;
-                text-decoration: none;
-                transition: 0.2s ease-in-out;
-                font-weight: 500;
-                color: black;
+      }
 
-                &:hover {
-                color: rgb(130, 11, 11);
-                }
-            }
-
+      .lien2 {
+        @include link-hover;
+        font-size: 13px;
+        text-decoration: none;
+        font-weight: 500;
+        color: var(--color-text);
+      }
+    }
+  }
 }
 
+/* === Menu utilisateur === */
 .user-menu {
   position: relative;
   display: flex;
@@ -167,12 +198,12 @@ header .header .container {
       height: 40px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s ease, border-color 0.2s ease;
+      border: 2px solid var(--color-border);
+      transition: transform var(--transition-fast), border-color var(--transition-fast);
 
       &:hover {
         transform: scale(1.05);
-        border-color: rgb(130, 11, 11);
+        border-color: var(--color-primary);
       }
     }
 
@@ -184,24 +215,28 @@ header .header .container {
       .user-name {
         font-size: 14px;
         font-weight: 600;
+        color: var(--color-text);
       }
 
       .user-email {
         font-size: 12px;
-        color: gray;
+        color: var(--color-text-secondary);
+
+        @include respond("mobile") {
+          display: none;
+        }
       }
     }
   }
 
-  /* === DROPDOWN MENU === */
   .dropdown-menu {
     position: absolute;
     top: 55px;
     right: 0;
     width: 190px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-dropdown);
     overflow: hidden;
     z-index: 20;
     display: flex;
@@ -215,29 +250,26 @@ header .header .container {
       padding: 10px 15px;
       margin: 10px 15px;
       font-size: 14px;
-      color: #333;
+      color: var(--color-text);
       cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease;
+      transition: background var(--transition-fast), color var(--transition-fast);
       width: 100%;
 
       &:hover {
-        background: rgb(130, 11, 11);
-        color: #fff;
+        background: var(--color-primary);
+        color: var(--color-text-on-primary);
 
-        a {
-          color: #fff;
-        }
-
+        a,
         .icon {
-          color: #fff;
+          color: var(--color-text-on-primary);
         }
       }
 
       .icon {
-        flex-shrink: 0; /* évite le décalage */
+        flex-shrink: 0;
         font-size: 15px;
-        color: rgb(130, 11, 11);
-        transition: color 0.2s ease;
+        color: var(--color-primary);
+        transition: color var(--transition-fast);
       }
 
       a {
@@ -249,10 +281,15 @@ header .header .container {
       }
 
       &:not(:last-child) {
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid var(--color-border-light);
       }
     }
   }
+}
+.theme-toggle-item {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
 }
 
 @keyframes dropdownFade {

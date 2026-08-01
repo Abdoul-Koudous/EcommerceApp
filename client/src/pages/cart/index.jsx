@@ -20,8 +20,8 @@ const CartPage = () => {
   const total = subtotal + shipping;
 
   return (
-    <div className="cart-page">
-      <div className="cart-header">
+    <div className="cp-page">
+      <div className="cp-header">
         <h2>🛒 Mon Panier</h2>
         <p>
           Vous avez <strong>{cartItems.length}</strong>{" "}
@@ -29,33 +29,35 @@ const CartPage = () => {
         </p>
       </div>
 
-      <div className="cart-content">
-        <div className="cart-left">
+      <div className="cp-content">
+        <div className="cp-left">
           <CartItems items={cartItems} loadCartItems={loadCartItems} />
         </div>
 
-        <div className="cart-right">
-          <div className="cart-summary-box">
+        <div className="cp-right">
+          <div className="cp-summary-box">
             <h3>Résumé du panier</h3>
 
-            <div className="summary-row">
+            <div className="cp-summary-row">
               <span>Sous-total</span>
               <span>{subtotal.toLocaleString()} FCFA</span>
             </div>
 
-            <div className="summary-row">
+            <div className="cp-summary-row">
               <span>Expédition</span>
               <span>{shipping.toLocaleString()} FCFA</span>
             </div>
 
-            <div className="summary-row total">
+            <div className="cp-summary-row cp-total">
               <span>Total à payer</span>
               <span>{total.toLocaleString()} FCFA</span>
             </div>
 
-            <div className="summary-buttons">
-              <button className="continue-btn" onClick={() => window.history.back()}>Continuer mes achats</button>
-              <button className="checkout-btn">Passer à la caisse</button>
+            <div className="cp-summary-buttons">
+              <button className="cp-continue-btn" onClick={() => window.history.back()}>
+                Continuer mes achats
+              </button>
+              <button className="cp-checkout-btn">Passer à la caisse</button>
             </div>
           </div>
         </div>

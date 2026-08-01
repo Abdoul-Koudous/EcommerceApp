@@ -15,6 +15,7 @@ import { fetchDataFromApi } from "../../pages/utils/api";
 import "./header.scss";
 import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
+import ThemeToggle from "../themetoggle";
 
 const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
@@ -94,6 +95,9 @@ const Header = () => {
 
           <div className="cont3">
             <ul>
+              <li className="theme-toggle-item">
+                <ThemeToggle />
+              </li>
               {!isLoggedIn ? (
                 <div>
                   <Link className="lien2" to="/login">
@@ -145,7 +149,10 @@ const Header = () => {
                 </li>
               )}
 
-              <li className="iconBox" onClick={() => navigate("/account/wishlist")}>
+              <li
+                className="iconBox"
+                onClick={() => navigate("/account/wishlist")}
+              >
                 <FaHeart className="icon" />
                 <span className="count">{myListItems.length}</span>
                 <span className="tooltip">Souhaits</span>

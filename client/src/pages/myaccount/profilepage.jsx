@@ -8,8 +8,6 @@ import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 
-
-
 const ProfilePage = () => {
   const { user, setUser } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
@@ -27,7 +25,6 @@ const ProfilePage = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordBlock, setShowPasswordBlock] = useState(false);
-
 
   useEffect(() => {
     if (user) setProfileData({ name: user.name || "", mobile: user.mobile || "" });
@@ -121,8 +118,8 @@ const ProfilePage = () => {
   return (
     <>
       {/* PROFIL */}
-      <div className="tab-content profile-tab">
-        <div className="htitle">
+      <div className="al-tab-content pt-tab">
+        <div className="pt-htitle">
           <h2>Mon Profil</h2>
           <button type="button" onClick={() => setShowPasswordBlock(prev => !prev)}>
             {showPasswordBlock ? "Fermer le mot de passe" : "Changer mon mot de passe"}
@@ -130,8 +127,8 @@ const ProfilePage = () => {
         </div>
 
         <hr />
-        <div className="profile-header">
-          <div className="profile-avatar">
+        <div className="pt-avatar-header">
+          <div className="pt-avatar">
             {uploading ? <CircularProgress /> : <img
                 src={previews[0] || user?.avatar || "/user.jpg"}
                 alt="User avatar"
@@ -141,25 +138,23 @@ const ProfilePage = () => {
                 }}
               />
               }
-            <label htmlFor="avatar-upload" className="change-avatar">Changer</label>
+            <label htmlFor="avatar-upload" className="pt-change-avatar">Changer</label>
             <input id="avatar-upload" type="file" accept="image/*" hidden onChange={(e) => onChangeFile(e, "/api/users/user-avatar")} />
           </div>
         </div>
 
-        <form className="profile-form" onSubmit={handleProfileSubmit}>
-          <div className="form-group">
-            <FaUser className="input-icon" />
+        <form className="pt-form" onSubmit={handleProfileSubmit}>
+          <div className="pt-field-group">
+            <FaUser className="pt-input-icon" />
             <input type="text" name="name" placeholder=" " value={profileData.name} onChange={handleProfileChange} disabled={!profileEdit} />
             <label>Nom complet</label>
           </div>
-          <div className="form-group">
-            <FaEnvelope className="input-icon" />
+          <div className="pt-field-group">
+            <FaEnvelope className="pt-input-icon" />
             <input type="email" placeholder=" " value={user?.email || ""} disabled />
             <label>Email</label>
           </div>
-          <div className="form-group phone-group">
-
-
+          <div className="pt-field-group pt-phone-group">
             <PhoneInput
               international
               defaultCountry="bj"
@@ -174,14 +169,13 @@ const ProfilePage = () => {
             <label>Téléphone</label>
           </div>
 
-
-          <div className="actions">
+          <div className="pt-actions">
             {!profileEdit ? (
-              <button type="button" className="btn-edit" onClick={() => setProfileEdit(true)}>Modifier le profil</button>
+              <button type="button" className="pt-btn-edit" onClick={() => setProfileEdit(true)}>Modifier le profil</button>
             ) : (
-              <div className="edit-buttons">
-                <button type="button" className="btn-cancel" onClick={cancelProfile}>Annuler</button>
-                <button type="submit" className="btn-save">
+              <div className="pt-edit-buttons">
+                <button type="button" className="pt-btn-cancel" onClick={cancelProfile}>Annuler</button>
+                <button type="submit" className="pt-btn-save">
                   {submittingProfile ? <CircularProgress size={20}/> : "Enregistrer"}
                 </button>
               </div>
@@ -191,13 +185,13 @@ const ProfilePage = () => {
       </div>
 
       {/* MOT DE PASSE */}
-      {showPasswordBlock && (<div className="tab-content profile-tab">
+      {showPasswordBlock && (<div className="al-tab-content pt-tab">
         <h2>Changer mon mot de passe</h2>
         <hr />
-        <form className="profile-form" onSubmit={handlePasswordSubmit}>
+        <form className="pt-form" onSubmit={handlePasswordSubmit}>
           {/* Nouveau mot de passe */}
-          <div className="form-group">
-            <FaLock className="input-icon" />
+          <div className="pt-field-group">
+            <FaLock className="pt-input-icon" />
             <input
               type={showNewPassword ? "text" : "password"}
               name="newPassword"
@@ -207,14 +201,14 @@ const ProfilePage = () => {
               disabled={!passwordEdit}
             />
             <label>Nouveau mot de passe</label>
-            <span className="toggle-password" onClick={() => setShowNewPassword(!showNewPassword)}>
+            <span className="pt-toggle-password" onClick={() => setShowNewPassword(!showNewPassword)}>
               {showNewPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
 
           {/* Confirmer mot de passe */}
-          <div className="form-group">
-            <FaLock className="input-icon" />
+          <div className="pt-field-group">
+            <FaLock className="pt-input-icon" />
             <input
               type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
@@ -224,18 +218,18 @@ const ProfilePage = () => {
               disabled={!passwordEdit}
             />
             <label>Confirmer mot de passe</label>
-            <span className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+            <span className="pt-toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
               {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
 
-          <div className="actions">
+          <div className="pt-actions">
             {!passwordEdit ? (
-              <button type="button" className="btn-edit" onClick={() => setPasswordEdit(true)}>Modifier</button>
+              <button type="button" className="pt-btn-edit" onClick={() => setPasswordEdit(true)}>Modifier</button>
             ) : (
-              <div className="edit-buttons">
-                <button type="button" className="btn-cancel" onClick={cancelPassword}>Annuler</button>
-                <button type="submit" className="btn-save">
+              <div className="pt-edit-buttons">
+                <button type="button" className="pt-btn-cancel" onClick={cancelPassword}>Annuler</button>
+                <button type="submit" className="pt-btn-save">
                   {submittingPassword ? <CircularProgress size={20}/> : "Enregistrer"}
                 </button>
               </div>

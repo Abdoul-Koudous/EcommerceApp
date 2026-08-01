@@ -10,7 +10,6 @@ import CircularProgress from "../CircularProgress/CircularProgress";
 import "./dashboardboxes.scss";
 import { fetchDataFromApi } from "../../pages/utils/api";
 
-// Titre + icône par carte. La valeur et la tendance viennent de l'API.
 const STAT_META = [
   { key: "users", title: "Utilisateurs", icon: <FaUsers /> },
   { key: "orders", title: "Commandes", icon: <FaShoppingCart /> },
@@ -53,7 +52,7 @@ const DashboardBoxe = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-boxe loading">
+      <div className="dsb-wrapper dsb-loading">
         <CircularProgress />
       </div>
     );
@@ -61,57 +60,56 @@ const DashboardBoxe = () => {
 
   if (error || !stats) {
     return (
-      <div className="dashboard-boxe">
+      <div className="dsb-wrapper">
         <p>Impossible de charger les statistiques.</p>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-boxe">
-      <button className="nav-btn left" onClick={() => scroll("left")}>
+    <div className="dsb-wrapper">
+      <button className="dsb-nav-btn dsb-nav-left" onClick={() => scroll("left")}>
         <MdArrowBackIos />
       </button>
 
-      <div className="slider" ref={sliderRef}>
+      <div className="dsb-slider" ref={sliderRef}>
         {STAT_META.map(({ key, title, icon }) => {
           const stat = stats[key];
           if (!stat) return null;
 
           return (
-            <div key={key} className="stat-box">
-              <div className="top-section">
-                <div className="left-part">
-                  <div className="icon">{icon}</div>
-                  <div className="info">
+            <div key={key} className="dsb-stat-box">
+              <div className="dsb-top">
+                <div className="dsb-left">
+                  <div className="dsb-icon">{icon}</div>
+                  <div className="dsb-info">
                     <h3>{title}</h3>
                     <p>{formatValue(key, stat.value)}</p>
                   </div>
                 </div>
-                <div className="right-part">
-                  {/* Petit graphique simulé (tu peux mettre un vrai mini chart plus tard) */}
-                  <div className="mini-graph">
-                    <div className="bar bar1"></div>
-                    <div className="bar bar2"></div>
-                    <div className="bar bar3"></div>
-                    <div className="bar bar4"></div>
-                    <div className="bar bar5"></div>
+                <div className="dsb-right">
+                  <div className="dsb-mini-graph">
+                    <div className="dsb-bar dsb-bar-1"></div>
+                    <div className="dsb-bar dsb-bar-2"></div>
+                    <div className="dsb-bar dsb-bar-3"></div>
+                    <div className="dsb-bar dsb-bar-4"></div>
+                    <div className="dsb-bar dsb-bar-5"></div>
                   </div>
                 </div>
               </div>
 
               <hr />
 
-              <div className="bottom-section">
+              <div className="dsb-bottom">
                 {stat.trend === "up" ? (
-                  <MdTrendingUp className="trend-icon up" />
+                  <MdTrendingUp className="dsb-trend-icon up" />
                 ) : (
-                  <MdTrendingDown className="trend-icon down" />
+                  <MdTrendingDown className="dsb-trend-icon down" />
                 )}
-                <span className={`percent ${stat.trend === "up" ? "up" : "down"}`}>
+                <span className={`dsb-percent ${stat.trend === "up" ? "up" : "down"}`}>
                   {stat.percent}
                 </span>
-                <span className="desc">
+                <span className="dsb-desc">
                   {stat.trend === "up" ? "augmenté" : "diminué"} cette semaine
                 </span>
               </div>
@@ -120,7 +118,7 @@ const DashboardBoxe = () => {
         })}
       </div>
 
-      <button className="nav-btn right" onClick={() => scroll("right")}>
+      <button className="dsb-nav-btn dsb-nav-right" onClick={() => scroll("right")}>
         <MdArrowForwardIos />
       </button>
     </div>

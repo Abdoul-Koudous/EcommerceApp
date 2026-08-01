@@ -37,9 +37,6 @@ const Product = () => {
 
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     CHARGEMENT DES LISTES (1 FOIS)
-  ========================== */
   useEffect(() => {
     const fetchFilters = async () => {
       const res = await fetchDataFromApi("/api/product/getAllProducts");
@@ -57,9 +54,6 @@ const Product = () => {
     fetchFilters();
   }, []);
 
-  /* =========================
-     FETCH PRODUITS (BACK FILTER)
-  ========================== */
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -86,9 +80,6 @@ const Product = () => {
     itemsPerPage
   ]);
 
-  /* =========================
-     SELECTION
-  ========================== */
   const allSelected =
     productData.length > 0 &&
     productData.every(p => selectedProducts.includes(p._id));
@@ -109,9 +100,6 @@ const Product = () => {
     );
   };
 
-  /* =========================
-     SUPPRESSION
-  ========================== */
   const handleDeleteClick = (id) => {
     setToDeleteId(id);
     setConfirmOpen(true);
@@ -147,14 +135,14 @@ const Product = () => {
   };
 
   return (
-    <div className="admin-pages">
-      <div className="header">
+    <div className="ptbl-page">
+      <div className="ptbl-header">
         <h2>Liste des produits</h2>
 
-        <div className="header-actions">
+        <div className="ptbl-header-actions">
           {selectedProducts.length > 0 && (
             <button
-              className="delete-multiple-btn show"
+              className="ptbl-delete-multiple-btn show"
               onClick={() => {
                 setToDeleteId(null);
                 setConfirmOpen(true);
@@ -166,18 +154,18 @@ const Product = () => {
             </button>
           )}
 
-          <button className="export-btn"><FaDownload /> Exporter</button>
+          <button className="ptbl-export-btn"><FaDownload /> Exporter</button>
 
-          <button className="add-btn" onClick={() => setShowAddDialog(true)}>
+          <button className="ptbl-add-btn" onClick={() => setShowAddDialog(true)}>
             <FaPlus /> Ajouter un produit
           </button>
         </div>
       </div>
 
-      <div className="product-table-container">
-        <div className="filters-actions">
-          <div className="left">
-            <div className="form-group">
+      <div className="ptbl-table-container">
+        <div className="ptbl-filters-actions">
+          <div className="ptbl-filters-left">
+            <div className="ptbl-form-group">
               <label>Catégorie</label>
               <select value={productCat} onChange={e => {
                 setProductCat(e.target.value);
@@ -190,7 +178,7 @@ const Product = () => {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className="ptbl-form-group">
               <label>Sous catégorie</label>
               <select value={productSubCat} onChange={e => {
                 setProductSubCat(e.target.value);
@@ -203,7 +191,7 @@ const Product = () => {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className="ptbl-form-group">
               <label>Dernier sous catégorie</label>
               <select value={productThirdSubCat} onChange={e => {
                 setProductThirdSubCat(e.target.value);
@@ -217,7 +205,7 @@ const Product = () => {
             </div>
           </div>
 
-          <div className="search-bar">
+          <div className="ptbl-search-bar">
             <FaSearch className="icon" />
             <input
               type="text"
@@ -232,13 +220,14 @@ const Product = () => {
         </div>
 
         {loading ? (
-          <div className="loading"><CircularProgress /></div>
-        ): productData.length === 0 ? (
-          <div className="no-results">
+          <div className="ptbl-loading"><CircularProgress /></div>
+        ) : productData.length === 0 ? (
+          <div className="ptbl-no-results">
             Aucun produit correspondant aux filtres ou à la recherche.
           </div>
         ) : (
-          <table className="product-table">
+          <div className="ptbl-table-wrapper">
+          <table className="ptbl-table">
             <thead>
               <tr>
                 <th><input type="checkbox" checked={allSelected} onChange={handleSelectAll} /></th>
@@ -261,40 +250,52 @@ const Product = () => {
                       onChange={() => handleSelectOne(product._id)}
                     />
                   </td>
-                  <td className="product-info"> 
-                    <Link to={`/product/${product._id}`}> <img src={product.images?.[0]} alt={product.name} /> </Link> 
-                    <div> 
+                  <td className="ptbl-product-info">
+                    <Link to={`/product/${product._id}`}> <img src={product.images?.[0]} alt={product.name} /> </Link>
+                    <div>
                       <Link to={`/product/${product._id}`}><h4>{product.name}</h4></Link>
-                       <p>{product.brand}</p> 
-                    </div> 
+                      <p>{product.brand}</p>
+                    </div>
                   </td>
-                  
+
                   <td>{product.catName}</td>
                   <td>{product.subCat || "—"}</td>
-                  <td className="price"> 
+                  <td className="ptbl-price">
                     {product.oldPrice > 0 && ( <div className="old-price">{product.oldPrice} FCFA</div> )}
-                     <div className="current-price">{product.price} FCFA</div> 
+                    <div className="current-price">{product.price} FCFA</div>
                   </td>
-                  <td className="rating"> 
+                  <td className="ptbl-rating">
                     <HoverRating rating={product.rating} />
                   </td>
-                  <td className="sales"> 
-                    <span>{product.sale}%</span> 
-                    <div className="progress-bar"> 
-                      <div className="progress" style={{ width: `${product.sale}%`, background: product.sale < 40 ? "#ef4444" : product.sale < 70 ? "#facc15" : "#22c55e", }} >
-
-                      </div>
-                   </div> 
+                  <td className="ptbl-sales">
+                    <span>{product.sale}%</span>
+                    <div className="progress-bar">
+                      <div
+                        className="progress"
+                        style={{
+                          width: `${product.sale}%`,
+                          background:
+                            product.sale < 40
+                              ? "var(--color-danger)"
+                              : product.sale < 70
+                              ? "var(--color-rating)"
+                              : "var(--color-success)",
+                        }}
+                      />
+                    </div>
                   </td>
-                  <td className="actions">
-                    <Link to={`/product/${product._id}`}> <button > <FaEye /> </button> </Link>
-                    <button onClick={() => {
-                      setProductToEdit(product);
-                      setShowEditDialog(true);
-                    }}>
+                  <td className="ptbl-actions">
+                    <Link to={`/product/${product._id}`}> <button className="ptbl-view-btn"> <FaEye /> </button> </Link>
+                    <button
+                      className="ptbl-edit-btn"
+                      onClick={() => {
+                        setProductToEdit(product);
+                        setShowEditDialog(true);
+                      }}
+                    >
                       <FaEdit />
                     </button>
-                    <button onClick={() => handleDeleteClick(product._id)}>
+                    <button className="ptbl-delete-btn" onClick={() => handleDeleteClick(product._id)}>
                       <FaTrash />
                     </button>
                   </td>
@@ -302,12 +303,12 @@ const Product = () => {
               ))}
             </tbody>
           </table>
+          </div>
         )}
-
         
 
-        <div className="table-footer">
-          <div className="items-selector">
+        <div className="ptbl-table-footer">
+          <div className="ptbl-items-selector">
             <label>Afficher</label>
 
             <select
@@ -333,7 +334,6 @@ const Product = () => {
             onPageChange={setCurrentPage}
           />
         </div>
-
       </div>
 
       {showAddDialog && <AddProduct onClose={() => setShowAddDialog(false)} />}

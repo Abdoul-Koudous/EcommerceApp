@@ -1,89 +1,90 @@
-.order-success-page {
+.os-page {
   min-height: 80vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 3rem 1rem;
-  background: #f8f9fb;
+  background: var(--color-surface-alt);
 }
 
-.order-success-card {
-  background: #fff;
+.os-card {
+  background: var(--color-surface);
   border-radius: 16px;
   padding: 2.5rem;
   max-width: 600px;
   width: 100%;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
   text-align: center;
 
-  .success-icon {
+  .os-success-icon {
     font-size: 4rem;
-    color: #2e7d32;
+    color: var(--color-success);
     margin-bottom: 1rem;
   }
 
   h1 {
     font-size: 1.7rem;
-    color: #222;
+    color: var(--color-text);
     margin-bottom: 0.5rem;
   }
 
-  .subtitle {
-    color: #666;
+  .os-subtitle {
+    color: var(--color-text-secondary);
     margin-bottom: 2rem;
   }
 
   h3 {
     text-align: left;
     font-size: 1.1rem;
-    color: #222;
+    color: var(--color-text);
     margin: 1.5rem 0 0.75rem;
   }
 }
 
-.order-info-box {
-  background: #fafafa;
+.os-info-box {
+  background: var(--color-surface-alt-2);
   border-radius: 10px;
   padding: 1.2rem;
   text-align: left;
 
-  .info-row {
+  .os-info-row {
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
     font-size: 0.95rem;
-    color: #444;
+    color: var(--color-text);
 
-    &.total {
-      border-top: 1px solid #e5e5e5;
+    &.os-total {
+      border-top: 1px solid var(--color-border-light);
       margin-top: 0.5rem;
       padding-top: 0.75rem;
       font-size: 1.1rem;
 
       strong {
-        color: #e63946;
+        color: var(--color-primary);
       }
     }
 
-    .status-badge {
-      background: #fff3cd;
-      color: #856404;
+    .os-status-badge {
+      background: var(--color-surface-alt-2); // ✅ neutre, cohérent avec le reste de la boîte
+      color: var(--color-rating); // ✅ ambre/doré déjà dans la palette, stable entre les deux thèmes
       padding: 2px 10px;
       border-radius: 20px;
       font-size: 0.8rem;
+      font-weight: 600; // léger renfort pour compenser l'absence de fond contrastant
     }
   }
 }
 
-.order-products {
+.os-products {
   text-align: left;
 
-  .product-line {
+  .os-product-line {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 0.6rem 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--color-border-light);
 
     &:last-child {
       border-bottom: none;
@@ -93,58 +94,59 @@
       width: 48px;
       height: 48px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
     }
 
-    .product-line-info {
+    .os-product-line-info {
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-width: 0;
 
-      .product-name {
+      .os-product-name {
         font-weight: 500;
         font-size: 0.9rem;
-        color: #222;
+        color: var(--color-text);
       }
 
-      .product-qty {
+      .os-product-qty {
         font-size: 0.8rem;
-        color: #888;
+        color: var(--color-text-secondary);
       }
     }
 
-    .product-price {
+    .os-product-price {
       font-weight: 600;
       font-size: 0.9rem;
-      color: #333;
+      color: var(--color-text);
+      flex-shrink: 0;
     }
   }
 }
 
-.cod-notice {
-  background: #fff8e1;
-  border-left: 4px solid #f9a825;
+.os-cod-notice {
+  background: var(--color-surface-alt-2); // ✅ remplace le jaune très clair non tokenisé
+  border-left: 4px solid var(--color-rating); // ✅ garde l'accent visuel "attention" avec un token existant
   padding: 0.9rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   margin-top: 1.5rem;
   font-size: 0.9rem;
-  color: #6d4c00;
+  color: var(--color-text); // ✅ lisible dans les deux thèmes, au lieu d'un brun fixe illisible en dark
   text-align: left;
 }
-
-.next-steps {
+.os-next-steps {
   text-align: left;
 
   ul {
     margin: 0;
     padding-left: 1.2rem;
-    color: #555;
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     line-height: 1.7;
   }
 }
 
-.action-buttons {
+.os-action-buttons {
   display: flex;
   gap: 1rem;
   margin-top: 2rem;
@@ -156,33 +158,33 @@
     justify-content: center;
     gap: 8px;
     padding: 0.8rem;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     text-decoration: none;
     font-weight: 600;
     transition: 0.2s;
   }
 
-  .btn-primary {
-    background: #e63946;
-    color: #fff;
+  .os-btn-primary {
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
 
     &:hover {
-      background: #c62b38;
+      background: var(--color-primary-hover);
     }
   }
 
-  .btn-secondary {
-    background: #f0f0f0;
-    color: #333;
+  .os-btn-secondary {
+    background: var(--color-surface-alt-2);
+    color: var(--color-text);
 
     &:hover {
-      background: #e0e0e0;
+      background: var(--color-border-light);
     }
   }
 }
 
 @media (max-width: 600px) {
-  .action-buttons {
+  .os-action-buttons {
     flex-direction: column;
   }
 }

@@ -1,24 +1,16 @@
 /* wishlisttab.scss */
 .wishlist-page {
-
-
-  h2 {
-    color: #e63946;
-    margin-bottom: 0.5rem;
-  }
-
   p {
     margin-bottom: 1.5rem;
-    color: #555;
+    color: var(--color-text-secondary);
   }
 
   .wishlist-items-container {
-    background: #fff;
+    background: var(--color-surface);
     padding: 1.5rem;
-   
 
-    max-height: 400px; // ← limite la hauteur
-    overflow-y: auto;  // ← active la scrollbar
+    max-height: 400px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -28,17 +20,17 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: #f1f1f1;
+      background: var(--color-surface-alt-2);
       border-radius: 4px;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #e63946;
+      background: var(--color-primary);
       border-radius: 4px;
     }
 
     &::-webkit-scrollbar-thumb:hover {
-      background: #c62b38;
+      background: var(--color-primary-hover);
     }
   }
 }
@@ -72,21 +64,21 @@
 
 .empty-text {
   font-size: 15px;
-  color: #666;
+  color: var(--color-text-secondary);
   margin-bottom: 20px;
 }
 
 .continue-shopping-btn {
-  background: #e63946;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
   border: none;
   padding: 10px 18px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  transition: background 0.2s ease;
+  transition: var(--transition-fast);
 
   &:hover {
-    background: #c62b38;
+    background: var(--color-primary-hover);
   }
 }

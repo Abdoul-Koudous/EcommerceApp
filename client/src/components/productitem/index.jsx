@@ -115,9 +115,9 @@ const ProductItem = ({ product }) => {
       });
   };
 
-  const currentCartItem = cartItems?.find(
-    (item) => item.productId === product._id,
-  );
+const currentCartItem = cartItems?.find(
+  (item) => (item.productId?._id || item.productId) === product._id,
+);
 
   useEffect(() => {
     if (currentCartItem) {

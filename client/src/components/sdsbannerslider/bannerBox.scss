@@ -8,44 +8,52 @@
   background-position: center;
   display: flex;
   align-items: center;
-  padding: 20px;
+  padding: clamp(14px, 4%, 20px);
 
   .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.3);
+    background: var(--color-overlay);
   }
 
   .banner-content {
     position: relative;
     z-index: 2;
     color: #fff;
-    max-width: 200px;
+    max-width: min(200px, 100%);
+
+    hr {
+      border-color: rgba(255, 255, 255, 0.4);
+      margin: 6px 0;
+    }
 
     h3 {
-      font-size: 22px;
+      font-size: clamp(1rem, 4vw, 1.375rem);
       font-weight: bold;
+      overflow-wrap: break-word;
     }
 
     .price {
-      color: #ff3c3c;
+      color: var(--color-primary);
       font-weight: bold;
       margin: 8px 0;
+      font-size: clamp(0.85rem, 3vw, 1rem);
     }
-    
 
-     button {
-      padding: 10px 25px;
-      background: #e63946;
+    button {
+      padding: clamp(8px, 2.5%, 10px) clamp(16px, 6%, 25px);
+      background: var(--color-primary);
       border: none;
       border-radius: 5px;
       color: #fff;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background var(--transition-base);
+      white-space: nowrap;
+      font-size: clamp(0.8rem, 3vw, 1rem);
 
       &:hover {
-        background: #d62828;
+        background: var(--color-primary-hover);
       }
     }
   }

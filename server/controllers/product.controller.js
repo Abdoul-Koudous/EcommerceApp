@@ -1469,47 +1469,94 @@ export async function getProductSIZEById(request, response) {
   }
 }
 
+// Remplace ta fonction `filters` existante dans product.controller.js par celle-ci.
+// Elle gère maintenant aussi sortBy/order, donc SideBar peut être la seule source de fetch.
+
+// Remplace ta fonction `filters` existante dans product.controller.js par celle-ci.
+// Ajouts : support du tri (sortBy/order) + comptage dynamique par étoile (ratingCounts),
+// calculé avec les MÊMES filtres actifs (catégorie, prix, recherche...) mais SANS le filtre
+// de note lui-même, pour que les 5 options restent toutes visibles avec leur vrai total.
+
 export async function filters(request, response) {
   const {
     catId = [],
     subCatId = [],
     thirdsubCatId = [],
     minPrice = 0,
-    maxPrice = 999999,
+    maxPrice = 999999999,
     rating,
+    search,
+    sortBy = "createdAt",
+    order = "desc",
     page = 1,
-    limit = 5,
+    limit = 15,
   } = request.body || {};
 
   const filter = {};
 
-  if (catId?.length) {
-    filter.catId = { $in: catId };
-  }
-  if (subCatId?.length) {
-    filter.subCatId = { $in: subCatId };
-  }
-  if (thirdsubCatId?.length) {
-    filter.thirdsubCatId = { $in: thirdsubCatId };
-  }
+  if (catId?.length) filter.catId = { $in: catId };
+  if (subCatId?.length) filter.subCatId = { $in: subCatId };
+  if (thirdsubCatId?.length) filter.thirdsubCatId = { $in: thirdsubCatId };
   if (minPrice !== undefined && maxPrice !== undefined) {
     filter.price = {
       $gte: Number(minPrice) || 0,
       $lte: Number(maxPrice) || 999999999,
     };
   }
+  if (search && search.trim()) {
+    filter.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { brand: { $regex: search, $options: "i" } },
+      { catName: { $regex: search, $options: "i" } },
+      { subCat: { $regex: search, $options: "i" } },
+      { thirdsubCat: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // ✅ Filtre utilisé pour la LISTE de produits : inclut la note si sélectionnée
+  const filterForProducts = { ...filter };
   if (rating && !isNaN(Number(rating))) {
-    filter.rating = Number(rating); // ✅ EXACT MATCH
+    filterForProducts.rating = Number(rating);
+  }
+
+  let sort = {};
+  switch (sortBy) {
+    case "name":
+      sort.name = order === "asc" ? 1 : -1;
+      break;
+    case "price":
+      sort.price = order === "asc" ? 1 : -1;
+      break;
+    case "createdAt":
+    default:
+      sort.createdAt = order === "asc" ? 1 : -1;
+      break;
   }
 
   try {
-    const products = await ProductModel.find(filter)
+    const products = await ProductModel.find(filterForProducts)
       .populate("category")
-      .sort({ createdAt: -1 }) // 🔥 IMPORTANT
+      .sort(sort)
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    const total = await ProductModel.countDocuments(filter);
+    const total = await ProductModel.countDocuments(filterForProducts);
+
+    // ✅ Comptage par étoile : basé sur `filter` (SANS le rating) pour que
+    // toutes les options 1-5 étoiles restent affichées avec leur vrai total,
+    // même quand une note est déjà sélectionnée.
+    const ratingAgg = await ProductModel.aggregate([
+      { $match: filter },
+      { $group: { _id: "$rating", count: { $sum: 1 } } },
+    ]);
+
+    const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    ratingAgg.forEach((r) => {
+      const star = Math.round(r._id);
+      if (ratingCounts[star] !== undefined) {
+        ratingCounts[star] += r.count;
+      }
+    });
 
     return response.status(200).json({
       error: false,
@@ -1518,8 +1565,8 @@ export async function filters(request, response) {
       total: total,
       page: parseInt(page),
       totalPages: Math.ceil(total / limit),
+      ratingCounts: ratingCounts,
     });
-    console.log("FILTERS BACKEND:", request.body);
   } catch (error) {
     return response.status(500).json({
       message: error.message,
@@ -1534,37 +1581,51 @@ export async function sortBy(req, res) {
     const {
       sortBy = "createdAt",
       order = "desc",
+      catId = [],
+      subCatId = [],
+      thirdsubCatId = [],
+      search,
       page = 1,
       limit = 10,
     } = req.body;
 
-    // 🔹 construction du tri MongoDB
     let sort = {};
-
     switch (sortBy) {
       case "name":
         sort.name = order === "asc" ? 1 : -1;
         break;
-
       case "price":
         sort.price = order === "asc" ? 1 : -1;
         break;
-
       case "createdAt":
       default:
         sort.createdAt = order === "asc" ? 1 : -1;
         break;
     }
 
-    // 🔹 requête DB (IMPORTANT : Number)
+    const filter = {};
+    if (catId?.length) filter.catId = { $in: catId };
+    if (subCatId?.length) filter.subCatId = { $in: subCatId };
+    if (thirdsubCatId?.length) filter.thirdsubCatId = { $in: thirdsubCatId };
+    if (search && search.trim()) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { brand: { $regex: search, $options: "i" } },
+        { catName: { $regex: search, $options: "i" } },
+        { subCat: { $regex: search, $options: "i" } },
+        { thirdsubCat: { $regex: search, $options: "i" } },
+      ];
+    }
+
     const skip = (Number(page) - 1) * Number(limit);
 
-    const products = await ProductModel.find()
+    const products = await ProductModel.find(filter)
+      .populate("category")
       .sort(sort)
       .skip(skip)
       .limit(Number(limit));
 
-    const total = await ProductModel.countDocuments();
+    const total = await ProductModel.countDocuments(filter);
 
     return res.status(200).json({
       success: true,
@@ -1580,3 +1641,104 @@ export async function sortBy(req, res) {
     });
   }
 }
+
+
+export async function searchProductController(request, response){
+  try {
+    const query = request.query.q;
+    const page = parseInt(request.query.page) || 1;
+    const limit = parseInt(request.query.limit) || 20;
+
+    if(!query){
+      return response.status(400).json({
+        error: true,
+        success: false,
+        message: "La requête est requise"
+      });
+    }
+
+    const filter = {
+      $or:[
+        {name: {$regex: query, $options: "i"}},
+        {brand: {$regex: query, $options: "i"}},
+        {catName: {$regex: query, $options: "i"}},
+        {subCat: {$regex: query, $options: "i"}},
+        {thirdsubCat: {$regex: query, $options: "i"}},
+      ],
+    };
+
+    const total = await ProductModel.countDocuments(filter);
+
+    const products = await ProductModel.find(filter)
+      .populate("category")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products: products,
+      total: total,
+      page: page,
+      totalPages: Math.ceil(total / limit)
+    })
+    
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false
+    })
+  }
+}
+
+// À ajouter dans product.controller.js (nouvelle fonction, ne remplace rien).
+// Renvoie un aperçu léger (6 produits max) pour l'autocomplete — pas de pagination,
+// juste ce qu'il faut pour afficher le dropdown de suggestions.
+
+export async function searchSuggestions(request, response) {
+  try {
+    const query = request.query.q;
+
+    if (!query || !query.trim()) {
+      return response.status(200).json({
+        error: false,
+        success: true,
+        products: [],
+      });
+    }
+
+    const filter = {
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { brand: { $regex: query, $options: "i" } },
+        { catName: { $regex: query, $options: "i" } },
+        { subCat: { $regex: query, $options: "i" } },
+        { thirdsubCat: { $regex: query, $options: "i" } },
+      ],
+    };
+
+    const products = await ProductModel.find(filter)
+      .select("name price oldPrice images")
+      .sort({ createdAt: -1 })
+      .limit(6);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+// N'oublie pas d'ajouter la route dans ton fichier de routes produit, juste à côté
+// de ta route /search existante, par exemple :
+//
+// router.get("/api/product/searchSuggestions", searchSuggestions);

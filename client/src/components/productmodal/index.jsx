@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   FaStar,
+  FaRegStar,
   FaHeart,
   FaCartPlus,
   FaBalanceScale,
@@ -12,7 +13,6 @@ import "./productpopup.scss";
 const ProductPopup = ({ product, onClose, addToCart, user }) => {
   const [quantity, setQuantity] = useState(1);
 
-  // ✅ STATES pour les caractéristiques
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedRam, setSelectedRam] = useState(null);
@@ -20,7 +20,6 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
 
   const isOutOfStock = !product?.countIntStock || product.countIntStock <= 0;
 
-  // ✅ INIT : prendre la première option disponible par défaut
   const handleAddToCart = () => {
     console.log("CLICK ADD", {
       selectedSize,
@@ -61,10 +60,9 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
       weight: selectedWeight,
     });
 
-    onClose(); // fermer popup après ajout
+    onClose();
   };
 
-  // Quantité
   const handleIncrement = () => {
     if (isOutOfStock) return;
     setQuantity((q) => Math.min(q + 1, product.countIntStock));
@@ -73,47 +71,47 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
     setQuantity(quantity > 1 ? quantity - 1 : 1);
 
   return (
-    <div className="popup-overlay">
-      <div className="popup-content">
-        <button className="close-btn" onClick={onClose}>
+    <div className="pp-overlay">
+      <div className="pp-content">
+        <button className="pp-close-btn" onClick={onClose}>
           <FaTimes />
         </button>
 
-        <div className="container2">
+        <div className="pp-container">
           {/* Images */}
-          <div className="productzoomcont">
+          <div className="pp-zoom-cont">
             {product.images?.length > 0 && <ProductZoom images={product.images} />}
           </div>
 
           {/* Infos */}
-          <div className="productcont">
-            <h2 className="product-title">{product.name}</h2>
+          <div className="pp-info-cont">
+            <h2 className="pp-title">{product.name}</h2>
 
             {/* Marque + rating */}
             {(product.brand || product.rating) && (
-              <div className="brand-rating">
-                {product.brand && <span className="brand">Marque: {product.brand}</span>}
+              <div className="pp-brand-rating">
+                {product.brand && <span className="pp-brand">Marque: {product.brand}</span>}
                 {product.rating != null && (
-                  <div className="rating">
+                  <div className="pp-rating">
                     {[...Array(5)].map((_, i) => (
-                      <FaStar
-                        key={i}
-                        color={i < product.rating ? "#FFD700" : "#ccc"}
-                        size={16}
-                      />
+                      i < product.rating ? (
+                        <FaStar key={i} className="pp-star-filled" size={16} />
+                      ) : (
+                        <FaRegStar key={i} className="pp-star-empty" size={16} />
+                      )
                     ))}
-                    <span className="reviews">({product.rating} Avis)</span>
+                    <span className="pp-reviews">({product.rating} Avis)</span>
                   </div>
                 )}
               </div>
             )}
 
             {/* Prix et stock */}
-            <div className="price-stock">
-              {product.oldPrice && <span className="old-price">{product.oldPrice} FCFA</span>}
-              {product.price && <span className="price">{product.price} FCFA</span>}
+            <div className="pp-price-stock">
+              {product.oldPrice && <span className="pp-old-price">{product.oldPrice} FCFA</span>}
+              {product.price && <span className="pp-price">{product.price} FCFA</span>}
               {product.countIntStock != null && (
-                <span className={`stock ${product.countIntStock > 0 ? "in-stock" : "out-of-stock"}`}>
+                <span className={`pp-stock ${product.countIntStock > 0 ? "pp-in-stock" : "pp-out-of-stock"}`}>
                   {product.countIntStock > 0
                     ? `En stock (${product.countIntStock})`
                     : "Indisponible"}
@@ -122,17 +120,17 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
             </div>
 
             {/* Description */}
-            {product.description && <p className="desc">{product.description}</p>}
+            {product.description && <p className="pp-desc">{product.description}</p>}
 
-            {/* Options (tailles, couleurs, RAM, poids) */}
-            <div className="characteristics">
+            {/* Options */}
+            <div className="pp-characteristics">
               {product.size?.length > 0 && (
-                <div className="option-group">
-                  <span className="option-label">Tailles:</span>
+                <div className="pp-option-group">
+                  <span className="pp-option-label">Tailles:</span>
                   {product.size.map((size, i) => (
                     <button
                       key={i}
-                      className={`option-btn ${size === selectedSize ? "active" : ""}`}
+                      className={`pp-option-btn ${size === selectedSize ? "pp-active" : ""}`}
                       onClick={() => setSelectedSize(size)}
                     >
                       {size}
@@ -142,12 +140,12 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
               )}
 
               {product.colors?.length > 0 && (
-                <div className="option-group">
-                  <span className="option-label">Couleurs:</span>
+                <div className="pp-option-group">
+                  <span className="pp-option-label">Couleurs:</span>
                   {product.colors.map((color, i) => (
                     <button
                       key={i}
-                      className={`option-btn ${color === selectedColor ? "active" : ""}`}
+                      className={`pp-option-btn ${color === selectedColor ? "pp-active" : ""}`}
                       style={{ backgroundColor: color.toLowerCase() }}
                       onClick={() => setSelectedColor(color)}
                     >
@@ -158,12 +156,12 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
               )}
 
               {product.productRam?.length > 0 && (
-                <div className="option-group">
-                  <span className="option-label">RAM:</span>
+                <div className="pp-option-group">
+                  <span className="pp-option-label">RAM:</span>
                   {product.productRam.map((ram, i) => (
                     <button
                       key={i}
-                      className={`option-btn ${ram === selectedRam ? "active" : ""}`}
+                      className={`pp-option-btn ${ram === selectedRam ? "pp-active" : ""}`}
                       onClick={() => setSelectedRam(ram)}
                     >
                       {ram}
@@ -173,12 +171,12 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
               )}
 
               {product.productWeight?.length > 0 && (
-                <div className="option-group">
-                  <span className="option-label">Poids:</span>
+                <div className="pp-option-group">
+                  <span className="pp-option-label">Poids:</span>
                   {product.productWeight.map((w, i) => (
                     <button
                       key={i}
-                      className={`option-btn ${w === selectedWeight ? "active" : ""}`}
+                      className={`pp-option-btn ${w === selectedWeight ? "pp-active" : ""}`}
                       onClick={() => setSelectedWeight(w)}
                     >
                       {w}
@@ -187,8 +185,7 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
                 </div>
               )}
 
-              {/* Ligne dynamique des caractéristiques sélectionnées */}
-              <div className="selected-characteristics">
+              <div className="pp-selected-characteristics">
                 { [selectedSize, selectedColor, selectedRam, selectedWeight]
                     .filter(Boolean)
                     .join(" | ") }
@@ -196,25 +193,25 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
             </div>
 
             {/* Quantité */}
-            <div className="cart-actions">
-              <div className="quantity">
+            <div className="pp-cart-actions">
+              <div className="pp-quantity">
                 <button onClick={handleDecrement} disabled={isOutOfStock}>-</button>
                 <span>{quantity}</span>
                 <button onClick={handleIncrement} disabled={isOutOfStock}>+</button>
               </div>
 
-              <button className="add-cart" onClick={handleAddToCart} disabled={isOutOfStock}>
+              <button className="pp-add-cart" onClick={handleAddToCart} disabled={isOutOfStock}>
                 <FaCartPlus /> Ajouter au panier
               </button>
             </div>
 
             {/* Actions */}
-            <div className="extra-actions">
-              <button className="wishlist">
+            <div className="pp-extra-actions">
+              <button className="pp-wishlist">
                 <FaHeart /> Favoris
               </button>
 
-              <button className="compare">
+              <button className="pp-compare">
                 <FaBalanceScale /> Comparer
               </button>
             </div>

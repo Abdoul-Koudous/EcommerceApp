@@ -29,6 +29,7 @@ import LogoutPage from "./pages/myaccount/logoutpage";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import AddressPage from "./pages/myaccount/AddressPage";
 import AccountLayout from "./pages/myaccount/accountlayout";
+import SearchPage from "./components/searchs";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
           <Route path="/resetpassword" element={<ResetPassword />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order/success" element={<OrderSuccess />} />
+          <Route path="/search" element={<SearchPage />} />
 
           {/* === COMPTE UTILISATEUR PROTÉGÉ === */}
           <Route

@@ -3,23 +3,21 @@ import { Link, useLocation } from 'react-router-dom';
 import { RiMenu2Fill } from "react-icons/ri";
 import { LiaAngleDownSolid } from "react-icons/lia";
 import { GoRocket } from "react-icons/go";
+import { IoMenuOutline, IoClose } from "react-icons/io5";
 import CategoryPanel from './categoryPanel';
 import "./navigation.scss";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const closeDrawer = () => {
-  setIsOpen(false);
-};
 
-  const toggleDrawer = () => {
-    setIsOpen(!isOpen);
-  };
+  const closeDrawer = () => setIsOpen(false);
+  const toggleDrawer = () => setIsOpen(!isOpen);
+  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
     <>
@@ -27,26 +25,33 @@ const Navigation = () => {
         <div className="container">
           <div className="cont1">
             <button onClick={toggleDrawer}>
-              <RiMenu2Fill /> Toutes les Catégories <LiaAngleDownSolid />
+              <RiMenu2Fill /> <span className="label">Toutes les Catégories</span> <LiaAngleDownSolid />
             </button>
           </div>
 
-          <div className="cont2">
+          <button
+            className="mobile-toggle"
+            onClick={toggleMobileMenu}
+            aria-label="Ouvrir le menu de navigation"
+          >
+            {mobileMenuOpen ? <IoClose /> : <IoMenuOutline />}
+          </button>
+
+          <div className={`cont2 ${mobileMenuOpen ? "open" : ""}`}>
             <ul>
-              <li><Link to="/" className={isActive('/') ? 'active' : ''}>Accueil</Link></li>
-              <li><Link to="/productlisting" className={isActive('/productlisting') ? 'active' : ''}>Boutique</Link></li>
-              <li><Link to="/about" className={isActive('/about') ? 'active' : ''}>À propos de nous</Link></li>
-              <li><Link to="/contact" className={isActive('/contact') ? 'active' : ''}>Nous contacter</Link></li>
+              <li><Link to="/" className={isActive('/') ? 'active' : ''} onClick={closeMobileMenu}>Accueil</Link></li>
+              <li><Link to="/productlisting" className={isActive('/productlisting') ? 'active' : ''} onClick={closeMobileMenu}>Boutique</Link></li>
+              <li><Link to="/about" className={isActive('/about') ? 'active' : ''} onClick={closeMobileMenu}>À propos de nous</Link></li>
+              <li><Link to="/contact" className={isActive('/contact') ? 'active' : ''} onClick={closeMobileMenu}>Nous contacter</Link></li>
             </ul>
           </div>
 
           <div className="cont3">
-            <p><GoRocket /> Livraison gratuite à l’interne</p>
+            <p><GoRocket /> Livraison gratuite à l'interne</p>
           </div>
         </div>
       </nav>
 
-      {/* ✅ Drawer des catégories */}
       <CategoryPanel isOpen={isOpen} onClose={closeDrawer} />
     </>
   );

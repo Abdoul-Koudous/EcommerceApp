@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import auth from '../middlewares/auth.js';
 import upload from '../middlewares/multer.js';
-import { createProduct,removeImageFromCloudinary, deleteProducts, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getProduct, getProductsCount, uploadImages, updateProduct, deleteMultipleProduct, getAllProductsByThirdLavelCatId, getAllProductsByThirdLavelCatName, getProducts, createProductRAM, deleteProductRAM, updateProductRAM, deleteMultipleProductRAM, getAllProductRAMs, getProductRAMById, createProductWEIGHT, createProductSIZE, deleteProductWEIGHT, deleteProductSIZE, deleteMultipleProductSIZE, deleteMultipleProductWEIGHT, updateProductWEIGHT, updateProductSIZE, getAllProductWEIGHTs, getAllProductSIZEs, getProductWEIGHTById, getProductSIZEById, uploadBannerImages, filters, sortBy} from '../controllers/product.controller.js';
+import { createProduct,removeImageFromCloudinary, deleteProducts, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getProduct, getProductsCount, uploadImages, updateProduct, deleteMultipleProduct, getAllProductsByThirdLavelCatId, getAllProductsByThirdLavelCatName, getProducts, createProductRAM, deleteProductRAM, updateProductRAM, deleteMultipleProductRAM, getAllProductRAMs, getProductRAMById, createProductWEIGHT, createProductSIZE, deleteProductWEIGHT, deleteProductSIZE, deleteMultipleProductSIZE, deleteMultipleProductWEIGHT, updateProductWEIGHT, updateProductSIZE, getAllProductWEIGHTs, getAllProductSIZEs, getProductWEIGHTById, getProductSIZEById, uploadBannerImages, filters, sortBy, searchProductController, searchSuggestions } from '../controllers/product.controller.js';
 
 
 const productRouter = Router();
@@ -27,6 +27,8 @@ productRouter.get("/productRAM", getAllProductRAMs);
 productRouter.get("/productSIZE", getAllProductSIZEs);
 productRouter.get("/productWEIGHT", getAllProductWEIGHTs);
 productRouter.get('/getAllFeaturedProducts', getAllFeaturedProducts);
+productRouter.get('/search', searchProductController);
+productRouter.get('/searchSuggestions', searchSuggestions);
 productRouter.delete('/deleteImage', auth, removeImageFromCloudinary);
 productRouter.delete('/deleteMultipleProduct', auth, deleteMultipleProduct);
 productRouter.delete('/deleteMultipleProductRAM', auth, deleteMultipleProductRAM);

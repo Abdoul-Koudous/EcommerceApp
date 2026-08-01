@@ -2,7 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 
 import "./productdetail.scss";
-import { FaStar, FaHeart, FaCartPlus, FaBalanceScale } from "react-icons/fa";
+import { FaHeart, FaCartPlus, FaBalanceScale, FaStar, FaRegStar } from "react-icons/fa";
 import ProductZoom from "../../components/productzoom";
 import ProductSlider from "../../components/productslider";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
@@ -136,6 +136,7 @@ const ProductDetails = () => {
   const handleDecrement = () => {
     setQuantity((q) => Math.max(1, q - 1));
   };
+
   // FETCH PRODUIT
   const getProduct = async () => {
     try {
@@ -240,11 +241,11 @@ const ProductDetails = () => {
 
                 <div className="rating">
                   {[...Array(5)].map((_, i) => (
-                    <FaStar
-                      key={i}
-                      color={i < product.rating ? "#FFD700" : "#ccc"}
-                      size={16}
-                    />
+                    i < product.rating ? (
+                      <FaStar key={i} className="star-filled" size={16} />
+                    ) : (
+                      <FaRegStar key={i} className="star-empty" size={16} />
+                    )
                   ))}
                   <span className="reviews">({reviewsCount} avis)</span>
                 </div>

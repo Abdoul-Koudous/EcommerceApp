@@ -1,7 +1,7 @@
 .order-panel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--color-overlay);
   z-index: 1000;
 }
 
@@ -12,36 +12,36 @@
   height: 100vh;
   width: 420px;
   max-width: 90vw;
-  background: #fff;
+  background: var(--color-surface);
   z-index: 1001;
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-drawer);
   overflow-y: auto;
   animation: slideInRight 0.25s ease forwards;
 
   scrollbar-width: thin;
-  scrollbar-color: #c62b38 transparent;
+  scrollbar-color: var(--color-primary) transparent;
   &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-thumb { background: #c62b38; border-radius: 8px; }
+  &::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 8px; }
 
   .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     padding: 1.5rem 1.5rem 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light);
 
-    h3 { margin: 0 0 0.25rem; font-size: 1.15rem; }
-    .panel-date { color: #888; font-size: 0.85rem; }
+    h3 { margin: 0 0 0.25rem; font-size: 1.15rem; color: var(--color-text); }
+    .panel-date { color: var(--color-text-secondary); font-size: 0.85rem; }
 
     .panel-close-btn {
       background: none;
       border: none;
       cursor: pointer;
-      color: #777;
+      color: var(--color-text-secondary);
       font-size: 1.1rem;
       padding: 0.25rem;
 
-      &:hover { color: #c62b38; }
+      &:hover { color: var(--color-primary); }
     }
   }
 
@@ -53,11 +53,11 @@
     .status {
       font-weight: 600;
       font-size: 0.85rem;
-      &.received { color: #7f8c8d; }
-      &.preparing { color: #e67e22; }
-      &.shipped { color: #2980b9; }
-      &.delivered { color: #2ecc71; }
-      &.cancelled { color: #e63946; }
+      &.received  { color: var(--color-text-secondary); }
+      &.preparing { color: var(--color-rating); }
+      &.shipped   { color: var(--color-info); }
+      &.delivered { color: var(--color-success); }
+      &.cancelled { color: var(--color-danger); }
     }
 
     .payment-status {
@@ -66,39 +66,39 @@
       border-radius: 12px;
       font-size: 0.8rem;
 
-      &.paid { color: #1e8449; background: #eafaf1; }
-      &.cod { color: #b9770e; background: #fef5e7; }
-      &.failed { color: #922b21; background: #fdedec; }
+      &.paid   { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 12%, transparent); }
+      &.cod    { color: var(--color-rating);  background: color-mix(in srgb, var(--color-rating) 15%, transparent); }
+      &.failed { color: var(--color-danger);  background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
     }
   }
 
   .panel-section {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #f2f2f2;
+    border-bottom: 1px solid var(--color-border-light);
 
     h4 {
       margin: 0 0 0.6rem;
       font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 0.03em;
-      color: #999;
+      color: var(--color-text-secondary);
     }
 
     p {
       margin: 0.15rem 0;
-      color: #333;
+      color: var(--color-text);
       font-size: 0.92rem;
 
       &.field-missing {
         font-style: italic;
-        color: #aaa;
+        color: var(--color-text-secondary);
       }
     }
 
     .address-badge {
       display: inline-block;
-      background: #fff0f1;
-      color: #c62b38;
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
       font-size: 0.75rem;
       font-weight: 600;
       padding: 0.15rem 0.6rem;
@@ -116,9 +116,9 @@
     padding-right: 0.4rem;
 
     scrollbar-width: thin;
-    scrollbar-color: #c62b38 transparent;
+    scrollbar-color: var(--color-primary) transparent;
     &::-webkit-scrollbar { width: 5px; }
-    &::-webkit-scrollbar-thumb { background: #c62b38; border-radius: 8px; }
+    &::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 8px; }
   }
 
   .panel-product-row {
@@ -131,7 +131,7 @@
       height: 44px;
       object-fit: contain;
       border-radius: 6px;
-      background: #f7f7f7;
+      background: var(--color-surface-alt);
       flex-shrink: 0;
     }
 
@@ -144,16 +144,18 @@
       .panel-product-title {
         font-size: 0.9rem;
         font-weight: 500;
+        color: var(--color-text);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .panel-product-qty { font-size: 0.8rem; color: #888; }
+      .panel-product-qty { font-size: 0.8rem; color: var(--color-text-secondary); }
     }
 
     .panel-product-price {
       font-size: 0.9rem;
       font-weight: 600;
+      color: var(--color-text);
       white-space: nowrap;
     }
   }
@@ -163,13 +165,13 @@
     justify-content: space-between;
     font-size: 0.9rem;
     padding: 0.25rem 0;
-    color: #555;
+    color: var(--color-text-secondary);
 
     &.panel-summary-total {
       font-weight: 700;
-      color: #111;
+      color: var(--color-text);
       font-size: 1rem;
-      border-top: 1px solid #eee;
+      border-top: 1px solid var(--color-border-light);
       margin-top: 0.4rem;
       padding-top: 0.6rem;
     }
@@ -178,7 +180,7 @@
   .panel-payment-id {
     margin-top: 0.6rem;
     font-size: 0.8rem;
-    color: #999;
+    color: var(--color-text-secondary);
   }
 }
 

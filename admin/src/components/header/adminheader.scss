@@ -7,24 +7,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
+  background: var(--color-surface);
   padding: 0 2rem;
-  border-bottom: 2px solid #eee;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  border-bottom: 2px solid var(--color-border-light);
+  box-shadow: var(--shadow-card);
   z-index: 1000;
-
-
 
   .menu-btn {
     background: none;
     border: none;
     font-size: 1.6rem;
     cursor: pointer;
-    color: #444;
-    transition: 0.2s ease;
+    color: var(--color-text-secondary);
+    transition: var(--transition-fast);
 
     &:hover {
-      color: #e63946;
+      color: var(--color-primary);
       transform: scale(1.1);
     }
   }
@@ -38,11 +36,11 @@
       position: relative;
       cursor: pointer;
       font-size: 1.5rem;
-      color: #555;
-      transition: all 0.2s ease;
+      color: var(--color-text-secondary);
+      transition: var(--transition-fast);
 
       &:hover {
-        color: #e63946;
+        color: var(--color-primary);
         transform: scale(1.1);
       }
 
@@ -51,44 +49,22 @@
           position: absolute;
           top: -6px;
           right: -8px;
-          background: #e63946;
-          color: #fff;
+          background: var(--color-primary);
+          color: var(--color-text-on-primary);
           font-size: 0.65rem;
           font-weight: 600;
           padding: 2px 5px;
           border-radius: 10px;
-          border: 1.5px solid #fff;
+          border: 1.5px solid var(--color-surface);
           min-width: 16px;
           text-align: center;
           animation: popIn 0.3s ease;
         }
       }
     }
-
-    .user-profile {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      transition: 0.2s;
-      border-radius: 50%;
-      overflow: hidden;
-      width: 38px;
-      height: 38px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-
-      &:hover {
-        transform: scale(1.05);
-      }
-
-      .avatar {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-    }
   }
 }
+
 .user-menu {
   position: relative;
 
@@ -100,14 +76,15 @@
     overflow: hidden;
     width: 38px;
     height: 38px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: 0.2s;
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-fast);
 
     &:hover {
       transform: scale(1.05);
     }
 
-    .avatar {
+    .avatar,
+    img {
       width: 100%;
       height: 100%;
       border-radius: 50%;
@@ -119,9 +96,9 @@
     position: absolute;
     right: 0;
     top: 50px;
-    background: #fff;
+    background: var(--color-surface);
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-dropdown);
     width: 240px;
     overflow: hidden;
     animation: fadeInUp 0.25s ease forwards;
@@ -132,8 +109,8 @@
       align-items: center;
       gap: 10px;
       padding: 0.8rem 1rem;
-      background: #fafafa;
-      border-bottom: 1px solid #eee;
+      background: var(--color-surface-alt);
+      border-bottom: 1px solid var(--color-border-light);
 
       .avatar {
         width: 45px;
@@ -149,11 +126,11 @@
           font-size: 0.95rem;
           margin: 0;
           font-weight: 600;
-          color: #222;
+          color: var(--color-text);
         }
         p {
           font-size: 0.8rem;
-          color: #888;
+          color: var(--color-text-secondary);
           margin: 2px 0 0;
         }
       }
@@ -169,23 +146,23 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: #333;
+        color: var(--color-text);
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: var(--transition-fast);
 
         .icon {
-          color: #e63946;
+          color: var(--color-primary);
           font-size: 1.1rem;
         }
 
         &:hover {
-          background: rgba(230, 57, 70, 0.08);
+          background: var(--color-primary-soft);
         }
 
         &.logout {
-          color: #e63946;
+          color: var(--color-primary);
           font-weight: 600;
-          border-top: 1px solid #eee;
+          border-top: 1px solid var(--color-border-light);
           margin-top: 4px;
         }
       }
@@ -204,7 +181,6 @@
   }
 }
 
-/* Animation d’apparition du badge */
 @keyframes popIn {
   from {
     transform: scale(0);
@@ -215,18 +191,19 @@
     opacity: 1;
   }
 }
+
 .login-btn {
   padding: 0.4rem 1rem;
-  background: #e63946;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-fast);
 
   &:hover {
-    background: #d62839;
+    background: var(--color-primary-hover);
     transform: scale(1.05);
   }
 }

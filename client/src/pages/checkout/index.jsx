@@ -21,8 +21,6 @@ const Checkout = () => {
   const [panelMode, setPanelMode] = useState("add");
   const [editingAddress, setEditingAddress] = useState(null);
 
-  // Ref pour toujours avoir la valeur à jour de l'adresse sélectionnée
-  // dans les callbacks KkiaPay (évite le problème de "stale closure")
   const selectedAddressIdRef = useRef(selectedAddressId);
   useEffect(() => {
     selectedAddressIdRef.current = selectedAddressId;
@@ -146,9 +144,6 @@ const Checkout = () => {
     }
   };
 
-  // ============================
-  // === PAIEMENT FEDAPAY ===
-  // ============================
   const handlePay = () => {
     if (!selectedAddressId) {
       openToast("error", "Veuillez sélectionner une adresse de livraison");
@@ -164,8 +159,6 @@ const Checkout = () => {
       openToast("error", "Le module de paiement n'est pas chargé");
       return;
     }
-
-    console.log("[FedaPay] Ouverture du widget...");
 
     const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
     const [firstname, ...rest] = (user?.name || "Client").split(" ");
@@ -188,22 +181,13 @@ const Checkout = () => {
         },
       },
       onComplete: (resp) => {
-        console.log("[FedaPay] onComplete déclenché:", resp);
-        console.log("[FedaPay] Transaction:", resp.transaction);
-
         if (resp.reason === FedaPay.DIALOG_DISMISSED) {
-          console.log("[FedaPay] Paiement annulé par l'utilisateur");
           openToast("info", "Paiement annulé");
           return;
         }
         if (resp.transaction.status === "approved") {
-          console.log("[FedaPay] Statut approuvé, vérification serveur...");
           verifyPayment(resp.transaction.id);
         } else {
-          console.log(
-            "[FedaPay] Statut non approuvé:",
-            resp.transaction.status,
-          );
           openToast("error", "Le paiement n'a pas été approuvé");
         }
       },
@@ -211,21 +195,15 @@ const Checkout = () => {
   };
 
   const verifyPayment = async (transactionId) => {
-    console.log(
-      "[FedaPay] Appel /api/payment/verify avec transactionId:",
-      transactionId,
-    );
     try {
       const res = await postData("/api/payment/verify", {
         transactionId,
         addressId: selectedAddressIdRef.current,
       });
 
-      console.log("[FedaPay] Réponse /api/payment/verify:", res);
-
       if (res?.success) {
         openToast("success", "Paiement confirmé, commande créée avec succès !");
-        loadCartItems(); // 🔄 recharge le panier (maintenant vide)
+        loadCartItems();
         navigate("/order/success", { state: { order: res.data } });
       } else {
         openToast(
@@ -234,31 +212,17 @@ const Checkout = () => {
         );
       }
     } catch (err) {
-      console.error("[FedaPay] Erreur lors de la vérification:", err);
       openToast("error", "Erreur serveur lors de la vérification du paiement");
     }
   };
 
-  // ============================
-  // === PAIEMENT KKIAPAY ===
-  // ============================
   const { openKkiapayWidget, addSuccessListener } = useKKiaPay();
 
   useEffect(() => {
-    console.log("[KkiaPay] Enregistrement du addSuccessListener...");
-
     addSuccessListener((response) => {
-      console.log(
-        "[KkiaPay] addSuccessListener déclenché ! Réponse complète:",
-        response,
-      );
       const transactionId = response?.transactionId;
 
       if (!transactionId) {
-        console.error(
-          "[KkiaPay] Aucun transactionId dans la réponse !",
-          response,
-        );
         openToast(
           "error",
           "Impossible de récupérer l'identifiant de transaction",
@@ -268,8 +232,6 @@ const Checkout = () => {
 
       verifyKkiapayPayment(transactionId);
     });
-
-    console.log("[KkiaPay] Listener enregistré avec succès");
   }, [addSuccessListener]);
 
   const handlePayKkiapay = () => {
@@ -287,14 +249,12 @@ const Checkout = () => {
     const widgetConfig = {
       amount: Math.round(total),
       key: import.meta.env.VITE_KKIAPAY_PUBLIC_KEY,
-      sandbox: true, // à retirer en production
+      sandbox: true,
       phone: (selectedAddress?.mobile || "").replace(/\D/g, ""),
       email: user?.email,
       name: user?.name || "Client",
       reason: `Commande - ${cartItems.length} article(s)`,
     };
-
-    console.log("[KkiaPay] Ouverture du widget avec config:", widgetConfig);
 
     openKkiapayWidget(widgetConfig);
   };
@@ -302,23 +262,15 @@ const Checkout = () => {
   const verifyKkiapayPayment = async (transactionId) => {
     const addressId = selectedAddressIdRef.current;
 
-    console.log(
-      "[KkiaPay] Appel /api/payment/verify-kkiapay avec transactionId:",
-      transactionId,
-      "addressId:",
-      addressId,
-    );
     try {
       const res = await postData("/api/payment/verify-kkiapay", {
         transactionId,
         addressId,
       });
 
-      console.log("[KkiaPay] Réponse /api/payment/verify-kkiapay:", res);
-
       if (res?.success) {
         openToast("success", "Paiement confirmé, commande créée avec succès !");
-        loadCartItems(); // 🔄 recharge le panier (maintenant vide)
+        loadCartItems();
         navigate("/order/success", { state: { order: res.data } });
       } else {
         openToast(
@@ -327,7 +279,6 @@ const Checkout = () => {
         );
       }
     } catch (err) {
-      console.error("[KkiaPay] Erreur lors de la vérification:", err);
       openToast("error", "Erreur serveur lors de la vérification du paiement");
     }
   };
@@ -345,16 +296,11 @@ const Checkout = () => {
     }
 
     setLoadingCod(true);
-    console.log(
-      "[COD] Création de la commande avec paiement à la livraison...",
-    );
 
     try {
       const res = await postData("/api/payment/cash-on-delivery", {
         addressId: selectedAddressId,
       });
-
-      console.log("[COD] Réponse:", res);
 
       if (res?.success) {
         openToast("success", "Commande créée ! Vous paierez à la livraison.");
@@ -367,7 +313,6 @@ const Checkout = () => {
         );
       }
     } catch (err) {
-      console.error("[COD] Erreur:", err);
       openToast("error", "Erreur serveur lors de la création de la commande");
     } finally {
       setLoadingCod(false);
@@ -375,35 +320,35 @@ const Checkout = () => {
   };
 
   return (
-    <div className="checkout-page">
-      <div className="checkout-container">
+    <div className="co-page">
+      <div className="co-container">
         {/* === Bloc gauche : Adresse de livraison === */}
-        <div className="billing-details">
-          <div className="section-header">
+        <div className="co-billing-details">
+          <div className="co-section-header">
             <h2>Adresse de livraison</h2>
-            <button className="btn-add-new-address" onClick={handleOpenAdd}>
+            <button className="co-btn-add-new-address" onClick={handleOpenAdd}>
               + Ajouter une adresse
             </button>
           </div>
 
           {addresses.length === 0 ? (
-            <div className="no-address-block">
+            <div className="co-no-address-block">
               <img
                 src="/empty-address.png"
                 alt="Aucune adresse"
-                className="no-address-img"
+                className="co-no-address-img"
               />
               <p>Aucune adresse trouvée dans votre compte !</p>
               <span>Ajoutez une adresse de livraison.</span>
-              <button className="btn-add-address-cta" onClick={handleOpenAdd}>
+              <button className="co-btn-add-address-cta" onClick={handleOpenAdd}>
                 Ajouter une adresse
               </button>
             </div>
           ) : (
-            <div className="checkout-address-list">
+            <div className="co-address-list">
               {addresses.map((addr) => (
                 <div
-                  className={`checkout-address-card ${selectedAddressId === addr._id ? "selected" : ""}`}
+                  className={`co-address-card ${selectedAddressId === addr._id ? "co-selected" : ""}`}
                   key={addr._id}
                   onClick={() => handleSelectAddress(addr._id)}
                 >
@@ -414,11 +359,11 @@ const Checkout = () => {
                     onChange={() => handleSelectAddress(addr._id)}
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <div className="checkout-address-info">
-                    <div className="address-top-row">
-                      <span className="address-badge">{addr.addressType}</span>
+                  <div className="co-address-info">
+                    <div className="co-address-top-row">
+                      <span className="co-address-badge">{addr.addressType}</span>
                       <button
-                        className="edit-address-btn"
+                        className="co-edit-address-btn"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOpenEdit(addr);
@@ -427,15 +372,15 @@ const Checkout = () => {
                         <FaPen />
                       </button>
                     </div>
-                    <p className="address-name">
+                    <p className="co-address-name">
                       <strong>{addr.name}</strong>
                     </p>
-                    <p className="address-full">
+                    <p className="co-address-full">
                       {addr.address_line1}
                       {addr.landmark && `, ${addr.landmark}`}, {addr.city},{" "}
                       {addr.state} {addr.country} {addr.pincode}
                     </p>
-                    <p className="address-phone">{addr.mobile}</p>
+                    <p className="co-address-phone">{addr.mobile}</p>
                   </div>
                 </div>
               ))}
@@ -444,30 +389,30 @@ const Checkout = () => {
         </div>
 
         {/* === Bloc droite: Votre commande === */}
-        <div className="order-summary">
+        <div className="co-order-summary">
           <h2>Votre commande</h2>
 
-          <div className="order-items">
+          <div className="co-order-items">
             {cartItems.length === 0 ? (
-              <p className="empty-order">Votre panier est vide.</p>
+              <p className="co-empty-order">Votre panier est vide.</p>
             ) : (
               cartItems.map((item) => (
-                <div className="order-item" key={item._id}>
+                <div className="co-order-item" key={item._id}>
                   <img
                     src={item.image || "/placeholder.png"}
                     alt={item.productTitle}
                   />
-                  <div className="item-info">
-                    <span className="item-name">
+                  <div className="co-item-info">
+                    <span className="co-item-name">
                       {item.productTitle.length > 30
                         ? item.productTitle.substring(0, 30) + "..."
                         : item.productTitle}
                     </span>
-                    <span className="item-quantity">
+                    <span className="co-item-quantity">
                       Quantité: {item.quantity}
                     </span>
                   </div>
-                  <span className="item-price">
+                  <span className="co-item-price">
                     {(item.price * item.quantity).toLocaleString()} FCFA
                   </span>
                 </div>
@@ -475,34 +420,34 @@ const Checkout = () => {
             )}
           </div>
 
-          <div className="total-row">
+          <div className="co-total-row">
             <span>Sous-total</span>
             <span>{subtotal.toLocaleString()} FCFA</span>
           </div>
-          <div className="total-row">
+          <div className="co-total-row">
             <span>Expédition</span>
             <span>{shipping.toLocaleString()} FCFA</span>
           </div>
-          <div className="total-row">
+          <div className="co-total-row">
             <span>Taxes (18%)</span>
             <span>{taxes.toLocaleString()} FCFA</span>
           </div>
-          <div className="total-row grand-total">
+          <div className="co-total-row co-grand-total">
             <span>Total</span>
             <span>{total.toLocaleString()} FCFA</span>
           </div>
 
-          <button className="btn-pay" onClick={handlePay}>
+          <button className="co-btn-pay" onClick={handlePay}>
             Payer avec FedaPay
           </button>
           <button
-            className="btn-pay btn-pay-kkiapay"
+            className="co-btn-pay co-btn-pay-kkiapay"
             onClick={handlePayKkiapay}
           >
             Payer avec KkiaPay
           </button>
           <button
-            className="btn-pay btn-pay-cod"
+            className="co-btn-pay co-btn-pay-cod"
             onClick={handlePayCashOnDelivery}
             disabled={loadingCod}
           >
@@ -520,7 +465,7 @@ const Checkout = () => {
       />
 
       {panelOpen && (
-        <div className="address-panel-overlay" onClick={handleClosePanel} />
+        <div className="co-address-panel-overlay" onClick={handleClosePanel} />
       )}
     </div>
   );

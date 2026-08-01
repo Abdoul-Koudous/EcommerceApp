@@ -1,74 +1,106 @@
-.address-panel {
+.ap-panel {
   position: fixed;
   top: 0;
   right: -100%;
   width: 500px;
+  max-width: 100%; // ✅ ne dépasse jamais la largeur de l'écran
   height: 100vh;
-  background: #fff;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card-hover);
   transition: right 0.3s ease;
   z-index: 999;
   display: flex;
   flex-direction: column;
 
-  &.open {
+  &.ap-open {
     right: 0;
   }
 
-  .address-panel-header {
+  .ap-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light);
 
     h3 {
       margin: 0;
       font-size: 1.1rem;
+      color: var(--color-text);
     }
 
-    .address-panel-close-btn {
+    .ap-close-btn {
       background: none;
       border: none;
       font-size: 1.3rem;
       cursor: pointer;
-      color: #555;
+      color: var(--color-text-secondary);
 
       &:hover {
-        color: #e63946;
+        color: var(--color-primary);
       }
     }
   }
 
-  .address-panel-body {
+  .ap-body {
     padding: 1rem;
     overflow-y: auto;
     flex: 1;
   }
+
+  /* Tablette / petit desktop : le panneau se resserre un peu, tout reste stable */
+  @media (max-width: 600px) {
+    width: 420px;
+  }
+
+  /* Mobile : plein écran, plus de panneau flottant à largeur fixe */
+  @media (max-width: 480px) {
+    width: 100%;
+
+    .ap-header {
+      padding: 0.85rem 1rem;
+
+      h3 {
+        font-size: 1rem;
+      }
+    }
+
+    .ap-body {
+      padding: 0.85rem;
+    }
+  }
 }
 
-.address-form {
+.ap-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 
-  .field-row {
+  .ap-field-row {
     display: flex;
     gap: 12px;
 
-    .field-group {
+    .ap-field-group {
       flex: 1;
+      min-width: 0; // ✅ empêche un champ trop large de forcer un débordement horizontal
+    }
+
+    /* En dessous de 380px, même deux champs côte à côte deviennent trop étroits
+       (labels et placeholders qui se compressent) → on les empile */
+    @media (max-width: 380px) {
+      flex-direction: column;
+      gap: 16px;
     }
   }
 
-  .field-group {
+  .ap-field-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
 
     label {
       font-size: 0.82rem;
-      color: #666;
+      color: var(--color-text-secondary);
       font-weight: 500;
     }
 
@@ -76,31 +108,36 @@
     select {
       height: 42px;
       padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
       font-size: 14px;
       outline: none;
+      color: var(--color-text);
+      background: var(--color-surface);
+      width: 100%; // ✅ le champ suit toujours la largeur de son conteneur, jamais figé
 
       &:focus {
-        border-color: #e63946;
+        border-color: var(--color-primary);
       }
     }
 
-    .radio-options {
+    .ap-radio-options {
       display: flex;
       gap: 20px;
       margin-top: 4px;
+      flex-wrap: wrap; // ✅ si "Maison"/"Bureau" ne tiennent plus côte à côte, ça passe à la ligne au lieu de déborder
 
       label {
         display: flex;
         align-items: center;
         gap: 6px;
         font-size: 0.9rem;
-        color: #333;
+        color: var(--color-text);
         cursor: pointer;
+        white-space: nowrap;
 
         input[type="radio"] {
-          accent-color: #e63946;
+          accent-color: var(--color-primary);
           transform: scale(1.1);
           cursor: pointer;
         }
@@ -109,17 +146,17 @@
   }
 }
 
-.address-panel-footer {
+.ap-footer {
   display: flex;
   gap: 10px;
   margin-top: 10px;
   padding-top: 14px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border-light);
 
   button {
     flex: 1;
     padding: 12px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-size: 15px;
     border: none;
     cursor: pointer;
@@ -129,20 +166,31 @@
     justify-content: center;
   }
 
-  .btn-cancel {
-    background: #ddd;
+  .ap-btn-cancel {
+    background: var(--color-surface-alt-2);
+    color: var(--color-text);
 
     &:hover {
-      background: #c4c4c4;
+      background: var(--color-border-light);
     }
   }
 
-  .btn-save {
-    background: #e63946;
-    color: white;
+  .ap-btn-save {
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
 
     &:hover {
-      background: #c62b38;
+      background: var(--color-primary-hover);
+    }
+  }
+
+  /* Sous 360px, "Annuler" + "Enregistrer" côte à côte deviennent trop étroits
+     pour le texte → on les empile, pleine largeur chacun */
+  @media (max-width: 360px) {
+    flex-direction: column;
+
+    button {
+      width: 100%;
     }
   }
 }

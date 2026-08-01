@@ -47,15 +47,11 @@ const BlogSlider = ({ items = 3 }) => {
     <section className="blog-slider">
       <button className="banner-btn left" onClick={scrollLeft}>‹</button>
 
-      <div
-        className="blog-container"
-        ref={sliderRef}
-        style={{ "--items": items }}
-      >
+      <div className="blog-container" ref={sliderRef}>
         {visibleBlogs.map((blog) => (
           <BlogItem
-            key={blog._id} 
-            _id={blog._id} 
+            key={blog._id}
+            _id={blog._id}
             image={blog.images?.[0]}
             title={blog.title}
             date={

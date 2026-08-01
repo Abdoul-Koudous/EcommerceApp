@@ -13,6 +13,7 @@ import { fetchDataFromApi } from "../../pages/utils/api";
 import "./adminheader.scss";
 import { ToastContext } from "../../context/ToastContext";
 import { Link } from "react-router-dom";
+import ThemeToggle from "../themetoggle";
 
 const AdminHeader = ({ onToggleSidebar }) => {
   const { user, loadUser } = useContext(UserContext);
@@ -22,8 +23,6 @@ const AdminHeader = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
   const { openToast } = useContext(ToastContext);
 
-
-  // fermer le menu si clic à l'extérieur
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -39,13 +38,13 @@ const AdminHeader = ({ onToggleSidebar }) => {
       const res = await fetchDataFromApi("/api/users/logout");
 
       if (res.success) {
-        openToast("success", res.message); // ✅ message backend visible
+        openToast("success", res.message);
 
         localStorage.removeItem("accesstoken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userEmail");
 
-        loadUser(); 
+        loadUser();
         navigate("/login");
       } else {
         openToast("error", res.message || "Erreur lors de la déconnexion");
@@ -56,8 +55,6 @@ const AdminHeader = ({ onToggleSidebar }) => {
     }
   };
 
-
-
   return (
     <header className="admin-header">
       <div className="part1">
@@ -67,6 +64,8 @@ const AdminHeader = ({ onToggleSidebar }) => {
       </div>
 
       <div className="part2">
+        <ThemeToggle />
+
         {user ? (
           <>
             <div className="icon-wrapper badge">
@@ -89,7 +88,6 @@ const AdminHeader = ({ onToggleSidebar }) => {
                 className="user-profile"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
               >
-                
                 <img
                   src={user?.avatar || "/user.jpg"}
                   alt="User avatar"
@@ -114,21 +112,21 @@ const AdminHeader = ({ onToggleSidebar }) => {
                     </div>
                   </div>
 
-                   <ul className="menu-items">
-                      <li>
-                        <Link to="/profile">
-                          <FaUserCircle className="icon" /> Mon compte
-                        </Link>
-                      </li>
-                      <li>
-                        <Link to="/settings">
-                          <RiSettings3Line className="icon" /> Paramètres
-                        </Link>
-                      </li>
-                      <li className="logout" onClick={() => logout(navigate)}>
-                        <IoMdLogOut className="icon" /> Déconnexion
-                      </li>
-                    </ul>
+                  <ul className="menu-items">
+                    <li>
+                      <Link to="/profile">
+                        <FaUserCircle className="icon" /> Mon compte
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/settings">
+                        <RiSettings3Line className="icon" /> Paramètres
+                      </Link>
+                    </li>
+                    <li className="logout" onClick={() => logout(navigate)}>
+                      <IoMdLogOut className="icon" /> Déconnexion
+                    </li>
+                  </ul>
                 </div>
               )}
             </div>

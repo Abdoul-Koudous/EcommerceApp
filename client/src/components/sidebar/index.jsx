@@ -6,31 +6,11 @@ import { fetchDataFromApi, postData } from "../../pages/utils/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 
-const disponibilites = [
-  { name: "En stock", count: 40 },
-  { name: "Rupture de stock", count: 7 },
-  { name: "Bientôt disponible", count: 3 },
-];
-
-const tailles = [
-  { name: "S", count: 12 },
-  { name: "M", count: 20 },
-  { name: "L", count: 15 },
-  { name: "XL", count: 8 },
-  { name: "XXL", count: 4 },
-];
-const ratings = [
-  { stars: 5, count: 12 },
-  { stars: 4, count: 8 },
-  { stars: 3, count: 6 },
-  { stars: 2, count: 3 },
-  { stars: 1, count: 1 },
-];
+// Ordre d'affichage des étoiles dans le filtre Note (5 -> 1)
+const ratingStars = [5, 4, 3, 2, 1];
 
 const SideBar = (props) => {
   const [isCategoryOpen, setIsCategoryOpen] = useState(true);
-  const [isDisponibilityOpen, setIsDisponibilityOpen] = useState(true);
-  const [isSizeOpen, setIsSizeOpen] = useState(true);
   const [isPriceOpen, setIsPriceOpen] = useState(true);
 
   const [priceRange, setPriceRange] = useState({ min: 0, max: 999999999 });
@@ -41,6 +21,9 @@ const SideBar = (props) => {
   const [previousPage, setPreviousPage] = useState(1);
   const navigate = useNavigate();
 
+  // clé utilisée pour forcer le remount du slider de prix lors d'un reset
+  const [resetKey, setResetKey] = useState(0);
+
   const [filters, setFilters] = useState({
     catId: [],
     subCatId: [],
@@ -48,6 +31,9 @@ const SideBar = (props) => {
     minPrice: "",
     maxPrice: "",
     rating: null,
+    search: "",
+    sortBy: props.sortBy || "createdAt",
+    order: props.order || "desc",
     page: 1,
     limit: 15,
   });
@@ -81,6 +67,16 @@ const SideBar = (props) => {
     fetchCats();
   }, []);
 
+  // ✅ Synchronise le tri choisi dans ProductListing/SearchPage avec les filtres
+  // (SideBar est maintenant la SEULE source de fetch, donc le tri doit passer par ici)
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: props.sortBy || "createdAt",
+      order: props.order || "desc",
+    }));
+  }, [props.sortBy, props.order]);
+
   const handleChekboxChange = (filterName, value) => {
     setFilters((prev) => {
       const currentValues = prev[filterName] || [];
@@ -96,25 +92,74 @@ const SideBar = (props) => {
         page: 1,
       };
 
-      // reset dépendances
       if (filterName === "catId") {
         newFilters.subCatId = [];
         newFilters.thirdsubCatId = [];
       }
 
-      // 🔥 BUILD URL propre
       const params = new URLSearchParams();
-
       newFilters.catId.forEach((id) => params.append("catId", id));
       newFilters.subCatId.forEach((id) => params.append("subCatId", id));
       newFilters.thirdsubCatId.forEach((id) =>
         params.append("thirdsubCatId", id),
       );
 
-      navigate(`/productlisting?${params.toString()}`);
+      // ✅ garde le terme de recherche dans l'URL
+      if (prev.search) params.set("q", prev.search);
+
+      // ✅ garde le rating dans l'URL
+      if (prev.rating) params.set("rating", prev.rating);
+
+      // ✅ reste sur la page courante (productlisting OU search)
+      navigate(`${location.pathname}?${params.toString()}`);
 
       return newFilters;
     });
+  };
+
+  const handleRatingChange = (stars) => {
+    setFilters((prev) => {
+      const newRating = prev.rating === stars ? null : stars;
+
+      const params = new URLSearchParams();
+      prev.catId.forEach((id) => params.append("catId", id));
+      prev.subCatId.forEach((id) => params.append("subCatId", id));
+      prev.thirdsubCatId.forEach((id) => params.append("thirdsubCatId", id));
+      if (prev.search) params.set("q", prev.search);
+      if (newRating) params.set("rating", newRating);
+
+      navigate(`${location.pathname}?${params.toString()}`);
+
+      return { ...prev, rating: newRating, page: 1 };
+    });
+  };
+
+  // ✅ Réinitialise les filtres (catégories, dispo, taille, prix, note, recherche, URL)
+  // Le tri (sortBy/order) n'est PAS réinitialisé : il reste piloté par le parent.
+  const handleResetFilters = () => {
+    setFilters((prev) => ({
+      catId: [],
+      subCatId: [],
+      thirdsubCatId: [],
+      minPrice: "",
+      maxPrice: "",
+      rating: null,
+      search: "",
+      sortBy: prev.sortBy,
+      order: prev.order,
+      page: 1,
+      limit: 15,
+    }));
+
+    setPriceFilter({ min: 0, max: 999999999 });
+    setPriceRange({ min: 0, max: 999999999 });
+    setPrice([0, 600000]);
+
+    // force le remount du PriceRangeSlider pour qu'il revienne visuellement à zéro
+    setResetKey((k) => k + 1);
+
+    // vide les query params de l'URL (catId, subCatId, q, rating...)
+    navigate(location.pathname);
   };
 
   useEffect(() => {
@@ -123,13 +168,16 @@ const SideBar = (props) => {
     const catIds = query.getAll("catId");
     const subCatIds = query.getAll("subCatId");
     const thirdCatIds = query.getAll("thirdsubCatId");
+    const q = query.get("q") || "";
+    const ratingParam = query.get("rating");
 
     setFilters((prev) => ({
       ...prev,
       catId: catIds,
       subCatId: subCatIds,
       thirdsubCatId: thirdCatIds,
-      rating: null,
+      search: q,
+      rating: ratingParam ? Number(ratingParam) : null,
       page: 1,
     }));
   }, [location.search]);
@@ -138,13 +186,12 @@ const SideBar = (props) => {
     props.setIsLoading(true);
 
     postData(`/api/product/filters`, filters).then((res) => {
-      // 🔥 correction clé
       if (filters.page > res.totalPages && res.totalPages > 0) {
         setFilters((prev) => ({
           ...prev,
           page: res.totalPages,
         }));
-        return; // ⚠️ on stop ici pour relancer avec bonne page
+        return;
       }
 
       props.setProductsData(res);
@@ -153,6 +200,7 @@ const SideBar = (props) => {
       window.scrollTo(0, 0);
     });
   };
+
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
@@ -176,8 +224,29 @@ const SideBar = (props) => {
     }));
   }, [priceFilter]);
 
+  // ✅ Un filtre est actif si au moins un critère est différent de sa valeur par défaut
+  const hasActiveFilters =
+    filters.catId.length > 0 ||
+    filters.subCatId.length > 0 ||
+    filters.thirdsubCatId.length > 0 ||
+    filters.rating !== null ||
+    filters.search !== "" ||
+    priceFilter.min !== 0 ||
+    priceFilter.max !== 999999999;
+
   return (
     <section className="sidebar-section">
+      {/* === Bloc Réinitialisation === */}
+      <div className="box reset-box">
+        <button
+          className="reset-filters-btn"
+          onClick={handleResetFilters}
+          disabled={!hasActiveFilters}
+        >
+          Réinitialiser les filtres
+        </button>
+      </div>
+
       {/* === Bloc Catégories === */}
       <div className="box">
         <h3 onClick={() => setIsCategoryOpen(!isCategoryOpen)}>
@@ -203,46 +272,6 @@ const SideBar = (props) => {
         </div>
       </div>
 
-      {/* === Bloc Disponibilité === */}
-      <div className="box">
-        <h3 onClick={() => setIsDisponibilityOpen(!isDisponibilityOpen)}>
-          Disponibilité{" "}
-          <span className="toggle-icon">
-            {isDisponibilityOpen ? <FaAngleUp /> : <FaAngleDown />}
-          </span>
-        </h3>
-        <div
-          className={`checkbox-list ${isDisponibilityOpen ? "open" : "closed"}`}
-        >
-          {disponibilites.map((item, index) => (
-            <label key={index} className="checkbox-item">
-              <input type="checkbox" />
-              <span className="label-text">{item.name}</span>
-              <span className="label-count">{item.count}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* === Bloc Taille === */}
-      <div className="box">
-        <h3 onClick={() => setIsSizeOpen(!isSizeOpen)}>
-          Taille{" "}
-          <span className="toggle-icon">
-            {isSizeOpen ? <FaAngleUp /> : <FaAngleDown />}
-          </span>
-        </h3>
-        <div className={`checkbox-list ${isSizeOpen ? "open" : "closed"}`}>
-          {tailles.map((item, index) => (
-            <label key={index} className="checkbox-item">
-              <input type="checkbox" />
-              <span className="label-text">{item.name}</span>
-              <span className="label-count">{item.count}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
       {/* === Bloc Prix === */}
       <div className="box">
         <h3 onClick={() => setIsPriceOpen(!isPriceOpen)}>
@@ -254,6 +283,7 @@ const SideBar = (props) => {
         <div className={`checkbox-list ${isPriceOpen ? "open" : "closed"}`}>
           <div className="price-range">
             <PriceRangeSlider
+              key={resetKey}
               min={0}
               max={999999999}
               onChange={setPriceFilter}
@@ -270,31 +300,33 @@ const SideBar = (props) => {
           </span>
         </h3>
         <div className={`checkbox-list ${isRatingOpen ? "open" : "closed"}`}>
-          {ratings.map((rating, index) => (
-            <label key={index} className="checkbox-item">
-              <input
-                type="radio"
-                name="rating"
-                value={rating.stars}
-                checked={filters.rating === rating.stars}
-                onClick={() => handleChekboxChange("rating", rating.stars)}
-                readOnly
-              />
-              <span className="label-text">
-                {/* Affichage des étoiles */}
-                <span className="rating">
-                  {[...Array(5)].map((_, i) => (
-                    <FaStar
-                      key={i}
-                      color={i < rating.stars ? "#FFD700" : "#ccc"}
-                      size={16}
-                    />
-                  ))}
+          {ratingStars.map((stars) => {
+            const count = props.productsData?.ratingCounts?.[stars] ?? 0;
+            return (
+              <label key={stars} className="checkbox-item">
+                <input
+                  type="radio"
+                  name="rating"
+                  value={stars}
+                  checked={filters.rating === stars}
+                  onClick={() => handleRatingChange(stars)}
+                  readOnly
+                />
+                <span className="label-text">
+                  <span className="rating">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar
+                        key={i}
+                        color={i < stars ? "#FFD700" : "#ccc"}
+                        size={16}
+                      />
+                    ))}
+                  </span>
                 </span>
-              </span>
-              <span className="label-count">{rating.count}</span>
-            </label>
-          ))}
+                <span className="label-count">{count}</span>
+              </label>
+            );
+          })}
         </div>
       </div>
     </section>

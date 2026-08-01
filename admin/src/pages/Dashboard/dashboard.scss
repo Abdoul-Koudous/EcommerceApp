@@ -1,99 +1,121 @@
-.dashboard {
+/* src/pages/dashboard.scss */
+
+.dsh-page {
   display: flex;
   flex-direction: column;
   gap: 2rem;
   width: 100%;
-  animation: fadeIn 0.3s ease;
- 
+  animation: dshFadeIn 0.3s ease; // ✅ fadeIn → dshFadeIn : évite la collision avec le @keyframes fadeIn (mort) d'adminlayout.scss
 
-  .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fff;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-     height: 180px;
+  .dsh-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: var(--shadow-card);
+  min-height: 180px; // ✅ height fixe → min-height : garde la hauteur desktop tout en laissant grandir si le contenu a besoin de plus de place
 
-    .left {
-      max-width: 55%;
+  .dsh-header-left {
+    max-width: 55%;
 
-      h2 {
-        font-size: 1.6rem;
-        color: #222;
-        font-weight: 700;
+    h2 {
+      font-size: 1.6rem;
+      color: var(--color-text);
+      font-weight: 700;
 
-        span {
-          color: #e63946;
-        }
-      }
-
-      p {
-        margin: 0.75rem 0 1.5rem;
-        font-size: 0.95rem;
-        color: #555;
-        line-height: 1.5;
-      }
-
-      .add-btn {
-        background: #e63946;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 0.75rem 1.4rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.3s ease;
-
-        &:hover {
-          background: #c62b38;
-          transform: translateY(-2px);
-        }
+      span {
+        color: var(--color-primary);
       }
     }
 
-    .right {
-      flex: 1;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
+    p {
+      margin: 0.75rem 0 1.5rem;
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .dsh-add-btn {
+      background: var(--color-primary);
+      color: var(--color-text-on-primary);
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.4rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-base);
+
+      &:hover {
+        background: var(--color-primary-hover);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  .dsh-header-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    img {
+      width: 180px;
+      height: auto;
+      object-fit: contain;
+    }
+  }
+
+  // ✅ nouveau : passe en colonne dès que la largeur devient trop étroite pour le texte + l'image côte à côte
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: auto;
+    text-align: left;
+    gap: 1rem;
+
+    .dsh-header-left {
+      max-width: 100%; // ✅ le texte reprend toute la largeur disponible
+    }
+
+    .dsh-header-right {
+      align-self: center;
+      justify-content: center;
+      width: 100%;
 
       img {
-        width: 180px;
-        height: auto;
-        object-fit: contain;
+        width: 120px; // ✅ plus petit sur mobile pour ne pas dominer l'écran
       }
     }
   }
-.recentOrder {
-  margin-top: 2rem;
-  background: #fff;
-  border-radius: 14px;
-  padding: 1.5rem 1.8rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  /* overflow: hidden retiré : coupait le tableau produits déplié à l'intérieur d'orders-tab */
+}
 
-  /* Titre (si ton composant en a un) */
-  h2, h3 {
-    font-size: 1.2rem;
-    color: #222;
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
-}
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+  .dsh-recent-orders {
+    margin-top: 2rem;
+    background: var(--color-surface);
+    border-radius: 14px;
+    padding: 1.5rem 1.8rem;
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-base);
+    /* overflow: hidden retiré : coupait le tableau produits déplié à l'intérieur d'orders-tab */
+
+    h2, h3 {
+      font-size: 1.2rem;
+      color: var(--color-text);
+      font-weight: 600;
+      margin-bottom: 1rem;
     }
   }
 }
-.recentOrder{
-    background-color: #fff;
+
+@keyframes dshFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -9,7 +9,6 @@ const OrderSuccess = () => {
   const order = location.state?.order;
 
   useEffect(() => {
-    // Si quelqu'un arrive sur cette page sans commande (accès direct par URL), on redirige
     if (!order) {
       navigate("/");
     }
@@ -24,44 +23,44 @@ const OrderSuccess = () => {
   };
 
   return (
-    <div className="order-success-page">
-      <div className="order-success-card">
-        <FaCheckCircle className="success-icon" />
+    <div className="os-page">
+      <div className="os-card">
+        <FaCheckCircle className="os-success-icon" />
 
         <h1>Commande confirmée !</h1>
-        <p className="subtitle">
+        <p className="os-subtitle">
           Merci pour votre confiance. Voici le récapitulatif de votre commande.
         </p>
 
-        <div className="order-info-box">
-          <div className="info-row">
+        <div className="os-info-box">
+          <div className="os-info-row">
             <span>Numéro de commande</span>
             <strong>{order.orderId}</strong>
           </div>
-          <div className="info-row">
+          <div className="os-info-row">
             <span>Méthode de paiement</span>
             <strong>{paymentMethodLabel()}</strong>
           </div>
-          <div className="info-row">
+          <div className="os-info-row">
             <span>Statut</span>
-            <strong className="status-badge">{order.order_status || "En attente"}</strong>
+            <strong className="os-status-badge">{order.order_status || "En attente"}</strong>
           </div>
-          <div className="info-row total">
+          <div className="os-info-row os-total">
             <span>Total payé</span>
             <strong>{order.totalAmt?.toLocaleString()} FCFA</strong>
           </div>
         </div>
 
-        <div className="order-products">
+        <div className="os-products">
           <h3>Articles commandés</h3>
           {order.products?.map((item, i) => (
-            <div className="product-line" key={i}>
+            <div className="os-product-line" key={i}>
               <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
-              <div className="product-line-info">
-                <span className="product-name">{item.productTitle}</span>
-                <span className="product-qty">Quantité : {item.quantity}</span>
+              <div className="os-product-line-info">
+                <span className="os-product-name">{item.productTitle}</span>
+                <span className="os-product-qty">Quantité : {item.quantity}</span>
               </div>
-              <span className="product-price">
+              <span className="os-product-price">
                 {(item.price * item.quantity).toLocaleString()} FCFA
               </span>
             </div>
@@ -69,13 +68,13 @@ const OrderSuccess = () => {
         </div>
 
         {order.payment_status?.includes("livraison") && (
-          <div className="cod-notice">
+          <div className="os-cod-notice">
             💵 Préparez le montant exact de <strong>{order.totalAmt?.toLocaleString()} FCFA</strong> à
             remettre au livreur lors de la réception de votre commande.
           </div>
         )}
 
-        <div className="next-steps">
+        <div className="os-next-steps">
           <h3>Et maintenant ?</h3>
           <ul>
             <li>Vous recevrez une confirmation par email sous peu.</li>
@@ -84,11 +83,11 @@ const OrderSuccess = () => {
           </ul>
         </div>
 
-        <div className="action-buttons">
-          <Link to="/account/orders" className="btn-primary">
+        <div className="os-action-buttons">
+          <Link to="/account/orders" className="os-btn-primary">
             <FaBoxOpen /> Voir mes commandes
           </Link>
-          <Link to="/" className="btn-secondary">
+          <Link to="/" className="os-btn-secondary">
             <FaHome /> Retour à l'accueil
           </Link>
         </div>

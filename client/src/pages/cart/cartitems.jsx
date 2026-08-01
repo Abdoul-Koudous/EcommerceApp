@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { FaTrash, FaStar } from "react-icons/fa";
+import { FaTrash, FaStar, FaRegStar } from "react-icons/fa";
 import { UserContext } from "../../UserContext/UserContext";
 import { deleteData, editData } from "../../pages/utils/api";
 import "./cartitems.scss";
@@ -23,176 +23,239 @@ const CartItems = () => {
   };
 
   return (
-    <div className="cart-items">
+    <div className="cp-items">
       {cartItems?.length === 0 && (
-        <div className="empty-cart">
-    <img
-      src="/empty-cart.png"
-      alt="Panier vide"
-      className="empty-cart-img"
-    />
+        <div className="cp-empty-cart">
+          <img
+            src="/empty-cart.png"
+            alt="Panier vide"
+            className="cp-empty-cart-img"
+          />
 
-    <p className="empty-text">
-      Votre panier est vide pour le moment
-    </p>
+          <p className="cp-empty-text">
+            Votre panier est vide pour le moment
+          </p>
 
-    <button
-      className="continue-btn"
-      onClick={() => window.history.back()}
-    >
-      Continuer les achats
-    </button>
-  </div>
+          <button
+            className="cp-continue-btn"
+            onClick={() => window.history.back()}
+          >
+            Continuer les achats
+          </button>
+        </div>
       )}
 
       {cartItems?.length > 0 &&
-  cartItems.map((item) => {
-        const reduction =
-          item.oldPrice && item.price
-            ? Math.round(((item.oldPrice - item.price) / item.oldPrice) * 100)
-            : 0;
+        cartItems.map((item) => {
+          const reduction =
+            item.oldPrice && item.price
+              ? Math.round(((item.oldPrice - item.price) / item.oldPrice) * 100)
+              : 0;
 
-        // ✅ ICI : maxQty par item
-        const maxQty = Math.min(item.countInStock || 1, 20);
+          const liveProduct = item.productId;
+          const isProductDeleted = !liveProduct;
 
-        return (
-          <div className="cart-item" key={item._id}>
-            <img src={item.image || "/placeholder.png"} alt="" />
+          const realStock = isProductDeleted
+            ? 0
+            : liveProduct.countIntStock ?? item.countInStock ?? 0;
 
-            <div className="item-details">
-              <h4>{item.productTitle}</h4>
+          const maxQty = Math.max(realStock, 0);
+          const isOutOfStock = maxQty === 0;
+          const isQuantityTooHigh = !isOutOfStock && item.quantity > maxQty;
 
-              <div className="item-rating">
-                {[...Array(5)].map((_, i) => (
-                  <FaStar
-                    key={i}
-                    className={i < (item.rating || 0) ? "star active" : "star"}
-                  />
-                ))}
-              </div>
+          const availableSizes =
+            liveProduct?.size?.length > 0 ? liveProduct.size : item.sizeOptions || [];
+          const availableColors =
+            liveProduct?.colors?.length > 0 ? liveProduct.colors : item.colorOptions || [];
+          const availableRams =
+            liveProduct?.productRam?.length > 0 ? liveProduct.productRam : item.ramOptions || [];
+          const availableWeights =
+            liveProduct?.productWeight?.length > 0
+              ? liveProduct.productWeight
+              : item.weightOptions || [];
 
-              {/* OPTIONS */}
-              <div className="item-attributes">
-                {item.sizeOptions?.length > 0 && (
-                  <div className="attr">
-                    <label>Taille :</label>
-                    <select
-                      value={item.size || ""}
-                      onChange={(e) =>
-                        handleUpdate(item._id, { size: e.target.value })
-                      }
-                    >
-                      <option value="">Choisir</option>
-                      {item.sizeOptions.map((s, i) => (
-                        <option key={i} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
+          const isSizeStale = item.size && !availableSizes.includes(item.size);
+          const isColorStale = item.color && !availableColors.includes(item.color);
+          const isRamStale = item.ram && !availableRams.includes(item.ram);
+          const isWeightStale = item.weight && !availableWeights.includes(item.weight);
+
+          return (
+            <div className="cp-item" key={item._id}>
+              <img src={item.image || "/placeholder.png"} alt="" />
+
+              <div className="cp-item-details">
+                <h4>{item.productTitle}</h4>
+
+                <div className="cp-item-rating">
+                  {[...Array(5)].map((_, i) => (
+                    i < (item.rating || 0) ? (
+                      <FaStar key={i} className="cp-star-filled" />
+                    ) : (
+                      <FaRegStar key={i} className="cp-star-empty" />
+                    )
+                  ))}
+                </div>
+
+                {isProductDeleted && (
+                  <p className="cp-stock-warning">
+                    Ce produit n'est plus disponible.
+                  </p>
+                )}
+
+                {!isProductDeleted && (
+                  <div className="cp-item-attributes">
+                    {availableSizes.length > 0 && (
+                      <div className="cp-attr">
+                        <label>Taille :</label>
+                        <select
+                          value={item.size || ""}
+                          onChange={(e) =>
+                            handleUpdate(item._id, { size: e.target.value })
+                          }
+                        >
+                          <option value="">Choisir</option>
+                          {availableSizes.map((s, i) => (
+                            <option key={i} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                        {isSizeStale && (
+                          <p className="cp-stock-warning">
+                            "{item.size}" n'est plus disponible, choisis-en une autre.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {availableColors.length > 0 && (
+                      <div className="cp-attr">
+                        <label>Couleur :</label>
+                        <select
+                          value={item.color || ""}
+                          onChange={(e) =>
+                            handleUpdate(item._id, { color: e.target.value })
+                          }
+                        >
+                          <option value="">Choisir</option>
+                          {availableColors.map((c, i) => (
+                            <option key={i} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                        {isColorStale && (
+                          <p className="cp-stock-warning">
+                            "{item.color}" n'est plus disponible, choisis-en une autre.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {availableRams.length > 0 && (
+                      <div className="cp-attr">
+                        <label>RAM :</label>
+                        <select
+                          value={item.ram || ""}
+                          onChange={(e) =>
+                            handleUpdate(item._id, { ram: e.target.value })
+                          }
+                        >
+                          <option value="">Choisir</option>
+                          {availableRams.map((r, i) => (
+                            <option key={i} value={r}>
+                              {r}
+                            </option>
+                          ))}
+                        </select>
+                        {isRamStale && (
+                          <p className="cp-stock-warning">
+                            "{item.ram}" n'est plus disponible, choisis-en une autre.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {availableWeights.length > 0 && (
+                      <div className="cp-attr">
+                        <label>Poids :</label>
+                        <select
+                          value={item.weight || ""}
+                          onChange={(e) =>
+                            handleUpdate(item._id, { weight: e.target.value })
+                          }
+                        >
+                          <option value="">Choisir</option>
+                          {availableWeights.map((w, i) => (
+                            <option key={i} value={w}>
+                              {w}
+                            </option>
+                          ))}
+                        </select>
+                        {isWeightStale && (
+                          <p className="cp-stock-warning">
+                            "{item.weight}" n'est plus disponible, choisis-en une autre.
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {item.colorOptions?.length > 0 && (
-                  <div className="attr">
-                    <label>Couleur :</label>
-                    <select
-                      value={item.color || ""}
-                      onChange={(e) =>
-                        handleUpdate(item._id, { color: e.target.value })
-                      }
-                    >
-                      <option value="">Choisir</option>
-                      {item.colorOptions.map((c, i) => (
-                        <option key={i} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
+                {!isProductDeleted && (
+                  <div className="cp-attr">
+                    <label>Quantité :</label>
+                    {isOutOfStock ? (
+                      <span className="cp-stock-warning">Rupture de stock</span>
+                    ) : (
+                      <select
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleUpdate(item._id, { qty: e.target.value })
+                        }
+                      >
+                        {[...Array(maxQty)].map((_, i) => {
+                          const q = i + 1;
+                          return (
+                            <option key={q} value={q}>
+                              {q}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    )}
                   </div>
                 )}
 
-                {item.ramOptions?.length > 0 && (
-                  <div className="attr">
-                    <label>RAM :</label>
-                    <select
-                      value={item.ram || ""}
-                      onChange={(e) =>
-                        handleUpdate(item._id, { ram: e.target.value })
-                      }
-                    >
-                      <option value="">Choisir</option>
-                      {item.ramOptions.map((r, i) => (
-                        <option key={i} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {isQuantityTooHigh && (
+                  <p className="cp-stock-warning">
+                    Seulement {maxQty} en stock — pense à ajuster la quantité.
+                  </p>
                 )}
 
-                {item.weightOptions?.length > 0 && (
-                  <div className="attr">
-                    <label>Poids :</label>
-                    <select
-                      value={item.weight || ""}
-                      onChange={(e) =>
-                        handleUpdate(item._id, { weight: e.target.value })
-                      }
-                    >
-                      <option value="">Choisir</option>
-                      {item.weightOptions.map((w, i) => (
-                        <option key={i} value={w}>
-                          {w}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                <div className="cp-item-prices">
+                  <span className="cp-current-price">
+                    {item.price.toLocaleString()} FCFA
+                  </span>
+
+                  {item.oldPrice && (
+                    <>
+                      <span className="cp-old-price">
+                        {item.oldPrice.toLocaleString()} FCFA
+                      </span>
+                      <span className="cp-discount">-{reduction}%</span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* QUANTITY FIX */}
-              <div className="attr">
-                <label>Quantité :</label>
-                <select
-                  value={item.quantity}
-                  onChange={(e) =>
-                    handleUpdate(item._id, { qty: e.target.value })
-                  }
-                >
-                  {[...Array(maxQty)].map((_, i) => {
-                    const q = i + 1;
-                    return (
-                      <option key={q} value={q}>
-                        {q}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              <div className="item-prices">
-                <span className="current-price">
-                  {item.price.toLocaleString()} FCFA
-                </span>
-
-                {item.oldPrice && (
-                  <>
-                    <span className="old-price">
-                      {item.oldPrice.toLocaleString()} FCFA
-                    </span>
-                    <span className="discount">-{reduction}%</span>
-                  </>
-                )}
-              </div>
+              <FaTrash
+                className="cp-delete-icon"
+                onClick={() => handleRemove(item._id)}
+              />
             </div>
-
-            <FaTrash
-              className="delete-icon"
-              onClick={() => handleRemove(item._id)}
-            />
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
 };

@@ -7,16 +7,16 @@
     display: flex;
     align-items: flex-start;
     gap: 1.2rem;
-    background: #fff;
-    border: 1px solid #eee;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
     border-radius: 12px;
     padding: 1.2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-base);
 
     &:hover {
       transform: scale(1.01);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-card-hover);
     }
 
     img {
@@ -26,7 +26,7 @@
       border-radius: 8px;
       flex-shrink: 0;
       cursor: pointer;
-      transition: transform 0.2s ease;
+      transition: var(--transition-fast);
 
       &:hover {
         transform: scale(1.05);
@@ -35,13 +35,14 @@
 
     .item-details {
       flex: 1;
+      min-width: 0; // ✅ empêche un titre de produit long de forcer le débordement de la carte
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
 
       .item-category {
         font-size: 0.85rem;
-        color: #888;
+        color: var(--color-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
@@ -49,11 +50,16 @@
       .item-title {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #222;
+        color: var(--color-text);
         cursor: pointer;
+        overflow: hidden; // ✅ tronque proprement au lieu de déborder
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2; // ✅ jusqu'à 2 lignes avant troncature
+        -webkit-box-orient: vertical;
 
         &:hover {
-          color: #e63946;
+          color: var(--color-primary);
         }
       }
 
@@ -62,11 +68,11 @@
         gap: 0.2rem;
 
         .star {
-          color: #ccc;
+          color: var(--color-border);
           font-size: 0.9rem;
 
           &.active {
-            color: #fbbf24;
+            color: var(--color-rating);
           }
         }
       }
@@ -76,22 +82,23 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap; // ✅ évite le débordement si prix + ancien prix + badge ne tiennent plus sur une ligne
 
         .current-price {
-          color: #e63946;
+          color: var(--color-primary);
           font-weight: 700;
           font-size: 1.1rem;
         }
 
         .old-price {
-          color: #888;
+          color: var(--color-text-secondary);
           text-decoration: line-through;
           font-size: 0.9rem;
         }
 
         .discount {
-          background: #e63946;
-          color: #fff;
+          background: var(--color-primary);
+          color: var(--color-text-on-primary);
           padding: 0.2rem 0.5rem;
           border-radius: 6px;
           font-size: 0.75rem;
@@ -101,14 +108,15 @@
     }
 
     .delete-icon {
-      color: #e63946;
+      color: var(--color-primary);
       font-size: 1.3rem;
       cursor: pointer;
       margin-top: 0.5rem;
-      transition: color 0.2s ease;
+      flex-shrink: 0; // ✅ garde l'icône à sa taille, ne se fait pas écraser par item-details
+      transition: var(--transition-fast);
 
       &:hover {
-        color: #c62b38;
+        color: var(--color-primary-hover);
       }
 
       &.disabled {

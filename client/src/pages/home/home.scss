@@ -1,32 +1,8 @@
-.section2{
-    background-color: white;
-    margin: 0 auto;
-    .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    }
-    .freeshipping{
-        margin: 0 20px;
-        border:1px solid #ff5252;
-        padding: 18px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        .free1 {
-            font-size: 18px;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-        .free3 p{
-            font-size: 20px;
-            font-weight: bolder;
-        }
-    }
-}
+@use "../../styles/breakpoints" as *;
 
 .section1 {
   padding: 60px 0;
-  background-color: #fff;
+  background-color: var(--color-surface);
 
   .container {
     max-width: 1200px;
@@ -38,10 +14,9 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 40px; // espace entre les deux colonnes
-    flex-wrap: wrap; // pour s’adapter sur mobile
+    gap: 40px;
+    flex-wrap: wrap;
 
-    // ----- Colonne gauche -----
     .cont1-left {
       flex: 1;
       min-width: 280px;
@@ -49,55 +24,41 @@
       h3 {
         font-size: 1.6rem;
         font-weight: 600;
-        color: #111;
+        color: var(--color-text);
         margin-bottom: 10px;
       }
 
       p {
         font-size: 0.8rem;
-        color: #555;
+        color: var(--color-text-secondary);
         line-height: 1.6;
       }
     }
 
-    // ----- Colonne droite -----
     .cont1-right {
       flex: 2;
       min-width: 300px;
       position: relative;
-      background: #fff;
-      border-radius: 12px;
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
       padding: 20px 25px;
-      box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
-
+      box-shadow: var(--shadow-card);
       display: flex;
       flex-direction: column;
       justify-content: center;
-
-      transition: all 0.3s ease;
+      transition: all var(--transition-base);
 
       &:hover {
         transform: translateY(-3px);
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--shadow-card-hover);
       }
     }
-  }
 
-  // ----- Responsive -----
-  @media (max-width: 992px) {
-    .cont1 {
+    @include respond("laptop") {
       gap: 30px;
-
-      .cont1-left {
-        h3 {
-          font-size: 1.6rem;
-        }
-      }
     }
-  }
 
-  @media (max-width: 768px) {
-    .cont1 {
+    @include respond("tablet") {
       flex-direction: column;
       align-items: stretch;
 
@@ -113,44 +74,95 @@
   }
 }
 
-
-.section3{
+.section2 {
+  background-color: var(--color-surface);
   margin: 0 auto;
-  background-color: #fff;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .freeshipping {
+    margin: 0 20px;
+    border: 1px solid var(--color-accent);
+    padding: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+
+    .free1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+      text-transform: uppercase;
+      color: var(--color-text);
+    }
+
+    .free2 p {
+      color: var(--color-text-secondary);
+    }
+
+    .free3 p {
+      font-size: 20px;
+      font-weight: bolder;
+      color: var(--color-text);
+    }
+
+    @include respond("tablet") {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    @include respond("mobile") {
+      margin: 0 12px;
+      padding: 14px;
+
+      .free1 {
+        font-size: 15px;
+      }
+
+      .free3 p {
+        font-size: 17px;
+      }
+    }
+  }
+}
+
+.section3,
+.section4 {
+  margin: 0 auto;
+  background-color: var(--color-surface);
 
   .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
   }
-}
 
-.section4{
-  margin: 0 auto;
-  background-color: #fff;
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+  h2 {
+    color: var(--color-text);
   }
 }
 
+/* === Bannière principale + boxes : layout fluide, sans breakpoint fixe === */
 .banner-section {
   display: flex;
-  gap: 10px;          // espace entre slide et box
-  align-items: flex-start;
-  justify-content: center;
-  flex-wrap: wrap;     // sur mobile, les éléments passent en colonne
+  flex-wrap: wrap;
+  gap: 20px;
   padding: 5px;
 }
 
 .slide-wrapper {
-  flex: 3;            // prend plus de largeur
-  min-width: 300px;   // responsive
+  flex: 3 1 320px;
+  min-width: 320px;
 }
 
 .box-wrapper {
-  flex: 1;            // moins large que le slide
-  min-width: 250px;
+  flex: 1 1 260px;
+  min-width: 260px;
 }

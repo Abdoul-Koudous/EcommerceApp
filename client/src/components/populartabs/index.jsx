@@ -64,7 +64,7 @@ const PopularTabs = () => {
 
   return (
     <div className="popular-tabs">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+      <div className="popular-tabs-header">
         <div className="cont1-left">
           <h3>Produits populaires</h3>
           <p>Ne manquez pas les offres actuellement avant fin mars</p>

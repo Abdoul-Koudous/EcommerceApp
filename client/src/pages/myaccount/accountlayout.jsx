@@ -1,4 +1,4 @@
-import React, { useState,useContext } from 'react'; 
+import React, { useState, useContext } from 'react';
 import { NavLink, Outlet } from "react-router-dom";
 import {
   FaUser,
@@ -7,13 +7,15 @@ import {
   FaCog,
   FaSignOutAlt,
   FaMapMarkerAlt,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 import "./myaccount.scss";
 import { UserContext } from "../../UserContext/UserContext";
 
 const AccountLayout = () => {
   const { user } = useContext(UserContext);
-  
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const tabs = [
     { id: "profile", label: "Mon Profil", icon: <FaUser /> },
@@ -25,45 +27,57 @@ const AccountLayout = () => {
   ];
 
   return (
-    <section className="account-layout">
-      <aside className="sidebar">
-        <div className="user-info">
-          <img
-            src={user?.avatar || "/user.jpg"}
-            alt="User"
-            className="avatar"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.target.src = "/user.jpg";
-            }}
-          />
+    <section className="al-layout">
+      <aside className="al-sidebar">
+        <div className="al-user-row">
+          <div className="al-user-info">
+            <img
+              src={user?.avatar || "/user.jpg"}
+              alt="User"
+              className="al-avatar"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.target.src = "/user.jpg";
+              }}
+            />
 
-          <h3>{user?.name}</h3>
-          <p>{user?.email}</p>
+            <h3>{user?.name}</h3>
+            <p>{user?.email}</p>
+          </div>
+
+          {/* Visible uniquement sous 480px, bascule le menu en dropdown */}
+          <button
+            type="button"
+            className="al-menu-toggle"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label={menuOpen ? "Fermer le menu du compte" : "Ouvrir le menu du compte"}
+          >
+            {menuOpen ? <FaTimes /> : <FaBars />}
+          </button>
         </div>
 
-        <ul className="menu">
+        <ul className={`al-menu ${menuOpen ? "al-menu-open" : ""}`}>
           {tabs.map((tab) => (
             <li key={tab.id}>
               <NavLink
                 to={`/account/${tab.id}`}
+                onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `menu-link ${isActive ? "active" : ""}`
+                  `al-menu-link ${isActive ? "al-active" : ""}`
                 }
               >
-                <span className="marker"></span>
-                <div className="menu-item">
-                  <span className="icon">{tab.icon}</span>
+                <span className="al-marker"></span>
+                <div className="al-menu-item">
+                  <span className="al-icon">{tab.icon}</span>
                   <span>{tab.label}</span>
                 </div>
               </NavLink>
             </li>
           ))}
-          
         </ul>
       </aside>
 
-      <main className="content">
+      <main className="al-content">
         <Outlet />
       </main>
     </section>

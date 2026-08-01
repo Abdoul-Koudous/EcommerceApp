@@ -1,19 +1,24 @@
+@use "../../styles/breakpoints" as *;
+@use "../../styles/mixins" as *;
+
 .blog-item {
-  width: 360px;
-  background: #fff;
+  flex: 0 0 320px; // seule source de vérité pour la largeur de la carte
+  background: var(--color-surface);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
   cursor: pointer;
-  flex: 0 0 auto;
 
   &:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    box-shadow: var(--shadow-card-hover);
   }
 
-  // 🔹 IMAGE
+  @include respond("mobile") {
+    flex: 0 0 260px;
+  }
+
   .blog-img {
     position: relative;
     width: 100%;
@@ -31,7 +36,6 @@
       transform: scale(1.08);
     }
 
-    // 🔥 BADGE DATE
     .date-badge {
       position: absolute;
       top: 12px;
@@ -39,50 +43,44 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      background: #e60023cc;
-      color: #fff;
+      background: var(--color-primary);
+      color: #fff; // sur photo : constant
       font-size: 0.75rem;
       padding: 6px 10px;
       border-radius: 20px;
-      backdrop-filter: blur(4px);
     }
   }
 
-  // 🔹 CONTENT
   .blog-content {
     padding: 18px;
 
     .blog-title {
       font-size: 1.1rem;
       font-weight: 600;
-      color: #222;
+      color: var(--color-text);
       margin-bottom: 10px;
       line-height: 1.4;
     }
 
     .blog-desc {
       font-size: 0.92rem;
-      color: #666;
+      color: var(--color-text-secondary);
       line-height: 1.5;
       margin-bottom: 15px;
     }
 
     .read-more {
+      @include link-hover;
       display: inline-flex;
       align-items: center;
       gap: 5px;
       text-decoration: none;
       font-size: 0.9rem;
       font-weight: 500;
-      color: #000;
-      transition: all 0.3s ease;
+      color: var(--color-text);
 
       svg {
-        transition: transform 0.3s ease;
-      }
-
-      &:hover {
-        color: #e60023;
+        transition: transform var(--transition-base);
       }
 
       &:hover svg {

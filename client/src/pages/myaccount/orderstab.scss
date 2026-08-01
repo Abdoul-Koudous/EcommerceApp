@@ -1,37 +1,38 @@
 .orders-tab {
+  min-width: 0; // ✅ empêche ce conteneur de forcer l'agrandissement de son parent flex (.al-tab-content)
+
   .orders-count {
-    color: #666;
+    color: var(--color-text-secondary);
     font-size: 0.95rem;
     margin: 0 0 1rem;
 
     .orders-count-number {
-      color: #c62b38;
+      color: var(--color-primary);
       font-weight: 700;
     }
   }
 
   .orders-wrapper {
     max-height: 75vh;
-    overflow-y: auto;
     max-width: 900px;
+    min-width: 0; // ✅ même raison, dernier maillon de la chaîne avant le tableau
+    overflow: auto; // ✅ overflow-y: auto → overflow: auto : ajoute le scroll horizontal
 
     scrollbar-width: thin;
-    scrollbar-color: #c62b38 transparent;
+    scrollbar-color: var(--color-primary) transparent;
 
-    &::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
+    &::-webkit-scrollbar { width: 8px; height: 8px; }
     &::-webkit-scrollbar-thumb {
-      background: #c62b38;
+      background: var(--color-primary);
       border-radius: 8px;
     }
     &::-webkit-scrollbar-thumb:hover {
-      background: #c62b38;
+      background: var(--color-primary-hover);
     }
   }
 
   .orders-table {
+    min-width: 780px; // ✅ force le scroll horizontal dès que .orders-wrapper devient plus étroit que ça
     display: block;
   }
 
@@ -46,29 +47,29 @@
 
   .table-header {
     font-weight: 600;
-    color: #666;
+    color: var(--color-text-secondary);
     font-size: 0.85rem;
   }
 
   .order-row {
-    border-top: 1px solid #eee;
-    transition: background 0.2s ease;
+    border-top: 1px solid var(--color-border-light);
+    transition: var(--transition-fast);
 
-    &:hover { background: #f9f9f9; }
+    &:hover { background: var(--color-surface-alt); }
 
     span { margin-left: 10px; overflow: hidden; text-overflow: ellipsis; }
 
     // Statut logistique
     .status {
       font-weight: 600;
-      &.received { color: #7f8c8d; }
-      &.preparing { color: #e67e22; }
-      &.shipped { color: #2980b9; }
-      &.delivered { color: #2ecc71; }
-      &.cancelled { color: #e63946; }
+      &.received  { color: var(--color-text-secondary); }
+      &.preparing { color: var(--color-rating); }
+      &.shipped   { color: var(--color-info); }
+      &.delivered { color: var(--color-success); }
+      &.cancelled { color: var(--color-danger); }
     }
 
-    // Statut de paiement (badge distinct du statut logistique)
+    // Statut de paiement (badge)
     .payment-status {
       font-weight: 600;
       padding: 0.2rem 0.6rem;
@@ -77,22 +78,22 @@
       display: inline-block;
       text-align: center;
 
-      &.paid { color: #1e8449; background: #eafaf1; }
-      &.cod { color: #b9770e; background: #fef5e7; }
-      &.failed { color: #922b21; background: #fdedec; }
+      &.paid   { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 12%, transparent); }
+      &.cod    { color: var(--color-rating);  background: color-mix(in srgb, var(--color-rating) 15%, transparent); }
+      &.failed { color: var(--color-danger);  background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
     }
 
     .btn-view-order {
       background: none;
       border: none;
       cursor: pointer;
-      color: #c62b38;
+      color: var(--color-primary);
       font-size: 1.1rem;
       padding: 0.3rem;
       border-radius: 6px;
-      transition: background 0.2s ease;
+      transition: var(--transition-fast);
 
-      &:hover { background: #fff0f1; }
+      &:hover { background: var(--color-primary-soft); }
     }
   }
 }

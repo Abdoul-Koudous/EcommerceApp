@@ -1,3 +1,4 @@
+// src/components/sidebar/index.jsx
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -10,10 +11,11 @@ import {
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import "./adminsidebar.scss";
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
   const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = (menu) => {
+    if (collapsed) return; // ✅ pas de sous-menu déroulant en mode replié
     setOpenMenus((prev) => ({
       ...prev,
       [menu]: !prev[menu],
@@ -31,23 +33,16 @@ const AdminSidebar = () => {
         { to: "/slides/create", label: "Création de slides" },
       ],
     },
-
     {
       label: "Banniers",
       icon: <FaShoppingCart />,
-      subLinks: [
-        { to: "/banners/lists", label: "Liste des bannieres" },
-      ],
+      subLinks: [{ to: "/banners/lists", label: "Liste des bannieres" }],
     },
-
-     {
+    {
       label: "Blogs",
       icon: <FaShoppingCart />,
-      subLinks: [
-        { to: "/blogs/lists", label: "Liste des blogs" },
-      ],
+      subLinks: [{ to: "/blogs/lists", label: "Liste des blogs" }],
     },
-
     {
       label: "Produits",
       icon: <FaBoxOpen />,
@@ -79,81 +74,84 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <aside className="sidebar">
-      {/* === Logo === */}
-      <div className="sidebar-logo">
-        <h2>
-          Yebou<span>Shop</span>
-        </h2>
-      </div>
+    <>
+      <aside className={`sidebar ${isOpen ? "open" : ""} ${collapsed ? "collapsed" : ""}`}>
+        <div className="sidebar-logo">
+          <h2>
+            Yebou<span>Shop</span>
+          </h2>
+        </div>
 
-      {/* === Liens === */}
-      <div className="sidebar-links">
-        <ul>
-          {links.map((link) => (
-            <li key={link.label}>
-              {link.subLinks ? (
-                <div className="menu-group">
-                  {/* Parent clickable */}
-                  <div
-                    className="menu-parent"
-                    onClick={() => toggleMenu(link.label)}
+        <div className="sidebar-links">
+          <ul>
+            {links.map((link) => (
+              <li key={link.label}>
+                {link.subLinks ? (
+                  <div className="menu-group">
+                    <div
+                      className="menu-parent"
+                      onClick={() => toggleMenu(link.label)}
+                      title={collapsed ? link.label : undefined}
+                    >
+                      <div className="menu-left">
+                        <span className="icon">{link.icon}</span>
+                        <span className="label">{link.label}</span>
+                      </div>
+
+                      <span className="arrow">
+                        {openMenus[link.label] ? (
+                          <MdKeyboardArrowUp />
+                        ) : (
+                          <MdKeyboardArrowDown />
+                        )}
+                      </span>
+                    </div>
+
+                    {!collapsed && openMenus[link.label] && (
+                      <ul className="submenu">
+                        {link.subLinks.map((sub) => (
+                          <li key={sub.to}>
+                            <NavLink
+                              to={sub.to}
+                              className={({ isActive }) =>
+                                isActive ? "active" : ""
+                              }
+                              onClick={onClose}
+                            >
+                              {sub.label}
+                            </NavLink>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : (
+                  <NavLink
+                    to={link.to}
+                    className={({ isActive }) =>
+                      isActive ? "active menu-link" : "menu-link"
+                    }
+                    onClick={onClose}
+                    title={collapsed ? link.label : undefined}
                   >
                     <div className="menu-left">
                       <span className="icon">{link.icon}</span>
                       <span className="label">{link.label}</span>
                     </div>
+                  </NavLink>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-                    <span className="arrow">
-                      {openMenus[link.label] ? (
-                        <MdKeyboardArrowUp />
-                      ) : (
-                        <MdKeyboardArrowDown />
-                      )}
-                    </span>
-                  </div>
+        <button className="logout-btn" title={collapsed ? "Déconnexion" : undefined}>
+          <FaSignOutAlt className="icon" /> <span className="label">Déconnexion</span>
+        </button>
+      </aside>
 
-                  {/* Sous-menus */}
-                  {openMenus[link.label] && (
-                    <ul className="submenu">
-                      {link.subLinks.map((sub) => (
-                        <li key={sub.to}>
-                          <NavLink
-                            to={sub.to}
-                            className={({ isActive }) =>
-                              isActive ? "active" : ""
-                            }
-                          >
-                            {sub.label}
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ) : (
-                <NavLink
-                  to={link.to}
-                  className={({ isActive }) =>
-                    isActive ? "active menu-link" : "menu-link"
-                  }
-                >
-                  <div className="menu-left">
-                    <span className="icon">{link.icon}</span>
-                    <span className="label">{link.label}</span>
-                  </div>
-                </NavLink>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* === Déconnexion === */}
-      <button className="logout-btn">
-        <FaSignOutAlt className="icon" /> Déconnexion
-      </button>
-    </aside>
+      {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
+    </>
   );
 };
 

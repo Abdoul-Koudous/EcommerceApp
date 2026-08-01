@@ -1,0 +1,89 @@
+:root {
+  // Couleur de marque
+  --color-primary: #820b0b;
+  --color-primary-hover: #640909;
+  --color-primary-soft: rgba(130, 11, 11, 0.08);
+  --color-primary-soft-strong: rgba(130, 11, 11, 0.1);
+  --color-tooltip-bg: rgba(0, 0, 0, 0.8);
+
+  --color-accent: #ff5252;
+  --shadow-card: 0 3px 15px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 5px 20px rgba(0, 0, 0, 0.08);
+
+  --color-glass: rgba(255, 255, 255, 0.6);
+  --color-glass-strong: rgba(255, 255, 255, 0.9);
+  --color-dot: rgba(255, 255, 255, 0.5);
+
+  --color-photo-text-secondary: #f0f0f0;
+  --color-primary-soft-bg: #fff5f5;
+
+  --color-info: #2a9d8f;
+  --color-success: #2e7d32;
+  --color-danger: #d32f2f;
+  --color-rating: #e6b800;
+
+  --color-skeleton-base: #f0f0f0;
+  --color-skeleton-highlight: #e0e0e0;
+  --color-icon-overlay-bg: rgba(0, 0, 0, 0.6);
+
+  // Fond & surfaces
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-alt: #fafafa;
+  --color-surface-alt-2: #f5f5f5;
+
+  // Texte
+  --color-text: #222222;
+  --color-text-secondary: #555555;
+  --color-text-on-primary: #ffffff;
+
+  // Bordures & ombres
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-light: #f0f0f0;
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --shadow-drawer: 2px 0 10px rgba(0, 0, 0, 0.2);
+  --shadow-dropdown: 0 4px 15px rgba(0, 0, 0, 0.15);
+
+  // Typo
+  --font-main: "Poppins", sans-serif;
+
+  // Rayons / transitions communs
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --transition-fast: 0.2s ease;
+  --transition-base: 0.3s ease;
+}
+
+[data-theme="dark"] {
+  --color-primary: #b3342f;
+  --color-primary-hover: #d3453f;
+  --color-primary-soft: rgba(179, 52, 47, 0.15);
+  --color-primary-soft-strong: rgba(179, 52, 47, 0.22);
+
+  --shadow-card: 0 3px 15px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 5px 20px rgba(0, 0, 0, 0.4);
+  --color-primary-soft-bg: rgba(179, 52, 47, 0.12);
+
+  --color-info: #3db3a4;
+  --color-success: #4caf50;
+  --color-danger: #e57373;
+  --color-rating: #e6b800;
+
+  --color-skeleton-base: #2a2a2a;
+  --color-skeleton-highlight: #383838;
+
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-surface-alt: #1a1a1a;
+  --color-surface-alt-2: #232323;
+
+  --color-text: #eaeaea;
+  --color-text-secondary: #a0a0a0;
+  --color-text-on-primary: #ffffff;
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-light: #2a2a2a;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --shadow-drawer: 2px 0 10px rgba(0, 0, 0, 0.5);
+  --shadow-dropdown: 0 4px 15px rgba(0, 0, 0, 0.4);
+}

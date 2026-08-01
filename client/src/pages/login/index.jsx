@@ -37,7 +37,6 @@ const Login = () => {
         if (res?.success === true) {
           openToast("success", res?.message);
 
-          // sauvegarde du user dans localStorage si tu veux
           localStorage.setItem("accesstoken", res?.data?.accesstoken);
           localStorage.setItem("refreshToken", res?.data?.refreshToken);
           localStorage.setItem("userEmail", email);
@@ -45,7 +44,7 @@ const Login = () => {
             loadUser();
           }, 50);
 
-          navigate("/"); // ou une autre page
+          navigate("/");
         } else {
           openToast("error", res?.message);
         }
@@ -58,7 +57,7 @@ const Login = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  },[]);
+  }, []);
 
   const forgotPassword = () => {
     if (email === "") {
@@ -87,14 +86,11 @@ const Login = () => {
       .finally(() => setLoading(false));
   };
 
-  // 📌 Authentification Google
   const authWithGoogle = () => {
     signInWithPopup(auth, googleProvider)
       .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const token = credential.accessToken;
-        // The signed-in user info.
         const user = result.user;
         const fields = {
           name: user.providerData[0].displayName,
@@ -118,40 +114,33 @@ const Login = () => {
                 loadUser();
               }, 50);
 
-              // 🚀 Redirection vers OTP
               navigate("/");
             }
           })
           .finally(() => setIsLoading(false));
 
         console.log("Google user:", user);
-        // IdP data available using getAdditionalUserInfo(result)
-        // ...
       })
       .catch((error) => {
-        // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
-        // The email of the user's account used.
         const email = error.customData.email;
-        // The AuthCredential type that was used.
         const credential = GoogleAuthProvider.credentialFromError(error);
-        // ...
       });
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h2 className="login-title">Se Connecter</h2>
-        <p className="login-subtitle">
+    <div className="lg-page">
+      <div className="lg-card">
+        <h2 className="lg-title">Se Connecter</h2>
+        <p className="lg-subtitle">
           Bienvenue ! Connectez-vous à votre compte
         </p>
 
-        <form className="login-form" onSubmit={handleSubmit} noValidate>
+        <form className="lg-form" onSubmit={handleSubmit} noValidate>
           {/* Champ email */}
-          <div className="form-group">
-            <FaEnvelope className="input-icon" />
+          <div className="lg-field-group">
+            <FaEnvelope className="lg-input-icon" />
             <input
               id="email"
               type="email"
@@ -165,8 +154,8 @@ const Login = () => {
           </div>
 
           {/* Champ mot de passe */}
-          <div className="form-group">
-            <FaLock className="input-icon" />
+          <div className="lg-field-group">
+            <FaLock className="lg-input-icon" />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -178,40 +167,40 @@ const Login = () => {
             />
             <label htmlFor="password">Mot de passe</label>
             <span
-              className="toggle-password"
+              className="lg-toggle-password"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
 
-          <div className="form-options">
-            <label className="remember">
+          <div className="lg-form-options">
+            <label className="lg-remember">
               <input type="checkbox" />
               <span>Se souvenir de moi</span>
             </label>
-            <a className="forgot-link" onClick={forgotPassword}>
+            <a className="lg-forgot-link" onClick={forgotPassword}>
               Mot de passe oublié ?
             </a>
           </div>
 
-          <button type="submit" className="btn-login" disabled={loading}>
+          <button type="submit" className="lg-btn-login" disabled={loading}>
             {loading ? <CircularProgress /> : "Se connecter"}
           </button>
 
-          <div className="social-login">
-            <p className="divider">ou continuer avec</p>
+          <div className="lg-social-login">
+            <p className="lg-divider">ou continuer avec</p>
             <button
               type="button"
-              className="btn-google"
+              className="lg-btn-google"
               onClick={authWithGoogle}
             >
-              <FcGoogle className="google-icon" />
+              <FcGoogle className="lg-google-icon" />
               Se connecter avec Google
             </button>
           </div>
 
-          <p className="register-text">
+          <p className="lg-register-text">
             Pas encore de compte ? <a href="/register">Inscrivez-vous</a>
           </p>
         </form>

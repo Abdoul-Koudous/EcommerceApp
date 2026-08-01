@@ -27,14 +27,14 @@ const OrdersTabPage = () => {
 
   if (loading) {
     return (
-      <div className="tab-content orders-tab">
+      <div className="orders-tab">
         <p>Chargement de vos commandes...</p>
       </div>
     );
   }
 
   return (
-    <div className="tab-content orders-tab">
+    <div className="orders-tab">
       {orders.length > 0 && (
         <p className="orders-count">
           Vous avez <span className="orders-count-number">{orders.length}</span> commande

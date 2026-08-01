@@ -192,15 +192,18 @@ export const deleteCartItemQtyController = async (req, res) => {
   }
 };
 
+// Dans cart.controller.js, remplace ta fonction emptyCartController par celle-ci.
+// Bug corrigé : `cartItems` n'existait pas dans cette fonction (ReferenceError).
+
 export const emptyCartController = async (req, res) => {
   try {
     const userId = req.params.id;
-   
+
     await cartProductModel.deleteMany({ userId: userId });
+
     res.status(200).json({
       message: "Panier vidé avec succès",
       success: true,
-      data: cartItems,
     });
   } catch (error) {
     return res.status(500).json({
@@ -208,6 +211,5 @@ export const emptyCartController = async (req, res) => {
       error: true,
       success: false,
     });
-    
   }
-}
+};

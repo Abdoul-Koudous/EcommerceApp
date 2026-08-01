@@ -54,17 +54,17 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
   };
 
   return (
-    <div className={`address-panel ${isOpen ? "open" : ""}`}>
-      <div className="address-panel-header">
+    <div className={`ap-panel ${isOpen ? "ap-open" : ""}`}>
+      <div className="ap-header">
         <h3>{mode === "edit" ? "Modifier l'adresse" : "Ajouter une adresse"}</h3>
-        <button className="address-panel-close-btn" onClick={onClose}>
+        <button className="ap-close-btn" onClick={onClose}>
           <FaTimes />
         </button>
       </div>
 
-      <div className="address-panel-body">
-        <form className="address-form" onSubmit={handleSubmit} autoComplete="off">
-          <div className="field-group">
+      <div className="ap-body">
+        <form className="ap-form" onSubmit={handleSubmit} autoComplete="off">
+          <div className="ap-field-group">
             <label>Nom du destinataire</label>
             <input
               type="text"
@@ -76,7 +76,7 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             />
           </div>
 
-          <div className="field-group">
+          <div className="ap-field-group">
             <label>Téléphone</label>
             <PhoneInput
               international
@@ -88,7 +88,7 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             />
           </div>
 
-          <div className="field-group">
+          <div className="ap-field-group">
             <label>Adresse</label>
             <input
               type="text"
@@ -100,8 +100,8 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             />
           </div>
 
-          <div className="field-row">
-            <div className="field-group">
+          <div className="ap-field-row">
+            <div className="ap-field-group">
               <label>Ville</label>
               <input
                 type="text"
@@ -112,7 +112,7 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
                 autoComplete="off"
               />
             </div>
-            <div className="field-group">
+            <div className="ap-field-group">
               <label>État / Région</label>
               <input
                 type="text"
@@ -125,8 +125,8 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             </div>
           </div>
 
-          <div className="field-row">
-            <div className="field-group">
+          <div className="ap-field-row">
+            <div className="ap-field-group">
               <label>Code postal</label>
               <input
                 type="text"
@@ -137,7 +137,7 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
                 autoComplete="off"
               />
             </div>
-            <div className="field-group">
+            <div className="ap-field-group">
               <label>Pays</label>
               <input
                 type="text"
@@ -150,7 +150,7 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             </div>
           </div>
 
-          <div className="field-group">
+          <div className="ap-field-group">
             <label>Point de repère (optionnel)</label>
             <input
               type="text"
@@ -162,9 +162,9 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             />
           </div>
 
-          <div className="field-group">
+          <div className="ap-field-group">
             <label>Type d'adresse</label>
-            <div className="radio-options">
+            <div className="ap-radio-options">
               <label>
                 <input
                   type="radio"
@@ -188,7 +188,7 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             </div>
           </div>
 
-          <div className="field-group">
+          <div className="ap-field-group">
             <label>Statut</label>
             <select
               name="status"
@@ -205,11 +205,11 @@ const AddressPanel = ({ isOpen, onClose, mode, editingAddress, onSubmit }) => {
             </select>
           </div>
 
-          <div className="address-panel-footer">
-            <button type="button" className="btn-cancel" onClick={onClose}>
+          <div className="ap-footer">
+            <button type="button" className="ap-btn-cancel" onClick={onClose}>
               Annuler
             </button>
-            <button type="submit" className="btn-save" disabled={isLoading}>
+            <button type="submit" className="ap-btn-save" disabled={isLoading}>
               {isLoading ? (
                 <CircularProgress size={20} />
               ) : mode === "edit" ? (

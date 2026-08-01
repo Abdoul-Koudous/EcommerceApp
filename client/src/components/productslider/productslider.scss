@@ -1,15 +1,16 @@
+@use "../../styles/breakpoints" as *;
+
 .product-slider-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 
-  /* --- Boutons de défilement --- */
   .scroll-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -18,13 +19,15 @@
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    color: #111;
+    color: var(--color-text);
+    box-shadow: var(--shadow-card);
     z-index: 10;
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
 
     &:hover {
-      background: #111;
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-text-on-primary);
+      border-color: var(--color-primary);
     }
 
     &.left {
@@ -34,23 +37,27 @@
     &.right {
       right: -15px;
     }
+
+    @include respond("mobile") {
+      width: 32px;
+      height: 32px;
+      font-size: 1rem;
+    }
   }
 
-  /* --- Zone de glissement --- */
   .product-slider {
     display: flex;
     gap: 1.5rem;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     scroll-behavior: smooth;
     padding: 1rem 0;
+    width: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 
     &::-webkit-scrollbar {
-      height: 8px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #ccc;
-      border-radius: 10px;
+      display: none;
     }
   }
 }

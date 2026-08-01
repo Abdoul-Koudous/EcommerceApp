@@ -1,8 +1,10 @@
+@use "../../../styles/breakpoints" as *;
+@use "../../../styles/mixins" as *;
+
 nav {
   width: 100%;
-  background-color: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  font-family: "Poppins", sans-serif;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 
   .container {
     width: 90%;
@@ -11,26 +13,31 @@ nav {
     justify-content: space-between;
     align-items: center;
     height: 60px;
+    position: relative;
+
+    @include respond("tablet") {
+      height: auto;
+      padding: 10px 0;
+    }
   }
 
-  /* ---------- Partie gauche : bouton catégories ---------- */
   .cont1 {
     button {
       display: flex;
       align-items: center;
       gap: 8px;
-      background-color: rgb(130, 11, 11);
-      color: #fff;
+      background-color: var(--color-primary);
+      color: var(--color-text-on-primary);
       border: none;
       padding: 10px 16px;
       font-size: 14px;
       font-weight: 500;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease;
+      transition: background-color var(--transition-base), transform 0.1s ease;
 
       &:hover {
-        background-color: rgb(100, 9, 9);
+        background-color: var(--color-primary-hover);
       }
 
       &:active {
@@ -40,10 +47,30 @@ nav {
       svg {
         font-size: 18px;
       }
+
+      @include respond("mobile") {
+        padding: 10px 12px;
+
+        .label {
+          display: none;
+        }
+      }
     }
   }
 
-  /* ---------- Partie centrale : liens de navigation ---------- */
+  .mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 26px;
+    color: var(--color-text);
+    cursor: pointer;
+
+    @include respond("tablet") {
+      display: block;
+    }
+  }
+
   .cont2 {
     ul {
       display: flex;
@@ -54,23 +81,13 @@ nav {
         list-style: none;
 
         a {
+          @include link-hover;
           text-decoration: none;
-          color: #333;
+          color: var(--color-text);
           font-weight: 500;
           font-size: 14px;
           position: relative;
-          transition: color 0.2s ease;
 
-          &:visited {
-            color: #333;
-          }
-
-          &:hover,
-          &.active {
-            color: rgb(130, 11, 11);
-          }
-
-          /* Petit trait en bas au survol */
           &::after {
             content: "";
             position: absolute;
@@ -78,30 +95,220 @@ nav {
             left: 0;
             width: 0;
             height: 2px;
-            background-color: rgb(130, 11, 11);
-            transition: width 0.3s ease;
+            background-color: var(--color-primary);
+            transition: width var(--transition-base);
           }
 
           &:hover::after,
           &.active::after {
             width: 100%;
           }
+
+          &.active {
+            color: var(--color-primary);
+          }
         }
+      }
+    }
+
+    @include respond("tablet") {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-dropdown);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--transition-base);
+      z-index: 50;
+
+      ul {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        padding: 0 20px;
+
+        li {
+          width: 100%;
+
+          a {
+            display: block;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--color-border-light);
+          }
+        }
+      }
+
+      &.open {
+        max-height: 300px;
       }
     }
   }
 
-  /* ---------- Partie droite : message livraison ---------- */
   .cont3 {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: rgb(130, 11, 11);
+    color: var(--color-primary);
     font-size: 13px;
     font-weight: 500;
 
     svg {
       font-size: 18px;
+    }
+
+    @include respond("laptop") {
+      display: none; // info secondaire, priorité à l'espace pour cont1/cont2
+    }
+  }
+}
+
+/* === FOND SOMBRE DERRIÈRE LE DRAWER === */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-overlay);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-base);
+  z-index: 90;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* === DRAWER PRINCIPAL (MENU LATÉRAL) === */
+.drawer {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 280px;
+  height: 100%;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-drawer);
+  z-index: 100;
+  transition: left var(--transition-base);
+
+  @include respond("mobile") {
+    width: 85vw;
+    left: -85vw;
+  }
+
+  &.open {
+    left: 0;
+  }
+
+  a {
+    @include link-hover;
+    text-decoration: none;
+    color: var(--color-text);
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 18px;
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--color-text-on-primary);
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform var(--transition-fast), opacity var(--transition-fast);
+
+      &:hover {
+        transform: rotate(90deg);
+        opacity: 0.8;
+      }
+    }
+  }
+
+  .drawer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      border-bottom: 1px solid var(--color-border-light);
+
+      .category-title,
+      .subcategory-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 18px;
+        cursor: pointer;
+        transition: background var(--transition-fast);
+        font-weight: 500;
+        font-size: 15px;
+        color: var(--color-text);
+
+        &:hover {
+          background: var(--color-primary-soft);
+          color: var(--color-primary);
+        }
+
+        .toggle-icon {
+          font-size: 13px;
+          color: var(--color-primary);
+          transition: transform var(--transition-fast);
+        }
+
+        &.open .toggle-icon {
+          transform: rotate(90deg);
+        }
+      }
+
+      .sub-list {
+        background: var(--color-surface-alt);
+        transition: all var(--transition-base);
+        overflow: hidden;
+
+        li {
+          border: none;
+
+          .subcategory-title {
+            font-size: 14px;
+            padding-left: 25px;
+          }
+
+          .sub-sub-list {
+            background: var(--color-surface-alt-2);
+
+            li {
+              padding: 8px 35px;
+              font-size: 13px;
+              color: var(--color-text-secondary);
+              cursor: pointer;
+              transition: background var(--transition-fast);
+
+              &:hover {
+                background: var(--color-primary-soft-strong);
+                color: var(--color-primary);
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
