@@ -38,13 +38,14 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  height: 50vh;
+  // ✅ height: 50vh retiré — le formulaire s'ajuste maintenant à son propre contenu
+  // au lieu d'être forcé à occuper la moitié de la hauteur d'écran
 }
 
 /* === Champs avec icônes et label flottant === */
 .lg-field-group {
   position: relative;
-  height: 100px;
+  height: 56px; // ✅ 100px → 56px, cohérent avec .rg-field-group dans register.scss
   background: var(--color-surface-alt);
   border-radius: var(--radius-md);
   display: flex;

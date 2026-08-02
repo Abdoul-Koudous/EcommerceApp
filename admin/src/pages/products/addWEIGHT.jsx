@@ -48,12 +48,6 @@ const AddWEIGHT = () => {
   fetchWeights();
 }, [currentPage, itemsPerPage]);
 
-
-  /* =========================
-     AJOUT WEIGHT
-  ========================== */
- 
-
   /* =========================
      SELECTION
   ========================== */
@@ -171,15 +165,15 @@ const handleAddOrEditWeight = async () => {
 
 
   return (
-    <div className="admin-pages">
+    <div className="crc-page">
       {/* ================= HEADER ================= */}
-      <div className="header">
+      <div className="crc-header">
         <h2>Gestion des WEIGHT</h2>
 
-        <div className="header-actions">
+        <div className="crc-header-actions">
           {selectedWeights.length > 0 && (
             <button
-              className="delete-multiple-btn show"
+              className="crc-delete-multiple-btn show"
               onClick={() => {
                 setToDeleteId(null);
                 setConfirmOpen(true);
@@ -196,10 +190,10 @@ const handleAddOrEditWeight = async () => {
             placeholder="Nom de la WEIGHT"
             value={newWeight}
             onChange={e => setNewWeight(e.target.value)}
-            className="category-select"
+            className="crc-name-input"
           />
 
-          <button onClick={handleAddOrEditWeight} className="add-btn">
+          <button onClick={handleAddOrEditWeight} className="crc-add-btn">
             <FaPlus /> {editId ? "Mettre à jour" : "Ajouter"}
             </button>
 
@@ -208,13 +202,13 @@ const handleAddOrEditWeight = async () => {
       </div>
 
       {/* ================= TABLE ================= */}
-      <div className="product-table-container">
+      <div className="crc-table-container">
         {loading ? (
-          <div className="loading"><CircularProgress /></div>
+          <div className="crc-loading"><CircularProgress /></div>
         ) : weight.length === 0 ? (
-          <div className="no-results">Aucune WEIGHT trouvée</div>
+          <div className="crc-no-results">Aucune WEIGHT trouvée</div>
         ) : (
-          <table className="product-table">
+          <table className="crc-table">
             <thead>
               <tr>
                 <th>
@@ -239,17 +233,17 @@ const handleAddOrEditWeight = async () => {
                   />
                 </td>
                 <td>{w.name}</td>
-                <td className="actions">
-                  <button className="edit" onClick={() => editItem(w._id)}><FaEdit /></button>
-                  <button className="delete" onClick={() => handleDeleteClick(w._id)}><FaTrash /></button>
+                <td className="crc-actions">
+                  <button className="crc-edit-btn" onClick={() => editItem(w._id)}><FaEdit /></button>
+                  <button className="crc-delete-btn" onClick={() => handleDeleteClick(w._id)}><FaTrash /></button>
                 </td>
               </tr>
             ))}
             </tbody>
           </table>
         )}
-        <div className="table-footer">
-        <div className="items-selector">
+        <div className="crc-table-footer">
+        <div className="crc-items-selector">
             <label>Afficher</label>
 
             <select

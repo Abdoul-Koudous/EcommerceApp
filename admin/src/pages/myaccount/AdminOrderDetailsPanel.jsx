@@ -39,42 +39,42 @@ const AdminOrderDetailsPanel = ({ order, onClose }) => {
 
   return (
     <>
-      <div className="admin-order-panel-overlay" onClick={onClose} />
-      <div className="admin-order-details-panel">
-        <div className="panel-header">
+      <div className="aop-overlay" onClick={onClose} />
+      <div className="aop-panel">
+        <div className="aop-header">
           <div>
             <h3>Commande {order.orderId}</h3>
-            <span className="panel-date">{formattedDate}</span>
+            <span className="aop-date">{formattedDate}</span>
           </div>
-          <button className="panel-close-btn" onClick={onClose}>
+          <button className="aop-close-btn" onClick={onClose}>
             <FaTimes />
           </button>
         </div>
 
-        <div className="panel-badges">
-          <span className={`status ${orderStatus.className}`}>{orderStatus.label}</span>
-          <span className={`payment-status ${paymentStatus.className}`}>
+        <div className="aop-badges">
+          <span className={`aop-order-status ${orderStatus.className}`}>{orderStatus.label}</span>
+          <span className={`aop-payment-status ${paymentStatus.className}`}>
             {paymentStatus.label}
           </span>
         </div>
 
         {/* Compte qui a passé la commande — peut différer du destinataire */}
-        <div className="panel-section">
+        <div className="aop-section">
           <h4>Client (compte)</h4>
           <p><strong>{order.userId?.name || "—"}</strong></p>
           <p>{order.userId?.email || "—"}</p>
-          <p className={!order.userId?.mobile ? "field-missing" : ""}>
+          <p className={!order.userId?.mobile ? "aop-field-missing" : ""}>
             {order.userId?.mobile || "Téléphone non renseigné"}
           </p>
         </div>
 
         {/* Destinataire réel — snapshot figé au moment de la commande */}
-        <div className="panel-section">
+        <div className="aop-section">
           <h4>Destinataire de la livraison</h4>
           {addr ? (
             <>
               {addr.addressType && (
-                <span className="address-badge">{addr.addressType}</span>
+                <span className="aop-address-badge">{addr.addressType}</span>
               )}
               <p><strong>{addr.name || "—"}</strong></p>
               <p>{addr.mobile || "—"}</p>
@@ -85,17 +85,17 @@ const AdminOrderDetailsPanel = ({ order, onClose }) => {
           )}
         </div>
 
-        <div className="panel-section">
+        <div className="aop-section">
           <h4>Articles ({order.products?.length || 0})</h4>
-          <div className="panel-products">
+          <div className="aop-products">
             {(order.products || []).map((item, idx) => (
-              <div className="panel-product-row" key={`${order._id}-${item.productId}-${idx}`}>
+              <div className="aop-product-row" key={`${order._id}-${item.productId}-${idx}`}>
                 <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
-                <div className="panel-product-info">
-                  <span className="panel-product-title">{item.productTitle}</span>
-                  <span className="panel-product-qty">Qté : {item.quantity}</span>
+                <div className="aop-product-info">
+                  <span className="aop-product-title">{item.productTitle}</span>
+                  <span className="aop-product-qty">Qté : {item.quantity}</span>
                 </div>
-                <span className="panel-product-price">
+                <span className="aop-product-price">
                   {((item.price || 0) * (item.quantity || 0)).toLocaleString()} FCFA
                 </span>
               </div>
@@ -103,26 +103,26 @@ const AdminOrderDetailsPanel = ({ order, onClose }) => {
           </div>
         </div>
 
-        <div className="panel-section">
+        <div className="aop-section">
           <h4>Paiement</h4>
-          <div className="panel-summary-row">
+          <div className="aop-summary-row">
             <span>Sous-total</span>
             <span>{(order.subTotalAmt || 0).toLocaleString()} FCFA</span>
           </div>
-          <div className="panel-summary-row">
+          <div className="aop-summary-row">
             <span>Livraison</span>
             <span>{(order.shippingAmt || 0).toLocaleString()} FCFA</span>
           </div>
-          <div className="panel-summary-row">
+          <div className="aop-summary-row">
             <span>Taxes</span>
             <span>{(order.taxAmt || 0).toLocaleString()} FCFA</span>
           </div>
-          <div className="panel-summary-row panel-summary-total">
+          <div className="aop-summary-row aop-summary-total">
             <span>Total</span>
             <span>{(order.totalAmt || 0).toLocaleString()} FCFA</span>
           </div>
           {order.paymentId && (
-            <p className="panel-payment-id">ID de transaction : {order.paymentId}</p>
+            <p className="aop-payment-id">ID de transaction : {order.paymentId}</p>
           )}
         </div>
       </div>

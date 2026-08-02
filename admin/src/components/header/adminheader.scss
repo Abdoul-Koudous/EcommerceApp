@@ -150,6 +150,18 @@
         cursor: pointer;
         transition: var(--transition-fast);
 
+        // ✅ reset du <a> rendu par <Link> — sinon le navigateur applique
+        // sa couleur bleue + soulignement par défaut, qui écrasent tout
+        // ce qui est défini sur le <li> parent
+        a {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+          color: inherit;
+          text-decoration: none;
+        }
+
         .icon {
           color: var(--color-primary);
           font-size: 1.1rem;

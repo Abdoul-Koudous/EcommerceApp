@@ -1,20 +1,22 @@
-.profile-container {
+@use "../../styles/breakpoints" as bp;
+
+.prf-container {
   display: flex;
   gap: 30px;
-  background: #fff;
+  background: var(--color-surface);
   padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-  font-family: "Poppins", sans-serif;
-  animation: fadeIn 0.5s ease;
+  border-radius: 16px; // ⚠️ toujours pas de token exact, cf. discussion graphstats/users
+  box-shadow: var(--shadow-card-hover);
+  font-family: var(--font-main);
+  animation: prfFadeIn 0.5s ease;
 
-  @media (max-width: 768px) {
+  @include bp.respond("tablet") {
     flex-direction: column;
   }
 }
 
-.profile-left {
-  .avatar-wrapper {
+.prf-left {
+  .prf-avatar-wrapper {
     position: relative;
     width: 150px;
     height: 150px;
@@ -23,38 +25,47 @@
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      border: 4px solid #e63946;
+      border: 4px solid var(--color-primary);
       object-fit: cover;
     }
 
-    .change-avatar {
+    .prf-change-avatar {
       position: absolute;
       bottom: -10px;
       left: 50%;
       transform: translateX(-50%);
-      background: #e63946;
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-text-on-primary);
       padding: 6px 12px;
       border-radius: 14px;
       cursor: pointer;
+      transition: var(--transition-fast);
 
-      &:hover { background: #c62b38; }
+      &:hover { background: var(--color-primary-hover); }
     }
   }
 }
 
-.profile-right {
+.prf-right {
   flex: 1;
 
-  .profile-header {
+  .prf-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 
-    h2 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
     button {
       background: transparent;
-      color: #e63946;
+      color: var(--color-primary);
       border: none;
       font-weight: 600;
       cursor: pointer;
@@ -62,27 +73,31 @@
   }
 }
 
-.profile-form {
+.prf-form {
   margin-top: 20px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 
-  .form-group {
+  @include bp.respond("mobile") {
+    grid-template-columns: 1fr;
+  }
+
+  .prf-form-group {
     position: relative;
-    background: #fbfbfd;
+    background: var(--color-surface-alt);
     border-radius: 12px;
     padding: 0 16px;
     display: flex;
     align-items: center;
     height: 62px;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+    box-shadow: inset 0 0 0 1px var(--color-border);
 
-    .input-icon {
+    .prf-input-icon {
       position: absolute;
       left: 14px;
       font-size: 1.2rem;
-      color: #e63946;
+      color: var(--color-primary);
     }
 
     input {
@@ -91,6 +106,7 @@
       border: none;
       background: transparent;
       outline: none;
+      color: var(--color-text);
     }
 
     label {
@@ -99,101 +115,110 @@
       top: 50%;
       transform: translateY(-50%);
       font-size: 0.95rem;
-      color: #888;
+      color: var(--color-text-secondary);
       pointer-events: none;
-      transition: 0.18s ease;
+      transition: var(--transition-fast);
     }
 
     input:focus + label,
     input:not(:placeholder-shown) + label {
       top: -8px;
       font-size: 0.75rem;
-      color: #e63946;
-      background: #fff;
+      color: var(--color-primary);
+      background: var(--color-surface);
       padding: 0 4px;
     }
 
-    .toggle-password {
+    .prf-toggle-password {
       position: absolute;
       right: 12px;
       cursor: pointer;
+      color: var(--color-text-secondary);
     }
   }
 
-  .actions {
+  .prf-actions {
     grid-column: 1 / 3;
     display: flex;
     justify-content: center;
     margin-top: 10px;
 
-    .btn-edit, .btn-save, .btn-cancel {
+    @include bp.respond("mobile") {
+      grid-column: 1;
+    }
+
+    .prf-btn-edit, .prf-btn-save, .prf-btn-cancel {
       padding: 12px 26px;
       border-radius: 10px;
       font-weight: 600;
       border: none;
       cursor: pointer;
+      transition: var(--transition-fast);
     }
 
-    .btn-edit, .btn-save { background: #e63946; color: #fff; }
-    .btn-save:hover, .btn-edit:hover { background: #c62b38; }
-    .btn-cancel { background: #ddd; color: #333; }
-    .btn-cancel:hover { background: #ccc; }
+    .prf-btn-edit, .prf-btn-save { background: var(--color-primary); color: var(--color-text-on-primary); }
+    .prf-btn-save:hover, .prf-btn-edit:hover { background: var(--color-primary-hover); }
+    .prf-btn-cancel { background: var(--color-surface-alt-2); color: var(--color-text); }
+    .prf-btn-cancel:hover { background: var(--color-border); }
   }
 }
 
-@keyframes fadeIn {
+@keyframes prfFadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 600px) {
-  .profile-form { grid-template-columns: 1fr; }
-}
-.btn-flat {
+.prf-btn-flat {
   background: transparent;
-  color: #e63946;
-  border: 1px solid #e63946;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
   border-radius: 8px;
   padding: 8px 16px;
   cursor: pointer;
   font-weight: 600;
   margin-bottom: 10px;
+  transition: var(--transition-fast);
 
   &:hover {
-    background: #e63946;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
   }
 }
-.address-block {
-  grid-column: 1 / 3; // pour qu'il prenne toute la largeur du formulaire
+
+.prf-address-block {
+  grid-column: 1 / 3;
   margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 
-  .btn-flat {
-    align-self: flex-start; // bouton aligné à gauche
+  @include bp.respond("mobile") {
+    grid-column: 1;
   }
 
-  .address-selection {
+  .prf-btn-flat {
+    align-self: flex-start;
+  }
+
+  .prf-address-selection {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-top: 8px;
 
-    .address-radio {
+    .prf-address-radio {
       display: flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
 
       input[type="radio"] {
-        accent-color: #e63946;
+        accent-color: var(--color-primary);
       }
 
-      .address-text {
+      .prf-address-text {
         font-size: 0.95rem;
-        color: #333;
+        color: var(--color-text);
       }
     }
   }

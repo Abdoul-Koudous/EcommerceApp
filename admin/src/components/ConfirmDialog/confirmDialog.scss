@@ -1,47 +1,123 @@
-.confirm-overlay {
+.cfd-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
+  inset: 0;
+  background: var(--color-overlay);
+  backdrop-filter: blur(3px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 3000; // ✅ au-dessus de .apd-overlay (2000), puisqu'une confirmation s'ouvre souvent par-dessus un dialog déjà ouvert
+  animation: cfdFadeIn 0.2s ease;
 }
 
-.confirm-dialog {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  width: 350px;
+.cfd-dialog {
+  background: var(--color-surface);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  width: 380px;
   max-width: 90%;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-dropdown);
+  animation: cfdPopIn 0.25s ease;
+
+  .cfd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    .cfd-close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--color-text-secondary);
+      padding: 0.3rem;
+      border-radius: 6px;
+      display: flex;
+      transition: var(--transition-fast);
+
+      &:hover {
+        color: var(--color-danger);
+        background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+      }
+    }
+  }
+
+  .cfd-body {
+    margin-bottom: 1.5rem;
+
+    p {
+      color: var(--color-text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+  }
+
+  .cfd-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.7rem;
+
+    .cfd-btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      min-width: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      &.cfd-cancel {
+        background: var(--color-surface-alt);
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+
+        &:hover:not(:disabled) {
+          background: var(--color-surface-alt-2);
+        }
+      }
+
+      &.cfd-confirm {
+        background: var(--color-danger);
+        color: var(--color-text-on-primary);
+
+        &:hover:not(:disabled) {
+          filter: brightness(0.9);
+        }
+      }
+    }
+  }
 }
 
-.confirm-dialog .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+@keyframes cfdFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.confirm-dialog .body {
-  margin: 15px 0;
-}
-
-.confirm-dialog .footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn.cancel {
-  background: #ccc;
-  color: #000;
-}
-
-.btn.confirm {
-  background: #e74c3c;
-  color: #fff;
+@keyframes cfdPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }

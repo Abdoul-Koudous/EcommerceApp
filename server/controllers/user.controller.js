@@ -194,11 +194,17 @@ export async function authWithGoogle(request, response){
             })
             
         }else{
-           const accesstoken = await generatedAccessToken(existingUser._id);
+            // ✅ met à jour l'avatar à chaque connexion Google si l'utilisateur existant n'en a pas
+            // (évite un avatar figé/vide pour toujours sur un compte déjà créé sans avatar)
+            const updateFields = { last_login_date: new Date() };
+            if (avatar && !existingUser.avatar) {
+                updateFields.avatar = avatar;
+            }
+
+            await UserModel.findByIdAndUpdate(existingUser?._id, updateFields);
+
+            const accesstoken = await generatedAccessToken(existingUser._id);
             const refreshToken = await generatedRefreshToken(existingUser._id);
-            await UserModel.findByIdAndUpdate(existingUser?._id,{
-                last_login_date : new Date()
-            })
 
             const cookiesOption = {
                 httpOnly : true,

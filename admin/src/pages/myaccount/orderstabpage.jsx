@@ -91,7 +91,6 @@ const OrdersTabPage = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     const previousOrders = orders;
 
-    // Mise à jour optimiste de l'affichage
     setOrders((prev) =>
       prev.map((o) => (o._id === orderId ? { ...o, order_status: newStatus } : o))
     );
@@ -103,10 +102,10 @@ const OrdersTabPage = () => {
       });
 
       if (!res?.success) {
-        setOrders(previousOrders); // rollback si l'API refuse
+        setOrders(previousOrders);
       }
     } catch (err) {
-      setOrders(previousOrders); // rollback si erreur réseau
+      setOrders(previousOrders);
     } finally {
       setUpdatingId(null);
     }
@@ -119,8 +118,8 @@ const OrdersTabPage = () => {
   return (
     <div className="tab-content orders-tab">
       {/* === Barre de filtres === */}
-      <div className="orders-filters">
-        <div className="form-group">
+      <div className="otb-filters">
+        <div className="otb-form-group">
           <label>Statut commande</label>
           <select
             value={orderStatusFilter}
@@ -136,7 +135,7 @@ const OrdersTabPage = () => {
           </select>
         </div>
 
-        <div className="form-group">
+        <div className="otb-form-group">
           <label>Statut paiement</label>
           <select
             value={paymentStatusFilter}
@@ -152,7 +151,7 @@ const OrdersTabPage = () => {
           </select>
         </div>
 
-        <div className="form-group">
+        <div className="otb-form-group">
           <label>Du</label>
           <input
             type="date"
@@ -164,7 +163,7 @@ const OrdersTabPage = () => {
           />
         </div>
 
-        <div className="form-group">
+        <div className="otb-form-group">
           <label>Au</label>
           <input
             type="date"
@@ -176,7 +175,7 @@ const OrdersTabPage = () => {
           />
         </div>
 
-        <div className="search-bar">
+        <div className="otb-search-bar">
           <FaSearch className="icon" />
           <input
             type="text"
@@ -190,23 +189,23 @@ const OrdersTabPage = () => {
         </div>
 
         {hasActiveFilters && (
-          <button type="button" className="reset-filters-btn" onClick={resetFilters}>
+          <button type="button" className="otb-reset-btn" onClick={resetFilters}>
             Réinitialiser
           </button>
         )}
       </div>
 
       {loading ? (
-        <div className="orders-loading">
+        <div className="otb-loading">
           <CircularProgress />
         </div>
       ) : orders.length === 0 ? (
         <p>Aucune commande ne correspond à ces filtres.</p>
       ) : (
-        <div className="orders-wrapper">
-          <div className="orders-table">
+        <div className="otb-wrapper">
+          <div className="otb-table">
             {/* === Header === */}
-            <div className="table-header">
+            <div className="otb-table-header">
               <span></span>
               <span>Commande</span>
               <span>Client</span>
@@ -225,31 +224,31 @@ const OrdersTabPage = () => {
               const addr = order.delivery_address;
 
               return (
-                <div key={order._id} className="order-row">
+                <div key={order._id} className="otb-row">
                   <div
-                    className={`order-summary ${isOpen ? "active" : ""}`}
+                    className={`otb-summary ${isOpen ? "active" : ""}`}
                     onClick={() => toggleOrder(order._id)}
                   >
-                    <span className={`arrow-icon ${isOpen ? "up" : "down"}`}>
+                    <span className={`otb-arrow-icon ${isOpen ? "up" : "down"}`}>
                       <MdOutlineKeyboardArrowUp />
                     </span>
 
                     {/* Commande : ID lisible, l'ID Mongo complet reste consultable au survol */}
-                    <span className="cell-order-id" title={order._id}>
+                    <span className="otb-cell-order-id" title={order._id}>
                       {order.orderId}
                     </span>
 
                     {/* Client : le COMPTE qui a passé la commande — peut différer du destinataire */}
-                    <span className="cell-client">
+                    <span className="otb-cell-client">
                       <strong>{order.userId?.name || "—"}</strong>
                       <small title={order.userId?._id}>{order.userId?.email || "—"}</small>
                     </span>
 
                     {/* Livraison : le DESTINATAIRE réel (snapshot figé au moment de la commande) */}
-                    <span className="cell-delivery">
+                    <span className="otb-cell-delivery">
                       <strong>{addr?.name || "—"}</strong>
                       <small>{addr?.mobile || "—"}</small>
-                      <small className="cell-address" title={formatAddress(addr)}>
+                      <small className="otb-cell-address" title={formatAddress(addr)}>
                         {formatAddress(addr)}
                         {addr?.pincode ? ` (${addr.pincode})` : ""}
                       </small>
@@ -258,8 +257,8 @@ const OrdersTabPage = () => {
                     <span>{(order.totalAmt || 0).toLocaleString()} FCFA</span>
 
                     {/* Paiement : badge + référence transaction discrète en dessous */}
-                    <span className="cell-payment">
-                      <span className={`payment-status ${paymentStatus.className}`}>
+                    <span className="otb-cell-payment">
+                      <span className={`otb-payment-status ${paymentStatus.className}`}>
                         {paymentStatus.label}
                       </span>
                       {order.paymentId && (
@@ -274,7 +273,7 @@ const OrdersTabPage = () => {
                     </span>
 
                     <select
-                      className={`status-select ${orderStatus.className}`}
+                      className={`otb-status-select ${orderStatus.className}`}
                       value={order.order_status}
                       disabled={updatingId === order._id}
                       onClick={(e) => e.stopPropagation()}
@@ -288,7 +287,7 @@ const OrdersTabPage = () => {
                     </select>
 
                     <button
-                      className="btn-view-order"
+                      className="otb-view-btn"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedOrder(order);
@@ -299,44 +298,42 @@ const OrdersTabPage = () => {
                     </button>
                   </div>
 
-                  {/* Détails toujours présents dans le DOM, visibilité pilotée par une classe simple (pas d'animation opacity) */}
-                  <div className={`order-details ${isOpen ? "open" : ""}`}>
-                    {isOpen && (
-                      <>
-                        {(!order.products || order.products.length === 0) ? (
-                          <p className="no-products">Aucun produit associé à cette commande.</p>
-                        ) : (
-                          <div className="products-grid">
-                            <div className="products-grid-header">
-                              <span>ID Produit</span>
-                              <span>Produit</span>
-                              <span>Image</span>
-                              <span>Quantité</span>
-                              <span>Prix</span>
-                              <span>Subtotal</span>
-                            </div>
-                            {order.products.map((item, idx) => (
-                              <div className="products-grid-row" key={item._id || item.productId || idx}>
-                                <span title={item.productId}>{item.productId}</span>
-                                <span>{item.productTitle}</span>
-                                <span>
-                                  <img
-                                    src={item.image}
-                                    alt={item.productTitle}
-                                    className="product-image"
-                                  />
-                                </span>
-                                <span>{item.quantity}</span>
-                                <span>{(item.price || 0).toLocaleString()} FCFA</span>
-                                <span>
-                                  {((item.price || 0) * (item.quantity || 0)).toLocaleString()} FCFA
-                                </span>
-                              </div>
-                            ))}
+                  {/* Détails toujours présents dans le DOM, l'ouverture est animée en CSS (grid-template-rows) */}
+                  <div className={`otb-details ${isOpen ? "open" : ""}`}>
+                    <div>
+                      {(!order.products || order.products.length === 0) ? (
+                        <p className="otb-no-products">Aucun produit associé à cette commande.</p>
+                      ) : (
+                        <div className="otb-products-grid">
+                          <div className="otb-products-grid-header">
+                            <span>ID Produit</span>
+                            <span>Produit</span>
+                            <span>Image</span>
+                            <span>Quantité</span>
+                            <span>Prix</span>
+                            <span>Subtotal</span>
                           </div>
-                        )}
-                      </>
-                    )}
+                          {order.products.map((item, idx) => (
+                            <div className="otb-products-grid-row" key={item._id || item.productId || idx}>
+                              <span title={item.productId}>{item.productId}</span>
+                              <span>{item.productTitle}</span>
+                              <span>
+                                <img
+                                  src={item.image}
+                                  alt={item.productTitle}
+                                  className="otb-product-image"
+                                />
+                              </span>
+                              <span>{item.quantity}</span>
+                              <span>{(item.price || 0).toLocaleString()} FCFA</span>
+                              <span>
+                                {((item.price || 0) * (item.quantity || 0)).toLocaleString()} FCFA
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -344,8 +341,8 @@ const OrdersTabPage = () => {
           </div>
 
           {/* === Pied de tableau : sélecteur d'items + pagination === */}
-          <div className="table-footer">
-            <div className="items-selector">
+          <div className="otb-table-footer">
+            <div className="otb-items-selector">
               <label>Afficher</label>
 
               <select

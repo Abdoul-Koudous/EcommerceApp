@@ -1,139 +1,158 @@
-.subcategories-page {
+.sct-page {
   padding: 20px;
 
-  .header {
+  .sct-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 1rem;
 
     h2 {
-      font-size: 22px;
+      font-size: 1.3rem;
       font-weight: 600;
+      color: var(--color-text);
     }
 
-    .actions {
+    .sct-actions {
       display: flex;
       gap: 10px;
 
-      .btn {
+      .sct-btn {
         padding: 8px 16px;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         border: none;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 0.85rem;
+        transition: var(--transition-base);
 
-        &.add {
-          background: #4caf50;
-          color: #fff;
+        &.sct-btn-add {
+          background: var(--color-success);
+          color: var(--color-text-on-primary);
+
+          &:hover {
+            filter: brightness(0.9);
+          }
         }
 
-        &.export {
-          background: #f1f1f1;
-        }
+        &.sct-btn-export {
+          background: var(--color-surface-alt-2);
+          color: var(--color-text);
 
-        &.save {
-          background: #2196f3;
-          color: #fff;
-          margin-left: 8px;
-        }
-
-        &.cancel {
-          background: #f44336;
-          color: #fff;
-          margin-left: 4px;
+          &:hover {
+            filter: brightness(0.95);
+          }
         }
       }
     }
   }
 
-  .tree-table {
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e5e5;
+  .sct-tree-table {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
     overflow: hidden;
 
-    .row {
-      display: flex;
-      align-items: center;
-      padding: 10px 12px;
-      border-bottom: 1px solid #eee;
-      transition: background 0.15s ease;
+    .sct-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap; // ✅ passe à la ligne en mode édition si select+input+boutons ne tiennent plus
+  gap: 8px;         // ✅ remplace les margin-right/margin-left ponctuels par un espacement uniforme
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-light);
+  transition: var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-alt);
+  }
+
+  &.sct-level-0 {
+    font-weight: 600;
+    background: var(--color-surface-alt);
+  }
+
+  select,
+  input {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    flex: 1 1 140px; // ✅ se rétrécit avec la ligne, mais jamais sous 140px avant de wrapper
+    min-width: 0;    // ✅ évite qu'un select au contenu long force un débordement
+  }
+
+  .sct-edit-btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    white-space: nowrap; // ✅ le texte "Save"/"Cancel" ne se coupe jamais au milieu
+    flex-shrink: 0;      // ✅ les boutons gardent leur taille, ce sont select/input qui cèdent
+
+    &.sct-save {
+      background: var(--color-info);
+      color: var(--color-text-on-primary);
 
       &:hover {
-        background: #fafafa;
-      }
-
-      &.level-0 {
-        font-weight: 600;
-        background: #f8f9fb;
-      }
-
-      select,
-      input {
-        padding: 4px 8px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-        margin-right: 8px;
-      }
-
-      button {
-        padding: 4px 8px;
-        font-size: 13px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-
-        &.save {
-          background: #2196f3;
-          color: #fff;
-        }
-
-        &.cancel {
-          background: #f44336;
-          color: #fff;
-        }
+        filter: brightness(0.9);
       }
     }
 
-    .cell {
+    &.sct-cancel {
+      background: var(--color-danger);
+      color: var(--color-text-on-primary);
+
+      &:hover {
+        filter: brightness(0.9);
+      }
+    }
+  }
+}
+
+    .sct-cell {
       display: flex;
       align-items: center;
-      font-size: 14px;
-      color: #333;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
 
-      &.name {
+      &.sct-name {
         flex: 1;
         gap: 8px;
       }
 
-      &.actions {
+      &.sct-actions-cell {
         gap: 12px;
       }
     }
 
-    .toggle {
+    .sct-toggle {
       cursor: pointer;
-      font-size: 14px;
+      font-size: 0.85rem;
       width: 16px;
       text-align: center;
-      color: #555;
+      color: var(--color-text-secondary);
     }
 
-    .indent {
+    .sct-indent {
       width: 20px;
     }
 
-    .icon {
+    .sct-icon {
       cursor: pointer;
-      font-size: 15px;
+      font-size: 0.95rem;
+      transition: var(--transition-fast);
 
-      &.edit {
-        color: #2196f3;
+      &.sct-icon-edit {
+        color: var(--color-rating);
       }
 
-      &.delete {
-        color: #f44336;
+      &.sct-icon-delete {
+        color: var(--color-danger);
       }
 
       &:hover {

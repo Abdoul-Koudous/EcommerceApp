@@ -1,5 +1,7 @@
+@use "../../styles/breakpoints" as bp; // ⚠️ adapte le chemin à l'emplacement réel du fichier breakpoints
+
 .orders-tab {
-  .orders-loading {
+  .otb-loading {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -7,14 +9,21 @@
   }
 
   // === Barre de filtres (statut, paiement, dates, recherche) ===
-  .orders-filters {
+  .otb-filters {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 1rem;
     margin-bottom: 1.25rem;
 
-    .form-group {
+    @include bp.respond("tablet") {
+      .otb-form-group,
+      .otb-search-bar {
+        flex: 1 1 100%; // ✅ un champ par ligne sous 768px plutôt que de dépendre du seul flex-wrap
+      }
+    }
+
+    .otb-form-group {
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
@@ -22,22 +31,23 @@
       label {
         font-size: 0.8rem;
         font-weight: 500;
-        color: #666;
+        color: var(--color-text-secondary);
       }
 
       select,
       input[type="date"] {
         padding: 0.45rem 0.6rem;
-        border: 1px solid #ddd;
-        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
         font-size: 0.85rem;
-        background: #fff;
-        color: #333;
+        background: var(--color-surface);
+        color: var(--color-text);
         cursor: pointer;
+        transition: var(--transition-fast);
 
         &:focus {
           outline: none;
-          border-color: #c62b38;
+          border-color: var(--color-primary);
         }
       }
 
@@ -46,19 +56,20 @@
       }
     }
 
-    .search-bar {
+    .otb-search-bar {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       padding: 0.45rem 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
       flex: 1;
       min-width: 220px;
+      transition: var(--transition-fast);
 
       .icon {
-        color: #999;
+        color: var(--color-text-secondary);
         font-size: 0.85rem;
       }
 
@@ -68,81 +79,83 @@
         font-size: 0.85rem;
         width: 100%;
         background: transparent;
+        color: var(--color-text);
 
         &::placeholder {
-          color: #aaa;
+          color: var(--color-text-secondary);
         }
       }
 
       &:focus-within {
-        border-color: #c62b38;
+        border-color: var(--color-primary);
       }
     }
 
-    .reset-filters-btn {
+    .otb-reset-btn {
       background: none;
-      border: 1px solid #c62b38;
-      color: #c62b38;
+      border: 1px solid var(--color-primary);
+      color: var(--color-primary);
       font-size: 0.85rem;
       font-weight: 500;
       padding: 0.45rem 0.9rem;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease;
+      transition: var(--transition-base);
       white-space: nowrap;
 
       &:hover {
-        background: #c62b38;
-        color: #fff;
+        background: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+        color: var(--color-text-on-primary);
       }
     }
   }
 
-  .orders-wrapper {
+  .otb-wrapper {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
 
     scrollbar-width: thin;
-    scrollbar-color: #c62b38 transparent;
+    scrollbar-color: var(--color-primary) transparent;
 
     &::-webkit-scrollbar {
       width: 8px;
       height: 8px;
     }
     &::-webkit-scrollbar-thumb {
-      background: #c62b38;
-      border-radius: 8px;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm);
     }
   }
 
-  .orders-table {
+  .otb-table {
     display: block;
     min-width: 1100px;
   }
 
   // 9 colonnes : flèche, Commande, Client, Livraison, Total, Paiement, Date, Statut, Actions
-  .table-header,
-  .order-summary {
+  .otb-table-header,
+  .otb-summary {
     display: grid;
     grid-template-columns:
       40px 140px 200px 240px 120px 160px 110px 150px 50px;
     padding: 1rem;
     align-items: center;
-    background: #f7f7f7;
+    background: var(--color-surface-alt);
     font-weight: 500;
   }
 
-  .order-row {
-    border-top: 1px solid #eee;
+  .otb-row {
+    border-top: 1px solid var(--color-border-light);
 
-    .order-summary {
+    .otb-summary {
       cursor: pointer;
-      transition: background 0.2s ease;
-      background: #fff;
+      transition: var(--transition-base);
+      background: var(--color-surface);
 
-      &:hover { background: #f9f9f9; }
-      &.active { background: #fff6f7; }
+      &:hover { background: var(--color-surface-alt); }
+      &.active { background: var(--color-primary-soft-bg); }
 
       > span {
         margin-left: 10px;
@@ -151,10 +164,9 @@
         white-space: nowrap;
       }
 
-      // Cellules à deux ou trois lignes (client, livraison, paiement)
-      .cell-client,
-      .cell-delivery,
-      .cell-payment {
+      .otb-cell-client,
+      .otb-cell-delivery,
+      .otb-cell-payment {
         display: flex;
         flex-direction: column;
         white-space: normal;
@@ -163,13 +175,14 @@
 
         strong {
           font-size: 0.9rem;
+          color: var(--color-text);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
 
         small {
-          color: #888;
+          color: var(--color-text-secondary);
           font-size: 0.75rem;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -177,21 +190,22 @@
         }
       }
 
-      .cell-order-id {
+      .otb-cell-order-id {
         font-family: monospace;
         font-size: 0.85rem;
+        color: var(--color-text);
       }
 
-      .cell-address {
+      .otb-cell-address {
         max-width: 220px;
       }
 
-      .arrow-icon {
+      .otb-arrow-icon {
         display: flex;
         justify-content: center;
         align-items: center;
         transition: transform 0.3s ease, color 0.3s ease;
-        color: #777;
+        color: var(--color-text-secondary);
 
         svg {
           width: 20px;
@@ -199,43 +213,44 @@
         }
       }
 
-      .arrow-icon.up {
+      .otb-arrow-icon.up {
         transform: rotate(180deg);
-        color: #e63946;
+        color: var(--color-primary);
       }
 
-      // Badge de statut de paiement — mêmes classes que côté client
-      // (paymentStatusInfo) pour rester cohérent visuellement
-      .payment-status {
+      // Badge de statut de paiement — classes issues de paymentStatusInfo()
+      .otb-payment-status {
         display: inline-block;
         width: fit-content;
         padding: 0.15rem 0.5rem;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         font-size: 0.78rem;
         font-weight: 600;
 
-        &.paid { background: #e6f9ee; color: #2ecc71; }
-        &.cod { background: #fff4e5; color: #e67e22; }
-        &.failed { background: #fdeaea; color: #e63946; }
+        &.paid { background: color-mix(in srgb, var(--color-success) 15%, transparent); color: var(--color-success); }
+        &.cod { background: color-mix(in srgb, var(--color-rating) 15%, transparent); color: var(--color-rating); }
+        &.failed { background: color-mix(in srgb, var(--color-danger) 10%, transparent); color: var(--color-danger); }
       }
 
-      .status-select {
+      .otb-status-select {
         margin-left: 10px;
         font-weight: 600;
         font-size: 0.85rem;
-        border-radius: 6px;
-        border: 1px solid #ddd;
-        background: #fff;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
         padding: 0.35rem 0.6rem;
         cursor: pointer;
         max-width: 150px;
         appearance: menulist;
+        transition: var(--transition-fast);
 
-        &.received { color: #6c757d; }
-        &.preparing { color: #e67e22; }
-        &.shipped { color: #2b90c6; }
-        &.delivered { color: #2ecc71; }
-        &.cancelled { color: #e63946; }
+        // Classes issues de orderStatusInfo()
+        &.received { color: var(--color-text-secondary); }
+        &.preparing { color: var(--color-rating); }
+        &.shipped { color: var(--color-info); }
+        &.delivered { color: var(--color-success); }
+        &.cancelled { color: var(--color-danger); }
 
         &:disabled {
           opacity: 0.6;
@@ -244,57 +259,67 @@
 
         &:focus {
           outline: none;
-          border-color: #c62b38;
+          border-color: var(--color-primary);
         }
       }
 
-      .btn-view-order {
+      .otb-view-btn {
         background: none;
         border: none;
         cursor: pointer;
-        color: #777;
+        color: var(--color-text-secondary);
         font-size: 1rem;
         display: flex;
         justify-content: center;
         align-items: center;
         padding: 0.3rem;
-        border-radius: 6px;
-        transition: color 0.2s ease, background 0.2s ease;
+        border-radius: var(--radius-sm);
+        transition: var(--transition-base);
 
         &:hover {
-          color: #c62b38;
-          background: #fff6f7;
+          color: var(--color-primary);
+          background: var(--color-primary-soft);
         }
       }
     }
 
-    // Fermé : hauteur 0, rien de visible, mais pas de overflow:hidden global qui casserait autre chose
-    .order-details {
-      display: none;
-      background: #fcfcfc;
-      padding: 0;
+    .otb-details {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      background: var(--color-surface-alt);
+      transition: grid-template-rows 0.25s ease, opacity 0.2s ease;
 
-      &.open {
-        display: block;
-        padding: 1rem 1.5rem 1.5rem;
+      > * {
+        overflow: hidden;
+        min-height: 0;
       }
 
-      .no-products {
-        color: #888;
+      &.open {
+        grid-template-rows: 1fr;
+        opacity: 1;
+
+        > * {
+          padding: 1rem 1.5rem 1.5rem;
+        }
+      }
+
+      .otb-no-products {
+        color: var(--color-text-secondary);
         font-style: italic;
         margin: 0;
       }
 
-      .products-grid {
+      .otb-products-grid {
         width: 100%;
         min-width: 700px;
         overflow-x: auto;
-        border: 1px solid #eee;
-        border-radius: 8px;
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius-md);
       }
 
-      .products-grid-header,
-      .products-grid-row {
+      .otb-products-grid-header,
+      .otb-products-grid-row {
         display: grid;
         grid-template-columns: 160px 1fr 80px 100px 120px 130px;
         align-items: center;
@@ -302,60 +327,64 @@
         padding: 0.6rem 0.8rem;
       }
 
-      .products-grid-header {
-        background: #f0f0f0;
+      .otb-products-grid-header {
+        background: var(--color-surface);
         font-weight: 600;
+        color: var(--color-text);
       }
 
-      .products-grid-row {
-        border-top: 1px solid #eee;
-        background: #fff;
+      .otb-products-grid-row {
+        border-top: 1px solid var(--color-border-light);
+        background: var(--color-surface);
 
         span {
+          color: var(--color-text-secondary);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
       }
 
-      .product-image {
+      .otb-product-image {
         width: 44px;
         height: 44px;
         object-fit: contain;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         display: block;
       }
     }
   }
 
   // === Pied de tableau : sélecteur d'items + pagination ===
-  .table-footer {
+  .otb-table-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
     padding: 1rem;
-    border-top: 1px solid #eee;
-    background: #fff;
+    border-top: 1px solid var(--color-border-light);
+    background: var(--color-surface);
 
-    .items-selector {
+    .otb-items-selector {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-size: 0.85rem;
-      color: #666;
+      color: var(--color-text-secondary);
 
       select {
         padding: 0.3rem 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
         font-size: 0.85rem;
         cursor: pointer;
+        background: var(--color-surface);
+        color: var(--color-text);
 
         &:focus {
           outline: none;
-          border-color: #c62b38;
+          border-color: var(--color-primary);
         }
       }
     }

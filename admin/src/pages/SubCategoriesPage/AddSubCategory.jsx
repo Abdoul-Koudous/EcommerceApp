@@ -92,21 +92,21 @@ const AddSubCategory = ({ onClose, onAddCategory }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}>
+    <div className="asc-overlay">
+      <div className={`asc-content ${isClosing ? "closing" : "opening"}`}>
+        <div className="asc-header">
+          <div className="asc-header-left">
+            <button className="asc-close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
             <h2>Ajouter une sous-catégorie</h2>
           </div>
         </div>
 
-        <div className="dialog-body">
-          <form className="subcategory-form">
+        <div className="asc-body">
+          <form className="asc-form">
             {/* Bloc 1 */}
-            <div className="left">
+            <div className="asc-block-left">
               <h4>Catégorie parente</h4>
               <select value={formCat.parentId} onChange={onChangeCategory}>
                 <option value="">-- Sélectionner une catégorie --</option>
@@ -128,7 +128,7 @@ const AddSubCategory = ({ onClose, onAddCategory }) => {
 
               <button
                 type="button"
-                className="publish-btn"
+                className="asc-publish-btn"
                 onClick={() => handleSubmit(formCat, setFormCat, setLoadingCat)}
                 disabled={loadingCat}
               >
@@ -137,7 +137,7 @@ const AddSubCategory = ({ onClose, onAddCategory }) => {
             </div>
 
             {/* Bloc 2 */}
-            <div className="right">
+            <div className="asc-block-right">
               <h4>Sous-catégorie parente</h4>
               <select value={formSub.parentId} onChange={onChangeSubCategory}>
                 <option value="">-- Sélectionner une sous-catégorie --</option>
@@ -161,7 +161,7 @@ const AddSubCategory = ({ onClose, onAddCategory }) => {
 
               <button
                 type="button"
-                className="publish-btn"
+                className="asc-publish-btn"
                 onClick={() => handleSubmit(formSub, setFormSub, setLoadingSub)}
                 disabled={loadingSub}
               >

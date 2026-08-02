@@ -78,12 +78,12 @@ const EditSubCategory = ({ subCategory, onClose }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
+    <div className="asc-overlay">
+      <div className={`asc-content ${isClosing ? "closing" : "opening"}`}>
         {/* HEADER */}
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}>
+        <div className="asc-header">
+          <div className="asc-header-left">
+            <button className="asc-close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
             <h2>Modifier la sous-catégorie</h2>
@@ -91,12 +91,12 @@ const EditSubCategory = ({ subCategory, onClose }) => {
         </div>
 
         {/* BODY */}
-        <div className="dialog-body">
-          <form className="subcategory-form" onSubmit={handleSubmit}>
+        <div className="asc-body">
+          <form className="asc-form" onSubmit={handleSubmit}>
             {/* LEFT : PARENT CATEGORY */}
-            <div className="left">
+            <div className="asc-block-left">
               <h4>Catégorie parente</h4>
-              <ul className="category-list">
+              <ul className="asc-category-list">
                 {categories.map((cat) => (
                   <li
                     key={cat._id}
@@ -117,7 +117,7 @@ const EditSubCategory = ({ subCategory, onClose }) => {
             </div>
 
             {/* RIGHT : SUBCATEGORY */}
-            <div className="right">
+            <div className="asc-block-right">
               <h4>Nom de la sous-catégorie</h4>
               <input
                 type="text"
@@ -127,7 +127,7 @@ const EditSubCategory = ({ subCategory, onClose }) => {
                 placeholder="Nom de la sous-catégorie"
               />
 
-              <button type="submit" className="publish-btn" disabled={loading}>
+              <button type="submit" className="asc-publish-btn" disabled={loading}>
                 {loading ? <CircularProgress /> : "Mettre à jour"}
               </button>
             </div>

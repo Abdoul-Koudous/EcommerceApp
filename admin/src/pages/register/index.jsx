@@ -11,6 +11,7 @@ const RegisterForm = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ✅ ajouté
   const [formFields, setFormFields] = useState({
     name: "",
     email: "",
@@ -56,27 +57,27 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="register-page">
-      <div className="logo">🛒 YebouShop</div>
+    <div className="rgs-page">
+      <div className="rgs-logo">🛒 YebouShop</div>
       <h2>Bienvenue sur Register</h2>
 
       {/* Social Register */}
-      <div className="social-register">
-        <button className="google">
+      <div className="rgs-social-register">
+        <button className="rgs-google">
           <FaGoogle className="icon" /> S'inscrire avec Google
         </button>
-        <button className="facebook">
+        <button className="rgs-facebook">
           <FaFacebookF className="icon" /> S'inscrire avec Facebook
         </button>
       </div>
 
       {/* Séparateur */}
-      <div className="separator">
+      <div className="rgs-separator">
         <span>ou avec email</span>
       </div>
 
       {/* Formulaire */}
-      <form className="register-form" onSubmit={handleSubmit}>
+      <form className="rgs-form" onSubmit={handleSubmit}>
         <input
           type="text"
           name="name"
@@ -93,7 +94,7 @@ const RegisterForm = () => {
           onChange={onChangeInput}
           disabled={isLoading}
         />
-        <div className="password-group">
+        <div className="rgs-password-group">
           <input
             type={showPassword ? "text" : "password"}
             name="password"
@@ -109,27 +110,35 @@ const RegisterForm = () => {
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </span>
         </div>
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirmer le mot de passe"
-          value={formFields.confirmPassword}
-          onChange={onChangeInput}
-          disabled={isLoading}
-        />
+        <div className="rgs-password-group">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            name="confirmPassword"
+            placeholder="Confirmer le mot de passe"
+            value={formFields.confirmPassword}
+            onChange={onChangeInput}
+            disabled={isLoading}
+          />
+          <span
+            className="toggle-password"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+          </span>
+        </div>
 
-        <div className="form-options">
+        <div className="rgs-form-options">
           <label>
             <input type="checkbox" /> Accepter les termes et conditions
           </label>
         </div>
 
-        <button type="submit" className="register-btn" disabled={isLoading}>
-          {isLoading ? <CircularProgress /> : "S'inscrire"}
+        <button type="submit" className="rgs-btn" disabled={isLoading}>
+          {isLoading ? <CircularProgress size={20} /> : "S'inscrire"}
         </button>
       </form>
 
-      <p className="login-text">
+      <p className="rgs-login-text">
         Vous avez déjà un compte ? <a href="/login">Se connecter</a>
       </p>
     </div>

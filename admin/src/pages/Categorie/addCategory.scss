@@ -1,17 +1,17 @@
-.fullscreen-dialog {
+.ctf-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--color-overlay);
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  z-index: 3000;
+  z-index: 3100;
 
-  .dialog-content {
+  .ctf-content {
     width: 80%;
     height: 100vh;
-    background: #fff;
+    background: var(--color-surface);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     display: flex;
@@ -20,20 +20,20 @@
 
     &.opening {
       transform: translateY(0);
-    opacity: 1;
+      opacity: 1;
     }
     &.closing {
       transform: translateY(100%);
-    opacity: 0;
+      opacity: 0;
     }
   }
 
-  .dialog-header {
+  .ctf-header {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #eee;
-    background: #f9fafb;
+    border-bottom: 1px solid var(--color-border-light);
+    background: var(--color-surface-alt);
 
-    .header-left {
+    .ctf-header-left {
       display: flex;
       align-items: center;
       gap: 0.8rem;
@@ -41,27 +41,30 @@
       h2 {
         font-size: 1.4rem;
         font-weight: 600;
+        color: var(--color-text);
       }
 
-      .close-btn {
+      .ctf-close-btn {
         background: none;
         border: none;
         font-size: 1.3rem;
         cursor: pointer;
+        color: var(--color-text-secondary);
+        transition: var(--transition-fast);
 
         &:hover {
-          color: #e63946;
+          color: var(--color-primary);
         }
       }
     }
   }
 
-  .dialog-body {
+  .ctf-body {
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
 
-    .category-form {
+    .ctf-form {
       max-width: 500px;
       display: flex;
       flex-direction: column;
@@ -70,134 +73,107 @@
       input,
       select {
         padding: 0.8rem 1rem;
-        border: 1px solid #ccc;
-        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
         font-size: 1rem;
+        background: var(--color-surface);
+        color: var(--color-text);
+        transition: var(--transition-fast);
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-primary);
+        }
       }
 
-      .image-upload {
+      .ctf-images-wrapper {
         display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
 
-        .image-circle {
-          width: 120px;
-          height: 120px;
+      .ctf-image-circle {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 2px dashed var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-surface-alt);
+        cursor: pointer;
+        transition: var(--transition-fast);
+
+        &:hover {
+          border-color: var(--color-primary);
+        }
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
           border-radius: 50%;
-          border: 2px dashed #ccc;
+        }
+
+        &.ctf-add {
+          border-style: dashed;
+
+          svg {
+            font-size: 1.6rem;
+            color: var(--color-text-secondary);
+          }
+
+          &.ctf-disabled {
+            opacity: 0.6;
+            pointer-events: none;
+          }
+        }
+
+        .ctf-remove-btn {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          background: var(--color-danger);
+          border: none;
+          color: var(--color-text-on-primary);
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          background: #f7f7f7;
+          font-size: 0.8rem;
+          transition: var(--transition-fast);
 
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-          }
-
-          svg {
-            font-size: 1.6rem;
-            color: #666;
+          &:hover {
+            filter: brightness(0.9);
           }
         }
       }
 
-      .publish-btn {
+      .ctf-publish-btn {
         margin-top: 1rem;
         width: 40%;
         padding: 0.8rem;
-        background: #e63946;
-        color: white;
+        background: var(--color-primary);
+        color: var(--color-text-on-primary);
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-md);
         font-size: 1rem;
         cursor: pointer;
+        transition: var(--transition-fast);
 
         &:hover {
-          background: #c62b38;
+          background: var(--color-primary-hover);
+        }
+
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
         }
       }
     }
   }
 }
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-}
-.images-wrapper {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.image-circle {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 2px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f7f7f7;
-  cursor: pointer;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
-
-  &.add {
-    border-style: dashed;
-
-    svg {
-      font-size: 1.6rem;
-      color: #666;
-    }
-  }
-
-  .remove-btn {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: #e63946;
-    border: none;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.8rem;
-
-    &:hover {
-      background: #c62b38;
-    }
-  }
-}
-

@@ -5,7 +5,7 @@ import "./register.scss";
 import { ToastContext } from "../../context/ToastContext";
 import { postData } from "../utils/api";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { firebaseApp } from "../../firebase";
 import { UserContext } from "../../UserContext/UserContext";
@@ -67,7 +67,7 @@ const Register = () => {
         };
 
         postData("/api/users/authWithGoogle", fields)
-          .then((res) => {
+          .then(async (res) => {
             if (res.error) {
               openToast("error", res.message);
             } else {
@@ -75,9 +75,9 @@ const Register = () => {
               localStorage.setItem("userEmail", fields.email);
               localStorage.setItem("accesstoken", res?.data?.accesstoken);
               localStorage.setItem("refreshToken", res?.data?.refreshToken);
-              setTimeout(() => {
-                loadUser();
-              }, 50);
+
+              // ✅ on attend vraiment que le contexte soit à jour, plus de setTimeout arbitraire
+              await loadUser();
 
               navigate("/");
             }
@@ -161,7 +161,7 @@ const Register = () => {
         </div>
 
         <p className="rg-login-text">
-          Vous avez déjà un compte ? <a href="/login">Se connecter</a>
+          Vous avez déjà un compte ? <Link to="/login">Se connecter</Link>
         </p>
       </div>
     </div>

@@ -18,22 +18,22 @@ const ConfirmDialog = ({ open, message, onConfirm, onCancel }) => {
   };
 
   return (
-    <div className="confirm-overlay">
-      <div className="confirm-dialog">
-        <div className="header">
+    <div className="cfd-overlay">
+      <div className="cfd-dialog">
+        <div className="cfd-header">
           <h3>Confirmation</h3>
-          <button className="close-btn" onClick={onCancel}>
+          <button className="cfd-close-btn" onClick={onCancel}>
             <FaTimes />
           </button>
         </div>
-        <div className="body">
+        <div className="cfd-body">
           <p>{message}</p>
         </div>
-        <div className="footer">
-          <button className="btn cancel" onClick={onCancel} disabled={loading}>
+        <div className="cfd-footer">
+          <button className="cfd-btn cfd-cancel" onClick={onCancel} disabled={loading}>
             Annuler
           </button>
-          <button className="btn confirm" onClick={handleConfirm} disabled={loading}>
+          <button className="cfd-btn cfd-confirm" onClick={handleConfirm} disabled={loading}>
             {loading ? <CircularProgress size={20} /> : "Confirmer"}
           </button>
         </div>

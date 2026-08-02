@@ -1,88 +1,190 @@
-.categories-page {
+.ctg-page {
   padding: 20px;
 
-  .header {
+  .ctg-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 1rem;
 
     h2 {
-      font-size: 24px;
-      font-weight: bold;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--color-text);
     }
 
-    .actions {
+    .ctg-actions {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
 
-      .btn {
+      .ctg-btn {
         padding: 8px 16px;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: var(--transition-base);
 
-        &.export {
-          background-color: #f0f0f0;
-          color: #333;
+        &.ctg-btn-export {
+          background-color: var(--color-surface-alt-2);
+          color: var(--color-text);
+
+          &:hover {
+            filter: brightness(0.95);
+          }
         }
 
-        &.add {
-          background-color: #4caf50;
-          color: white;
+        &.ctg-btn-add {
+          background-color: var(--color-success);
+          color: var(--color-text-on-primary);
+
+          &:hover {
+            filter: brightness(0.9);
+          }
+        }
+      }
+
+      // ✅ ajouté — même patron visuel que crc-/bnr-/usr- (bouton plein, pas la variante "soft" de users)
+      .ctg-btn-delete-multiple {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 8px 16px;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        background-color: var(--color-danger);
+        color: var(--color-text-on-primary);
+        transition: var(--transition-base);
+
+        &:hover {
+          filter: brightness(0.9);
         }
       }
     }
   }
 
-  .table-container {
+  .ctg-table-container {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+
     table {
       width: 100%;
       border-collapse: collapse;
 
       th,
       td {
-        padding: 10px;
+        padding: 10px 1rem;
         text-align: left;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid var(--color-border-light);
+        color: var(--color-text-secondary);
       }
 
       th {
-        background-color: #f5f5f5;
+        background-color: var(--color-surface-alt);
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--color-text);
+
+        &:first-child {
+          width: 40px;
+        }
       }
 
-      .icon {
+      tr:hover td {
+        background-color: var(--color-surface-alt);
+      }
+
+      .ctg-icon {
         margin-right: 10px;
         cursor: pointer;
+        font-size: 1rem;
+        transition: var(--transition-fast);
 
-        &.edit {
-          color: #2196f3;
+        &.ctg-icon-edit {
+          color: var(--color-rating);
+
+          &:hover {
+            filter: brightness(0.85);
+          }
         }
 
-        &.see {
-          color: #ffc107;
+        &.ctg-icon-see {
+          color: var(--color-info);
+
+          &:hover {
+            filter: brightness(0.85);
+          }
         }
 
-        &.delete {
-          color: #f44336;
+        &.ctg-icon-delete {
+          color: var(--color-danger);
+
+          &:hover {
+            filter: brightness(0.85);
+          }
+        }
+      }
+    }
+
+    .ctg-table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem;
+      border-top: 1px solid var(--color-border-light);
+
+      .ctg-items-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--color-text-secondary);
+
+        select {
+          padding: 0.3rem 0.5rem;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          font-size: 0.85rem;
+          background: var(--color-surface);
+          color: var(--color-text);
+          cursor: pointer;
+
+          &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+          }
         }
       }
     }
   }
 }
-.category-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%; // cercle
+
+.ctg-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
   overflow: hidden;
-  background-color: #f2f2f2;
+  background-color: var(--color-surface-alt);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0; // ✅ évite que la miniature s'écrase si la colonne "Nom" a beaucoup de texte
 
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover; // évite la déformation
+    object-fit: cover;
   }
 }

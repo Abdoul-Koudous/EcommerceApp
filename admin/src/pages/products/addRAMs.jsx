@@ -48,12 +48,6 @@ const AddRAMs = () => {
   fetchRams();
 }, [currentPage, itemsPerPage]);
 
-
-  /* =========================
-     AJOUT RAM
-  ========================== */
- 
-
   /* =========================
      SELECTION
   ========================== */
@@ -171,15 +165,15 @@ const handleAddOrEditRam = async () => {
 
 
   return (
-    <div className="admin-pages">
+    <div className="crc-page">
       {/* ================= HEADER ================= */}
-      <div className="header">
+      <div className="crc-header">
         <h2>Gestion des RAM</h2>
 
-        <div className="header-actions">
+        <div className="crc-header-actions">
           {selectedRams.length > 0 && (
             <button
-              className="delete-multiple-btn show"
+              className="crc-delete-multiple-btn show"
               onClick={() => {
                 setToDeleteId(null);
                 setConfirmOpen(true);
@@ -196,10 +190,10 @@ const handleAddOrEditRam = async () => {
             placeholder="Nom de la RAM"
             value={newRam}
             onChange={e => setNewRam(e.target.value)}
-            className="category-select"
+            className="crc-name-input"
           />
 
-          <button onClick={handleAddOrEditRam} className="add-btn">
+          <button onClick={handleAddOrEditRam} className="crc-add-btn">
             <FaPlus /> {editId ? "Mettre à jour" : "Ajouter"}
             </button>
 
@@ -208,13 +202,13 @@ const handleAddOrEditRam = async () => {
       </div>
 
       {/* ================= TABLE ================= */}
-      <div className="product-table-container">
+      <div className="crc-table-container">
         {loading ? (
-          <div className="loading"><CircularProgress /></div>
+          <div className="crc-loading"><CircularProgress /></div>
         ) : rams.length === 0 ? (
-          <div className="no-results">Aucune RAM trouvée</div>
+          <div className="crc-no-results">Aucune RAM trouvée</div>
         ) : (
-          <table className="product-table">
+          <table className="crc-table">
             <thead>
               <tr>
                 <th>
@@ -239,10 +233,10 @@ const handleAddOrEditRam = async () => {
                     />
                   </td>
                   <td>{ram.name}</td>
-                  <td className="actions">
-                    <button className="edit" onClick={() => editItem(ram._id)}><FaEdit /></button>
+                  <td className="crc-actions">
+                    <button className="crc-edit-btn" onClick={() => editItem(ram._id)}><FaEdit /></button>
                     <button
-                      className="delete"
+                      className="crc-delete-btn"
                       onClick={() => handleDeleteClick(ram._id)}
                     >
                       <FaTrash />
@@ -253,8 +247,8 @@ const handleAddOrEditRam = async () => {
             </tbody>
           </table>
         )}
-        <div className="table-footer">
-        <div className="items-selector">
+        <div className="crc-table-footer">
+        <div className="crc-items-selector">
             <label>Afficher</label>
 
             <select

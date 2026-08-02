@@ -13,7 +13,6 @@ const Profile = () => {
   const { user, setUser, addresses, setAddresses } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
 
-  /** ======= ÉTATS ======= **/
   const [profileEdit, setProfileEdit] = useState(false);
   const [passwordEdit, setPasswordEdit] = useState(false);
 
@@ -39,7 +38,6 @@ const Profile = () => {
 
   const [selectedAddress, setSelectedAddress] = useState(null);
 
-  /** ======= INITIALISATION ======= **/
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -53,8 +51,6 @@ const Profile = () => {
     }
   }, [user, addresses]);
 
-  /** ======= HANDLERS ======= **/
-
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({ ...prev, [name]: value }));
@@ -65,7 +61,6 @@ const Profile = () => {
     setPasswordData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /** Annuler profil */
   const cancelProfile = () => {
     setProfileEdit(false);
     setProfileData({
@@ -74,7 +69,6 @@ const Profile = () => {
     });
   };
 
-  /** Annuler password */
   const cancelPassword = () => {
     setPasswordEdit(false);
     setPasswordData({
@@ -84,13 +78,12 @@ const Profile = () => {
     });
   };
 
-  /** ======= SUBMIT PROFIL ======= **/
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setSubmittingProfile(true);
-     // Validation mobile
+
     if (profileData.mobile) {
-      const phoneRegex = /^\+?[0-9]{8,15}$/; // + optionnel, 8 à 15 chiffres
+      const phoneRegex = /^\+?[0-9]{8,15}$/;
       if (!phoneRegex.test(profileData.mobile)) {
         openToast("error", "Numéro de téléphone invalide");
         setSubmittingProfile(false);
@@ -108,13 +101,14 @@ const Profile = () => {
       openToast("success", res?.message || "Profil mis à jour !");
       setProfileEdit(false);
     } catch (error) {
-      openToast("error", res?.message || "Erreur serveur");
+      // ✅ corrigé : "res" n'existe pas dans ce scope (déclaré dans le try),
+      // provoquait un ReferenceError silencieux et aucun toast affiché
+      openToast("error", error?.message || "Erreur serveur");
     } finally {
       setSubmittingProfile(false);
     }
   };
 
-  /** ======= SUBMIT PASSWORD ======= **/
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
 
@@ -135,48 +129,47 @@ const Profile = () => {
       openToast("success", res?.message || "Mot de passe mis à jour !");
       cancelPassword();
     } catch (error) {
-      openToast("error", res?.message || "Erreur serveur");
+      // ✅ corrigé, même bug que ci-dessus
+      openToast("error", error?.message || "Erreur serveur");
     } finally {
       setSubmittingPassword(false);
     }
   };
 
-  /** ======= UPLOAD AVATAR ======= **/
   const onChangeFile = async (e, apiEndPoint) => {
-      try {
-        setUploading(true);
-        const files = e.target.files;
-        const formData = new FormData();
-        for (let file of files) {
-          if (!["image/jpeg","image/jpg","image/png","image/webp"].includes(file.type)) {
-            setUploading(false);
-            return openToast("error", "Image invalide");
-          }
-          formData.append("avatar", file);
+    try {
+      setUploading(true);
+      const files = e.target.files;
+      const formData = new FormData();
+      for (let file of files) {
+        if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+          setUploading(false);
+          return openToast("error", "Image invalide");
         }
-        const res = await uploadImage(apiEndPoint, formData);
-        setUploading(false);
-        if (res.error) return openToast("error", res.message);
-        setPreviews([res.avatar]);
-        setUser({ ...user, avatar: res.avatar });
-        openToast("success",res?.message || "Avatar mis à jour !");
-      } catch {
-        setUploading(false);
-        openToast("error", res?.message || "Erreur upload");
+        formData.append("avatar", file);
       }
-    };
+      const res = await uploadImage(apiEndPoint, formData);
+      setUploading(false);
+      if (res.error) return openToast("error", res.message);
+      setPreviews([res.avatar]);
+      setUser({ ...user, avatar: res.avatar });
+      openToast("success", res?.message || "Avatar mis à jour !");
+    } catch (error) {
+      // ✅ corrigé, même bug
+      setUploading(false);
+      openToast("error", error?.message || "Erreur upload");
+    }
+  };
 
-  /** ======= RENDER ======= **/
   return (
     <>
-      <div className="profile-container">
+      <div className="prf-container">
         {/* AVATAR */}
-        <div className="profile-left">
-          <div className="avatar-wrapper">
-           
+        <div className="prf-left">
+          <div className="prf-avatar-wrapper">
             {uploading ? <CircularProgress /> : <img src={previews[0] || user?.avatar || "/user.jpg"} alt="User avatar" />}
 
-            <label htmlFor="avatar-upload" className="change-avatar">
+            <label htmlFor="avatar-upload" className="prf-change-avatar">
               Changer
             </label>
             <input id="avatar-upload" type="file" accept="image/*" hidden onChange={(e) => onChangeFile(e, "/api/users/user-avatar")} />
@@ -184,10 +177,10 @@ const Profile = () => {
         </div>
 
         {/* FORMULAIRE */}
-        <div className="profile-right">
-          
+        <div className="prf-right">
+
           {/* HEADER */}
-          <div className="profile-header">
+          <div className="prf-header">
             <h2>Mon Profil</h2>
             <button
               type="button"
@@ -200,9 +193,9 @@ const Profile = () => {
           </div>
 
           {/* ====================== FORM PROFIL ====================== */}
-          <form className="profile-form" onSubmit={handleProfileSubmit}>
-            <div className="form-group">
-              <FaUser className="input-icon" />
+          <form className="prf-form" onSubmit={handleProfileSubmit}>
+            <div className="prf-form-group">
+              <FaUser className="prf-input-icon" />
               <input
                 type="text"
                 name="name"
@@ -214,13 +207,13 @@ const Profile = () => {
               <label>Nom complet</label>
             </div>
 
-            <div className="form-group">
-              <FaEnvelope className="input-icon" />
+            <div className="prf-form-group">
+              <FaEnvelope className="prf-input-icon" />
               <input type="email" value={user?.email || ""} disabled />
               <label>Email</label>
             </div>
 
-            <div className="form-group">
+            <div className="prf-form-group">
               <PhoneInput
                 international
                 defaultCountry="BJ"
@@ -234,19 +227,19 @@ const Profile = () => {
             </div>
 
             {/* ADRESSES */}
-            <div className="address-block">
+            <div className="prf-address-block">
               <button
                 type="button"
-                className="btn-flat"
+                className="prf-btn-flat"
                 onClick={() => setShowAddressDialog(true)}
               >
                 Gérer mes adresses
               </button>
 
-              <div className="address-selection">
+              <div className="prf-address-selection">
                 {addresses.length > 0 ? (
                   addresses.map((addr) => (
-                    <label key={addr._id} className="address-radio">
+                    <label key={addr._id} className="prf-address-radio">
                       <input
                         type="radio"
                         name="selectedAddress"
@@ -254,7 +247,7 @@ const Profile = () => {
                         checked={selectedAddress === addr._id}
                         onChange={() => setSelectedAddress(addr._id)}
                       />
-                      <span className="address-text">{addr.address_line1}</span>
+                      <span className="prf-address-text">{addr.address_line1}</span>
                     </label>
                   ))
                 ) : (
@@ -264,25 +257,25 @@ const Profile = () => {
             </div>
 
             {/* ACTIONS */}
-            <div className="actions">
+            <div className="prf-actions">
               {!profileEdit ? (
                 <button
                   type="button"
-                  className="btn-edit"
+                  className="prf-btn-edit"
                   onClick={() => setProfileEdit(true)}
                 >
                   Modifier
                 </button>
               ) : (
-                <div className="edit-buttons">
+                <div className="prf-edit-buttons">
                   <button
                     type="button"
-                    className="btn-cancel"
+                    className="prf-btn-cancel"
                     onClick={cancelProfile}
                   >
                     Annuler
                   </button>
-                  <button type="submit" className="btn-save">
+                  <button type="submit" className="prf-btn-save">
                     {submittingProfile ? (
                       <CircularProgress size={20} />
                     ) : (
@@ -297,12 +290,12 @@ const Profile = () => {
           {/* ====================== MOT DE PASSE ====================== */}
           {showPasswordBlock && (
             <form
-              className="profile-form password-form"
+              className="prf-form prf-password-form"
               onSubmit={handlePasswordSubmit}
             >
               {/* Ancien */}
-              <div className="form-group">
-                <FaLock className="input-icon" />
+              <div className="prf-form-group">
+                <FaLock className="prf-input-icon" />
                 <input
                   type={showOldPassword ? "text" : "password"}
                   name="oldPassword"
@@ -313,7 +306,7 @@ const Profile = () => {
                 />
                 <label>Ancien mot de passe</label>
                 <span
-                  className="toggle-password"
+                  className="prf-toggle-password"
                   onClick={() => setShowOldPassword(!showOldPassword)}
                 >
                   {showOldPassword ? <FaEyeSlash /> : <FaEye />}
@@ -321,8 +314,8 @@ const Profile = () => {
               </div>
 
               {/* Nouveau */}
-              <div className="form-group">
-                <FaLock className="input-icon" />
+              <div className="prf-form-group">
+                <FaLock className="prf-input-icon" />
                 <input
                   type={showNewPassword ? "text" : "password"}
                   name="newPassword"
@@ -333,7 +326,7 @@ const Profile = () => {
                 />
                 <label>Nouveau mot de passe</label>
                 <span
-                  className="toggle-password"
+                  className="prf-toggle-password"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
                   {showNewPassword ? <FaEyeSlash /> : <FaEye />}
@@ -341,8 +334,8 @@ const Profile = () => {
               </div>
 
               {/* Confirmation */}
-              <div className="form-group">
-                <FaLock className="input-icon" />
+              <div className="prf-form-group">
+                <FaLock className="prf-input-icon" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
@@ -353,7 +346,7 @@ const Profile = () => {
                 />
                 <label>Confirmer mot de passe</label>
                 <span
-                  className="toggle-password"
+                  className="prf-toggle-password"
                   onClick={() =>
                     setShowConfirmPassword(!showConfirmPassword)
                   }
@@ -363,25 +356,25 @@ const Profile = () => {
               </div>
 
               {/* ACTIONS */}
-              <div className="actions">
+              <div className="prf-actions">
                 {!passwordEdit ? (
                   <button
                     type="button"
-                    className="btn-edit"
+                    className="prf-btn-edit"
                     onClick={() => setPasswordEdit(true)}
                   >
                     Modifier
                   </button>
                 ) : (
-                  <div className="edit-buttons">
+                  <div className="prf-edit-buttons">
                     <button
                       type="button"
-                      className="btn-cancel"
+                      className="prf-btn-cancel"
                       onClick={cancelPassword}
                     >
                       Annuler
                     </button>
-                    <button type="submit" className="btn-save">
+                    <button type="submit" className="prf-btn-save">
                       {submittingPassword ? (
                         <CircularProgress size={20} />
                       ) : (

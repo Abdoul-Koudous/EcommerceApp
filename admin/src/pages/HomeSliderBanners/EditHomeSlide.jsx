@@ -16,7 +16,6 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
     images: [],
   });
 
-  // Initialisation du composant avec les données existantes du slide
   useEffect(() => {
     if (slide) {
       setPreviews(slide.images || []);
@@ -24,7 +23,6 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
     }
   }, [slide]);
 
-  // Supprimer une image
   const removeImage = async (imgUrl, index) => {
     try {
       const res = await deleteImages(`/api/homeSlide/deleteImage?img=${encodeURIComponent(imgUrl)}`);
@@ -40,7 +38,6 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
     }
   };
 
-  // Ajouter de nouvelles images
   const onChangeFile = async (e) => {
     try {
       const files = e.target.files;
@@ -74,7 +71,6 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
     }
   };
 
-  // Fermer le modal
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(() => onClose(), 400);
@@ -85,7 +81,6 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
     return () => (document.body.style.overflow = "auto");
   }, []);
 
-  // Soumettre le formulaire (création ou édition)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -99,10 +94,8 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
     try {
       let res;
       if (slide?._id) {
-        // Edition d’un slide existant
         res = await editData(`/api/homeSlide/${slide._id}`, formFields);
       } else {
-        // Création d’un nouveau slide
         openToast("error", "Slide non existant pour édition");
         setLoading(false);
         return;
@@ -124,12 +117,12 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
+    <div className="hsf-overlay">
+      <div className={`hsf-content ${isClosing ? "closing" : "opening"}`}>
         {/* HEADER */}
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}>
+        <div className="hsf-header">
+          <div className="hsf-header-left">
+            <button className="hsf-close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
             <h2>Modifier un slide</h2>
@@ -137,16 +130,16 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
         </div>
 
         {/* BODY */}
-        <div className="dialog-body">
-          <form className="slide-form" onSubmit={handleSubmit}>
+        <div className="hsf-body">
+          <form className="hsf-form" onSubmit={handleSubmit}>
             {/* IMAGES */}
-            <div className="images-wrapper">
+            <div className="hsf-images-wrapper">
               {previews.map((img, index) => (
-                <div className="image-circle" key={index}>
+                <div className="hsf-image-circle" key={index}>
                   <img src={img} alt="slide" />
                   <button
                     type="button"
-                    className="remove-btn"
+                    className="hsf-remove-btn"
                     onClick={() => removeImage(img, index)}
                   >
                     <FaTimes />
@@ -154,7 +147,7 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
                 </div>
               ))}
 
-              <label className={`image-circle add ${uploading ? "disabled" : ""}`}>
+              <label className={`hsf-image-circle hsf-add ${uploading ? "hsf-disabled" : ""}`}>
                 {uploading ? <CircularProgress size={28} /> : <FaPlus />}
                 <input
                   type="file"
@@ -167,7 +160,7 @@ const EditHomeSlide = ({ slide, onClose, onUpdateSlide }) => {
               </label>
             </div>
 
-            <button type="submit" className="publish-btn" disabled={loading}>
+            <button type="submit" className="hsf-publish-btn" disabled={loading}>
               {loading ? <CircularProgress /> : " Publier"}
             </button>
           </form>

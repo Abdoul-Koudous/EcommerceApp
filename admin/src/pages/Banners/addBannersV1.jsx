@@ -33,39 +33,36 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
     return selectedSub?.children || [];
   }, [subCategories, formFields.subCatId]);
 
-  // 🔹 INPUT CHANGE
   const onChangeInput = e => {
-  const { name, value } = e.target;
+    const { name, value } = e.target;
 
-  setFormFields(prev => {
-    if (name === "catId") {
-      return {
-        ...prev,
-        catId: value,
-        subCatId: "",
-        thirdsubCatId: "",
-      };
-    }
+    setFormFields(prev => {
+      if (name === "catId") {
+        return {
+          ...prev,
+          catId: value,
+          subCatId: "",
+          thirdsubCatId: "",
+        };
+      }
 
-    if (name === "subCatId") {
-      return {
-        ...prev,
-        subCatId: value,
-        thirdsubCatId: "",
-      };
-    }
+      if (name === "subCatId") {
+        return {
+          ...prev,
+          subCatId: value,
+          thirdsubCatId: "",
+        };
+      }
 
-    return { ...prev, [name]: value };
-  });
-};
+      return { ...prev, [name]: value };
+    });
+  };
 
-  // 🔹 SYNC IMAGES
   const setPreviewsFun = arr => {
     setPreviews(arr);
     setFormFields(prev => ({ ...prev, images: arr }));
   };
 
-  // 🔹 REMOVE IMAGE
   const removeImage = async (imgUrl, index) => {
     try {
       const res = await deleteImages(`/api/bannerV1/deleteImage?img=${encodeURIComponent(imgUrl)}`);
@@ -77,7 +74,6 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
     }
   };
 
-  // 🔹 UPLOAD IMAGE
   const onChangeFile = async e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -101,13 +97,11 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
     e.target.value = "";
   };
 
-  // 🔹 CLOSE
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(onClose, 400);
   };
 
-  // 🔹 FETCH CATEGORIES
   useEffect(() => {
     if (!categories || categories.length === 0) {
       fetchDataFromApi("/api/category").then(res => {
@@ -118,7 +112,6 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
     return () => (document.body.style.overflow = "auto");
   }, [categories, setCategories]);
 
-  // 🔹 SUBMIT
   const handleSubmit = async e => {
     e.preventDefault();
     if (!formFields.bannerTitle.trim()) return openToast("error", "Titre requis");
@@ -126,7 +119,6 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
     if (!formFields.catId) return openToast("error", "Catégorie requise");
     if (!formFields.price) return openToast("error", "Prix requis");
     if (!formFields.alignInfo) return openToast("error", "Alignement requis");
-    
 
     try {
       setLoading(true);
@@ -134,7 +126,7 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
       const payload = {
         ...formFields,
         categoryName: selectedCategory?.name || "",
-        };
+      };
       const res = await postData("/api/bannerV1/create", payload);
       setLoading(false);
 
@@ -150,18 +142,18 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}><FaTimes /></button>
+    <div className="bnf-overlay">
+      <div className={`bnf-content ${isClosing ? "closing" : "opening"}`}>
+        <div className="bnf-header">
+          <div className="bnf-header-left">
+            <button className="bnf-close-btn" onClick={handleClose}><FaTimes /></button>
             <h2>Ajouter une bannière</h2>
           </div>
         </div>
 
-        <div className="dialog-body">
-          <form className="category-form" onSubmit={handleSubmit}>
-            <div className="form-row">
+        <div className="bnf-body">
+          <form className="bnf-form" onSubmit={handleSubmit}>
+            <div className="bnf-form-row">
               <input
                 type="text"
                 name="bannerTitle"
@@ -178,7 +170,7 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
               />
             </div>
 
-            <div className="form-row">
+            <div className="bnf-form-row">
               <select value={formFields.catId} onChange={onChangeInput} name="catId">
                 <option value="">Choisir catégorie</option>
                 {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
@@ -189,37 +181,37 @@ const AddBannersV1 = ({ onClose, onAddBanner }) => {
               </select>
             </div>
 
-            <div className="form-row">
-                <select value={formFields.thirdsubCatId} onChange={onChangeInput} name="thirdsubCatId" disabled={!thirdSubCategories.length}>
+            <div className="bnf-form-row">
+              <select value={formFields.thirdsubCatId} onChange={onChangeInput} name="thirdsubCatId" disabled={!thirdSubCategories.length}>
                 <option value="">3ème sous-catégorie</option>
                 {thirdSubCategories.map(third => <option key={third._id} value={third._id}>{third.name}</option>)}
-                </select>
-                <select
+              </select>
+              <select
                 name="alignInfo"
                 value={formFields.alignInfo}
                 onChange={onChangeInput}
-                >
+              >
                 <option value="left">Texte à gauche</option>
                 <option value="right">Texte à droite</option>
-                </select>
+              </select>
             </div>
 
             {/* IMAGES */}
-            <div className="images-wrapper">
+            <div className="bnf-images-wrapper">
               {previews.map((img, index) => (
-                <div className="image-circle" key={index}>
+                <div className="bnf-image-circle" key={index}>
                   <img src={img} alt="banner" />
-                  <button type="button" className="remove-btn" onClick={() => removeImage(img, index)}><FaTimes /></button>
+                  <button type="button" className="bnf-remove-btn" onClick={() => removeImage(img, index)}><FaTimes /></button>
                 </div>
               ))}
 
-              <label className={`image-circle add ${uploading ? "disabled" : ""}`}>
+              <label className={`bnf-image-circle bnf-add ${uploading ? "bnf-disabled" : ""}`}>
                 {uploading ? <CircularProgress size={28} /> : <FaPlus />}
                 <input type="file" accept="image/*" multiple hidden disabled={uploading} onChange={onChangeFile} />
               </label>
             </div>
 
-            <button className="publish-btn" disabled={loading}>
+            <button className="bnf-publish-btn" disabled={loading}>
               {loading ? <CircularProgress /> : "Publier"}
             </button>
           </form>

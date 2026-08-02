@@ -107,13 +107,13 @@ const HomeSlidePage = () => {
   };
 
   return (
-    <div className="home-slide-page">
-      <div className="header">
+    <div className="hsl-page">
+      <div className="hsl-header">
         <h2>Liste des Slides</h2>
-        <div className="actions">
+        <div className="hsl-actions">
           {selected.length > 0 && (
             <button
-              className="btn delete-multiple"
+              className="hsl-btn hsl-btn-delete-multiple"
               onClick={() => {
                 setToDeleteId(null);
                 setConfirmOpen(true);
@@ -122,14 +122,14 @@ const HomeSlidePage = () => {
               <FaTrash /> Supprimer ({selected.length})
             </button>
           )}
-          <button className="btn add" onClick={() => setOpenAdd(true)}>Ajouter</button>
+          <button className="hsl-btn hsl-btn-add" onClick={() => setOpenAdd(true)}>Ajouter</button>
         </div>
       </div>
 
       {loadingSlides ? (
         <CircularProgress />
       ) : (
-        <div className="table-container">
+        <div className="hsl-table-container">
           <table>
             <thead>
               <tr>
@@ -155,11 +155,14 @@ const HomeSlidePage = () => {
                     />
                   </td>
                   <td>
-                    <img src={slide.images?.[0]} alt="Slide" width={400} height={150} />
+                    {/* ✅ wrapper .hsl-thumb branché — plus d'image affichée à sa taille native */}
+                    <div className="hsl-thumb">
+                      <img src={slide.images?.[0]} alt="Slide" />
+                    </div>
                   </td>
                   <td>
-                    <FaEdit className="icon edit" onClick={() => handleEdit(slide)} />
-                    <FaTrash className="icon delete" onClick={() => handleDeleteClick(slide._id)} />
+                    <FaEdit className="hsl-icon hsl-icon-edit" onClick={() => handleEdit(slide)} />
+                    <FaTrash className="hsl-icon hsl-icon-delete" onClick={() => handleDeleteClick(slide._id)} />
                   </td>
                 </tr>
               ))}
@@ -172,8 +175,8 @@ const HomeSlidePage = () => {
           </table>
 
           {/* Pagination */}
-          <div className="table-footer">
-            <div className="items-selector">
+          <div className="hsl-table-footer">
+            <div className="hsl-items-selector">
               <label>Afficher</label>
               <select
                 value={itemsPerPage}

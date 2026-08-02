@@ -20,7 +20,7 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
     subCatId: "",
     thirdsubCatId: "",
     price: "",
-     alignInfo: "left",
+    alignInfo: "left",
   });
 
   const subCategories = useMemo(() => {
@@ -33,7 +33,6 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
     return selectedSub?.children || [];
   }, [subCategories, formFields.subCatId]);
 
-  // 🔹 INIT
   useEffect(() => {
     if (banner) {
       setFormFields({
@@ -43,14 +42,12 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
         catId: banner.catId || "",
         subCatId: banner.subCatId || "",
         thirdsubCatId: banner.thirdsubCatId || "",
-       
-         alignInfo: banner.alignInfo || "left",
+        alignInfo: banner.alignInfo || "left",
       });
       setPreviews(banner.images || []);
     }
   }, [banner]);
 
-  // 🔹 FETCH CATEGORIES
   useEffect(() => {
     fetchDataFromApi("/api/category").then(res => {
       if (res?.data) setCategories(res.data);
@@ -59,19 +56,16 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
     return () => (document.body.style.overflow = "auto");
   }, []);
 
-  // 🔹 INPUT CHANGE
   const onChangeInput = e => {
     const { name, value } = e.target;
     setFormFields(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 SYNC IMAGES
   const setPreviewsFun = arr => {
     setPreviews(arr);
     setFormFields(prev => ({ ...prev, images: arr }));
   };
 
-  // 🔹 REMOVE IMAGE
   const removeImage = async (imgUrl, index) => {
     try {
       const res = await deleteImages(`/api/bannerV1/deleteImage?img=${encodeURIComponent(imgUrl)}`);
@@ -83,7 +77,6 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
     }
   };
 
-  // 🔹 UPLOAD IMAGE
   const onChangeFile = async e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -107,13 +100,11 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
     e.target.value = "";
   };
 
-  // 🔹 CLOSE
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(onClose, 400);
   };
 
-  // 🔹 SUBMIT
   const handleSubmit = async e => {
     e.preventDefault();
     if (!formFields.bannerTitle.trim()) return openToast("error", "Titre requis");
@@ -136,18 +127,18 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}><FaTimes /></button>
+    <div className="bnf-overlay">
+      <div className={`bnf-content ${isClosing ? "closing" : "opening"}`}>
+        <div className="bnf-header">
+          <div className="bnf-header-left">
+            <button className="bnf-close-btn" onClick={handleClose}><FaTimes /></button>
             <h2>Modifier la bannière</h2>
           </div>
         </div>
 
-        <div className="dialog-body">
-          <form className="category-form" onSubmit={handleSubmit}>
-            <div className="form-row">
+        <div className="bnf-body">
+          <form className="bnf-form" onSubmit={handleSubmit}>
+            <div className="bnf-form-row">
               <input
                 type="text"
                 name="bannerTitle"
@@ -164,22 +155,18 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
               />
             </div>
 
-            <div className="form-row">
+            <div className="bnf-form-row">
               <select value={formFields.catId} onChange={onChangeInput} name="catId">
-                
                 {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
               </select>
               <select value={formFields.subCatId} onChange={onChangeInput} name="subCatId" disabled={!subCategories.length}>
-                
                 {subCategories.map(sub => <option key={sub._id} value={sub._id}>{sub.name}</option>)}
               </select>
             </div>
 
-            
-            <div className="form-row">
+            <div className="bnf-form-row">
               <select value={formFields.thirdsubCatId} onChange={onChangeInput} name="thirdsubCatId" disabled={!thirdSubCategories.length}>
-             
-              {thirdSubCategories.map(third => <option key={third._id} value={third._id}>{third.name}</option>)}
+                {thirdSubCategories.map(third => <option key={third._id} value={third._id}>{third.name}</option>)}
               </select>
               <select
                 name="alignInfo"
@@ -192,21 +179,21 @@ const EditBannersV1 = ({ banner, onClose, onUpdateBanner }) => {
             </div>
 
             {/* IMAGES */}
-            <div className="images-wrapper">
+            <div className="bnf-images-wrapper">
               {previews.map((img, index) => (
-                <div className="image-circle" key={index}>
+                <div className="bnf-image-circle" key={index}>
                   <img src={img} alt="banner" />
-                  <button type="button" className="remove-btn" onClick={() => removeImage(img, index)}><FaTimes /></button>
+                  <button type="button" className="bnf-remove-btn" onClick={() => removeImage(img, index)}><FaTimes /></button>
                 </div>
               ))}
 
-              <label className={`image-circle add ${uploading ? "disabled" : ""}`}>
+              <label className={`bnf-image-circle bnf-add ${uploading ? "bnf-disabled" : ""}`}>
                 {uploading ? <CircularProgress size={28} /> : <FaPlus />}
                 <input type="file" accept="image/*" multiple hidden disabled={uploading} onChange={onChangeFile} />
               </label>
             </div>
 
-            <button className="publish-btn" disabled={loading}>
+            <button className="bnf-publish-btn" disabled={loading}>
               {loading ? <CircularProgress /> : "Mettre à jour"}
             </button>
           </form>

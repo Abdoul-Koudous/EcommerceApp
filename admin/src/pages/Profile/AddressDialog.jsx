@@ -67,23 +67,23 @@ const AddressDialog = ({ onClose }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
+    <div className="adr-overlay">
+      <div className={`adr-content ${isClosing ? "closing" : "opening"}`}>
 
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}>
+        <div className="adr-header">
+          <div className="adr-header-left">
+            <button className="adr-close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
             <h2>Mes Adresses</h2>
           </div>
         </div>
 
-        <div className="dialog-body">
-          <form className="address-form" onSubmit={handleSubmit}>
+        <div className="adr-body">
+          <form className="adr-form" onSubmit={handleSubmit}>
 
             {/* Ligne 1 */}
-            <div className="row">
+            <div className="adr-row">
               <input
                 type="text"
                 name="address_line1"
@@ -101,7 +101,7 @@ const AddressDialog = ({ onClose }) => {
             </div>
 
             {/* Ligne 2 */}
-            <div className="row">
+            <div className="adr-row">
               <input
                 type="text"
                 name="state"
@@ -126,7 +126,7 @@ const AddressDialog = ({ onClose }) => {
             </div>
 
             {/* Ligne 3 */}
-            <div className="row plus">
+            <div className="adr-row adr-row-plus">
               <PhoneInput
                 international
                 defaultCountry="BJ"
@@ -149,7 +149,7 @@ const AddressDialog = ({ onClose }) => {
               </select>
             </div>
 
-            <button className="publish-btn" disabled={isLoading}>
+            <button className="adr-publish-btn" disabled={isLoading}>
               {isLoading ? "En cours..." : "Enregistrer"}
             </button>
 

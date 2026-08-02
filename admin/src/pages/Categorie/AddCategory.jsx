@@ -25,6 +25,8 @@ const AddCategory = ({ onClose, onAddCategory }) => {
     }));
   };
 
+  // ✅ c'est bien setPreviewsFun qui doit être appelée partout — elle seule
+  // garde previews ET formFields.images synchronisés
   const setPreviewsFun = (previewsArr) => {
     setPreviews(previewsArr);
     setFormFields((prev) => ({
@@ -43,7 +45,8 @@ const AddCategory = ({ onClose, onAddCategory }) => {
         return openToast("error", res.message);
       }
 
-      setPreviews((prev) => prev.filter((_, i) => i !== index));
+      // ✅ corrigé : setPreviews(...) direct → setPreviewsFun(...)
+      setPreviewsFun(previews.filter((_, i) => i !== index));
 
       openToast("success", res?.message || "Image supprimée");
     } catch (err) {
@@ -74,8 +77,8 @@ const AddCategory = ({ onClose, onAddCategory }) => {
         return openToast("error", res.message);
       }
 
-      // 👉 On stocke uniquement les URLs
-      setPreviews((prev) => [...prev, ...res.images]);
+      // ✅ corrigé : setPreviews(...) direct → setPreviewsFun(...)
+      setPreviewsFun([...previews, ...res.images]);
 
       openToast("success", "Images uploadées");
       e.target.value = "";
@@ -99,7 +102,6 @@ const AddCategory = ({ onClose, onAddCategory }) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validation
     if (formFields.name.trim() === "") {
       openToast("error", "Le nom de la catégorie est requis");
       setLoading(false);
@@ -119,7 +121,6 @@ const AddCategory = ({ onClose, onAddCategory }) => {
       if (res.success) {
         openToast("success", res.message || "Catégorie créée avec succès");
 
-        // 🔹 Mettre à jour la liste du parent
         if (typeof onAddCategory === "function" && res.category) {
           onAddCategory(res.category);
         }
@@ -137,12 +138,12 @@ const AddCategory = ({ onClose, onAddCategory }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
+    <div className="ctf-overlay">
+      <div className={`ctf-content ${isClosing ? "closing" : "opening"}`}>
         {/* HEADER */}
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}>
+        <div className="ctf-header">
+          <div className="ctf-header-left">
+            <button className="ctf-close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
             <h2>Ajouter une catégorie</h2>
@@ -150,8 +151,8 @@ const AddCategory = ({ onClose, onAddCategory }) => {
         </div>
 
         {/* BODY */}
-        <div className="dialog-body">
-          <form className="category-form" onSubmit={handleSubmit}>
+        <div className="ctf-body">
+          <form className="ctf-form" onSubmit={handleSubmit}>
             {/* NOM */}
             <input
               type="text"
@@ -162,13 +163,13 @@ const AddCategory = ({ onClose, onAddCategory }) => {
             />
 
             {/* IMAGES */}
-            <div className="images-wrapper">
+            <div className="ctf-images-wrapper">
               {previews.map((img, index) => (
-                <div className="image-circle" key={index}>
+                <div className="ctf-image-circle" key={index}>
                   <img src={img} alt="cat" />
                   <button
                     type="button"
-                    className="remove-btn"
+                    className="ctf-remove-btn"
                     onClick={() => removeImage(img, index)}
                   >
                     <FaTimes />
@@ -176,7 +177,7 @@ const AddCategory = ({ onClose, onAddCategory }) => {
                 </div>
               ))}
 
-              <label className={`image-circle add ${uploading ? "disabled" : ""}`}>
+              <label className={`ctf-image-circle ctf-add ${uploading ? "ctf-disabled" : ""}`}>
                 {uploading ? <CircularProgress size={28} /> : <FaPlus />}
                 <input
                   type="file"
@@ -189,7 +190,7 @@ const AddCategory = ({ onClose, onAddCategory }) => {
               </label>
             </div>
 
-            <button type="submit" className="publish-btn" disabled={loading}>
+            <button type="submit" className="ctf-publish-btn" disabled={loading}>
               {loading ? <CircularProgress /> : " Publier"}
             </button>
           </form>

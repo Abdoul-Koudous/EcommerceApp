@@ -2,48 +2,56 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f5f5;
+  background: var(--color-bg);
 
   .auth-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap; // ✅ logo + boutons passent à la ligne si l'espace manque
+    gap: 0.8rem;
     padding: 1rem 3rem;
-    background: #fff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+
+    @media (max-width: 600px) {
+      padding: 1rem 1.2rem; // ✅ padding resserré sur mobile
+    }
 
     .logo {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #e63946;
+      color: var(--color-primary);
     }
 
     .auth-buttons {
       display: flex;
       gap: 1rem;
+      flex-wrap: wrap;
 
       a {
         display: flex;
         align-items: center;
         gap: 0.4rem;
         padding: 0.5rem 1rem;
-        border: 1px solid #e63946;
+        border: 1px solid var(--color-primary);
         background: none;
-        color: #e63946;
+        color: var(--color-primary);
         border-radius: 6px;
         cursor: pointer;
         font-weight: 500;
         text-decoration: none;
-        transition: all 0.2s ease;
+        white-space: nowrap;
+        transition: var(--transition-base);
 
         &:hover {
-          background: #e63946;
-          color: #fff;
+          background: var(--color-primary);
+          color: var(--color-text-on-primary);
         }
 
         &.active {
-          background: #e63946;
-          color: #fff;
+          background: var(--color-primary);
+          color: var(--color-text-on-primary);
         }
 
         svg {
@@ -58,14 +66,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 1rem; // ✅ évite que la carte touche les bords sur mobile
     position: relative;
 
     .form-container {
       position: absolute;
       opacity: 0;
       transform: translateY(20px);
-      transition: all 0.4s ease;
-   
+      transition: var(--transition-base);
 
       &.show {
         opacity: 1;

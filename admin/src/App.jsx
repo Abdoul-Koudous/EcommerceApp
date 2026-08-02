@@ -17,120 +17,145 @@ import HomeSlidePage from "./pages/HomeSliderBanners";
 import BannerV1List from "./pages/Banners";
 import BlogList from "./pages/blog";
 import Users from "./pages/Users/Users";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
 function App() {
   return (
     <BrowserRouter basename="/admin">
-      {" "}
-      {/* ✅ seul changement */}
       <Routes>
-        {/* === Pages avec layout admin === */}
+        {/* === Pages avec layout admin (protégées) === */}
         <Route
           path="/"
           element={
-            <AdminLayout>
-              <Dashboard />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <Dashboard />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/slides/lists"
           element={
-            <AdminLayout>
-              <HomeSlidePage />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <HomeSlidePage />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/banners/lists"
           element={
-            <AdminLayout>
-              <BannerV1List />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <BannerV1List />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/products/lists"
           element={
-            <AdminLayout>
-              <Products />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <Products />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/blogs/lists"
           element={
-            <AdminLayout>
-              <BlogList />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <BlogList />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/products/RAM/add"
           element={
-            <AdminLayout>
-              <AddRAMs />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <AddRAMs />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/products/WEIGHT/add"
           element={
-            <AdminLayout>
-              <AddWEIGHT />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <AddWEIGHT />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/products/SIZE/add"
           element={
-            <AdminLayout>
-              <AddSIZE />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <AddSIZE />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/product/:id"
           element={
-            <AdminLayout>
-              <ProductDetails />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <ProductDetails />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/categories/lists"
           element={
-            <AdminLayout>
-              <CategoriesPage />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <CategoriesPage />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/subCategories/lists"
           element={
-            <AdminLayout>
-              <SubCategoriesPage />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <SubCategoriesPage />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/profile"
           element={
-            <AdminLayout>
-              <Profile />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <Profile />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
-
         <Route
           path="/users"
           element={
-            <AdminLayout>
-              <Users />
-            </AdminLayout>
+            <ProtectedRoute>
+              <AdminLayout>
+                <Users />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
-        {/* === Pages publiques === */}
+
+        {/* === Pages publiques (non protégées) === */}
         <Route path="/login" element={<AuthPage defaultForm="login" />} />
         <Route path="/register" element={<AuthPage defaultForm="register" />} />
         <Route path="/otp" element={<AuthPage defaultForm="otp" />} />

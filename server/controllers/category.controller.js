@@ -95,28 +95,35 @@ export async function getCategories(request, response) {
         const categories = await CategoryModel.find();
         const categoryMap = {};
 
-        categories.forEach(cat =>{
-            categoryMap[cat._id] = {...cat._doc, children: []};
+        categories.forEach(cat => {
+            categoryMap[cat._id] = { ...cat._doc, children: [] };
         });
 
         const rootCategories = [];
 
         categories.forEach(cat => {
-            if(cat.parentId){
+            if (cat.parentId) {
                 categoryMap[cat.parentId].children.push(categoryMap[cat._id]);
-
-            }else{
+            } else {
                 rootCategories.push(categoryMap[cat._id]);
             }
-            
         });
+
+        // ✅ pagination appliquée sur les catégories racines uniquement,
+        // une fois l'arbre parent/enfants reconstruit
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 10;
+        const total = rootCategories.length;
+
+        const startIndex = (page - 1) * perPage;
+        const paginatedCategories = rootCategories.slice(startIndex, startIndex + perPage);
 
         return response.status(200).json({
             error: false,
             success: true,
-            data:rootCategories
+            data: paginatedCategories,
+            total
         });
-
 
     } catch (error) {
         return response.status(500).json({
@@ -124,9 +131,7 @@ export async function getCategories(request, response) {
             error: true,
             success: false
         });
-        
     }
-    
 }
 
 

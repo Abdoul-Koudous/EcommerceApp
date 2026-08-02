@@ -40,20 +40,19 @@ const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
   }, []);
 
   return (
-    <div className="multi-select" ref={containerRef}>
+    <div className="apd-multi-select" ref={containerRef}>
       <label>{label}</label>
-      <div className="selected-values" onClick={() => setOpen(!open)}>
+      <div className="apd-selected-values" onClick={() => setOpen(!open)}>
         <div
           style={{
             display: "flex",
             flexWrap: "wrap",
             gap: "4px",
-            color: "#222",
           }}
         >
           {selectedValues && selectedValues.length > 0 ? (
             selectedValues.map((val) => (
-              <span key={val} className="tag">
+              <span key={val} className="apd-tag">
                 {val}
               </span>
             ))
@@ -67,11 +66,11 @@ const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
       </div>
 
       {open && (
-        <div className="options">
+        <div className="apd-options">
           {options.map((opt) => (
             <div
               key={opt}
-              className={`option ${selectedValues.includes(opt) ? "selected" : ""}`}
+              className={`apd-option ${selectedValues.includes(opt) ? "selected" : ""}`}
               onClick={() => toggleSelection(opt)}
             >
               {opt}
@@ -90,6 +89,8 @@ const AddProduct = ({ onClose }) => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingMainImage, setLoadingMainImage] = useState(false);
   const [loadingExtraImages, setLoadingExtraImages] = useState(false);
+
+  const descriptionRef = useRef(null); // ✅ ref pour l'auto-resize du textarea description
 
   const [bannerFiles, setBannerFiles] = useState([]);
   const [bannerPreviews, setBannerPreviews] = useState([]);
@@ -147,7 +148,6 @@ const AddProduct = ({ onClose }) => {
   useEffect(() => {
     // RAM
     fetchDataFromApi("/api/product/productRAM").then((res) => {
-      // console.log("RAM response:", res);
       if (res?.error === false) {
         setRamOptions(res.productRAMs?.map((item) => item.name) || []);
       }
@@ -155,7 +155,6 @@ const AddProduct = ({ onClose }) => {
 
     // SIZE
     fetchDataFromApi("/api/product/productSIZE").then((res) => {
-      // console.log("SIZE response:", res);
       if (res?.error === false) {
         setSizeOptions(res.productSIZEs?.map((item) => item.name) || []);
       }
@@ -163,7 +162,6 @@ const AddProduct = ({ onClose }) => {
 
     // WEIGHT
     fetchDataFromApi("/api/product/productWEIGHT").then((res) => {
-      // console.log("WEIGHT response:", res);
       if (res?.error === false) {
         setWeightOptions(res.productWEIGHTs?.map((item) => item.name) || []);
       }
@@ -313,12 +311,6 @@ const AddProduct = ({ onClose }) => {
       return openToast("error", "L'ancien prix ne peut pas être négatif");
     if (formFields.rating < 0 || formFields.rating > 5)
       return openToast("error", "La note doit être comprise entre 0 et 5");
-    // if (formFields.productRam.length === 0)
-    //   return openToast("error", "Veuillez sélectionner au moins une option de RAM");
-    // if (formFields.size.length === 0)
-    //   return openToast("error", "Veuillez sélectionner au moins une taille");
-    // if (formFields.productWeight.length === 0)
-    //   return openToast("error", "Veuillez sélectionner au moins un poids");
     if (formFields.discount > 100)
       return openToast("error", "La remise ne peut pas dépasser 100%");
     if (Number(formFields.oldPrice) < Number(formFields.price))
@@ -417,21 +409,32 @@ const AddProduct = ({ onClose }) => {
     }
   }, [formFields.price, formFields.oldPrice]);
 
+  // ✅ auto-resize du textarea description à chaque changement de contenu
+  const autoResizeTextarea = (el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    autoResizeTextarea(descriptionRef.current);
+  }, [formFields.description]);
+
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}>
+    <div className="apd-overlay">
+      <div className={`apd-content ${isClosing ? "closing" : "opening"}`}>
+        <div className="apd-header">
+          <div className="apd-header-left">
+            <button className="apd-close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
             <h2>Ajouter un produit</h2>
           </div>
         </div>
 
-        <div className="dialog-body">
-          <form onSubmit={handleSubmit} className="product-form">
-            <div className="form-group">
+        <div className="apd-body">
+          <form onSubmit={handleSubmit} className="apd-form">
+            <div className="apd-form-group">
               <label>Nom du produit</label>
               <input
                 type="text"
@@ -440,9 +443,10 @@ const AddProduct = ({ onClose }) => {
                 onChange={onChangeInput}
               />
             </div>
-            <div className="form-group">
+            <div className="apd-form-group">
               <label>Description</label>
               <textarea
+                ref={descriptionRef}
                 name="description"
                 value={formFields.description}
                 onChange={onChangeInput}
@@ -450,8 +454,8 @@ const AddProduct = ({ onClose }) => {
             </div>
 
             {/* Catégories */}
-            <div className="row">
-              <div className="form-group">
+            <div className="apd-row">
+              <div className="apd-form-group">
                 <label>Catégorie</label>
                 <select
                   value={selectedCat}
@@ -481,7 +485,7 @@ const AddProduct = ({ onClose }) => {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
+              <div className="apd-form-group">
                 <label>Sous-catégorie</label>
                 <select
                   name="subCatId"
@@ -509,7 +513,7 @@ const AddProduct = ({ onClose }) => {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
+              <div className="apd-form-group">
                 <label>Sous-sous-catégorie</label>
                 <select
                   name="thirdSubCatId"
@@ -539,8 +543,8 @@ const AddProduct = ({ onClose }) => {
             </div>
 
             {/* Prix */}
-            <div className="row">
-              <div className="form-group">
+            <div className="apd-row">
+              <div className="apd-form-group">
                 <label>Prix</label>
                 <input
                   type="number"
@@ -550,7 +554,7 @@ const AddProduct = ({ onClose }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="apd-form-group">
                 <label>Ancien prix</label>
                 <input
                   type="number"
@@ -560,7 +564,7 @@ const AddProduct = ({ onClose }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="apd-form-group">
                 <label>Note</label>
                 <HoverRating
                   rating={formFields.rating}
@@ -572,8 +576,8 @@ const AddProduct = ({ onClose }) => {
             </div>
 
             {/* Infos */}
-            <div className="row">
-              <div className="form-group">
+            <div className="apd-row">
+              <div className="apd-form-group">
                 <label>Produit en vedette ?</label>
                 <select
                   name="isFeatured"
@@ -591,7 +595,7 @@ const AddProduct = ({ onClose }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="apd-form-group">
                 <label> En Stock</label>
                 <input
                   type="number"
@@ -601,7 +605,7 @@ const AddProduct = ({ onClose }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="apd-form-group">
                 <label>Marque</label>
                 <input
                   type="text"
@@ -611,7 +615,7 @@ const AddProduct = ({ onClose }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="apd-form-group">
                 <label>Remise (%)</label>
                 <input
                   type="number"
@@ -623,8 +627,8 @@ const AddProduct = ({ onClose }) => {
             </div>
 
             {/* Multi-selections + Rating */}
-            <div className="row">
-              <div className="form-group">
+            <div className="apd-row">
+              <div className="apd-form-group">
                 <DropdownMultiSelect
                   label="La RAM"
                   options={ramOptions}
@@ -636,7 +640,7 @@ const AddProduct = ({ onClose }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="apd-form-group">
                 <DropdownMultiSelect
                   label="Taille"
                   options={sizeOptions}
@@ -648,7 +652,7 @@ const AddProduct = ({ onClose }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="apd-form-group">
                 <DropdownMultiSelect
                   label="Poids"
                   options={weightOptions}
@@ -663,34 +667,11 @@ const AddProduct = ({ onClose }) => {
 
             {/* Images */}
             {/* Image principale */}
-            <div className="image-upload">
+            <div className="apd-image-upload">
               <label>Image principale</label>
               <div
-                className="image-box"
+                className="apd-image-box"
                 onClick={() => document.getElementById("main-img").click()}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  border: "2px dashed #ccc",
-                  borderRadius: "8px",
-                  padding: "20px",
-                  cursor: "pointer",
-                  minWidth: "120px",
-                  minHeight: "120px",
-                  transition: "all 0.2s ease",
-                  backgroundColor: "#fafafa",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#1976d2";
-                  e.currentTarget.style.backgroundColor = "#e3f2fd";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#ccc";
-                  e.currentTarget.style.backgroundColor = "#fafafa";
-                }}
               >
                 {loadingMainImage ? (
                   <CircularProgress />
@@ -698,18 +679,8 @@ const AddProduct = ({ onClose }) => {
                   <img src={formFields.mainImage} alt="" />
                 ) : (
                   <>
-                    <FaCloudUploadAlt
-                      style={{ fontSize: "32px", color: "#1976d2" }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "#666",
-                        textAlign: "center",
-                      }}
-                    >
-                      Ajouter des images
-                    </span>
+                    <FaCloudUploadAlt />
+                    <span>Ajouter des images</span>
                   </>
                 )}
               </div>
@@ -723,11 +694,11 @@ const AddProduct = ({ onClose }) => {
             </div>
 
             {/* Images secondaires */}
-            <div className="image-upload">
+            <div className="apd-image-upload">
               <label>Images secondaires</label>
-              <div className="extra-images">
+              <div className="apd-extra-images">
                 {formFields.extraImages.map((img, i) => (
-                  <div key={i} className="image-preview">
+                  <div key={i} className="apd-image-preview">
                     <img src={img} alt="" />
                     <button type="button" onClick={() => removeExtraImage(i)}>
                       <FaTimes />
@@ -735,48 +706,15 @@ const AddProduct = ({ onClose }) => {
                   </div>
                 ))}
                 <div
-                  className="image-box"
+                  className="apd-image-box"
                   onClick={() => document.getElementById("extra-img").click()}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    border: "2px dashed #ccc",
-                    borderRadius: "8px",
-                    padding: "20px",
-                    cursor: "pointer",
-                    minWidth: "120px",
-                    minHeight: "120px",
-                    transition: "all 0.2s ease",
-                    backgroundColor: "#fafafa",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "#1976d2";
-                    e.currentTarget.style.backgroundColor = "#e3f2fd";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "#ccc";
-                    e.currentTarget.style.backgroundColor = "#fafafa";
-                  }}
                 >
                   {loadingExtraImages ? (
                     <CircularProgress />
                   ) : (
                     <>
-                      <FaCloudUploadAlt
-                        style={{ fontSize: "32px", color: "#1976d2" }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#666",
-                          textAlign: "center",
-                        }}
-                      >
-                        Ajouter des images
-                      </span>
+                      <FaCloudUploadAlt />
+                      <span>Ajouter des images</span>
                     </>
                   )}
                 </div>
@@ -790,13 +728,13 @@ const AddProduct = ({ onClose }) => {
                 onChange={(e) => handleImageChange(e, false)}
               />
             </div>
-            <div className="image-upload">
+            <div className="apd-image-upload">
               <label>Images Banner</label>
 
-              <div className="extra-images">
+              <div className="apd-extra-images">
                 {/* Preview */}
                 {bannerPreviews.map((img, i) => (
-                  <div key={i} className="image-preview">
+                  <div key={i} className="apd-image-preview">
                     <img src={img} alt="" />
                     <button type="button" onClick={() => removeBannerImage(i)}>
                       <FaTimes />
@@ -806,7 +744,7 @@ const AddProduct = ({ onClose }) => {
 
                 {/* Box upload */}
                 <div
-                  className="image-box"
+                  className="apd-image-box"
                   onClick={() => {
                     if (!loadingBanner) {
                       document.getElementById("banner-img").click();
@@ -833,11 +771,11 @@ const AddProduct = ({ onClose }) => {
                 onChange={handleBannerChange}
               />
             </div>
-            <div className="form-group banner-toggle">
+            <div className="apd-form-group apd-banner-toggle">
               <label> Afficher dans le banner accueil</label>
 
               <div
-                className={`switch ${formFields.isDisplayOnHomeBanner ? "active" : ""}`}
+                className={`apd-switch ${formFields.isDisplayOnHomeBanner ? "active" : ""}`}
                 onClick={() =>
                   setFormFields((prev) => ({
                     ...prev,
@@ -845,10 +783,10 @@ const AddProduct = ({ onClose }) => {
                   }))
                 }
               >
-                <div className="slider"></div>
+                <div className="apd-slider"></div>
               </div>
             </div>
-            <div className="form-group">
+            <div className="apd-form-group">
               <label>Titre de la banniere</label>
               <input
                 type="text"
@@ -860,7 +798,7 @@ const AddProduct = ({ onClose }) => {
 
             <button
               type="submit"
-              className="publish-btn"
+              className="apd-publish-btn"
               disabled={loadingSubmit}
             >
               {loadingSubmit ? <CircularProgress /> : "Publier"}

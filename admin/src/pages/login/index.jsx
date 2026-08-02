@@ -87,31 +87,31 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="login-page">
+    <div className="lgn-page">
       {/* Logo */}
-      <div className="logo">🛒 YebouShop</div>
+      <div className="lgn-logo">🛒 YebouShop</div>
 
       {/* Welcome text */}
       <h2>Bienvenue sur Login</h2>
 
       {/* Social login buttons */}
-      <div className="social-login">
-        <button className="google">
+      <div className="lgn-social-login">
+        <button className="lgn-google">
           <FaGoogle className="icon" /> Connexion avec Google
         </button>
-        <button className="facebook">
+        <button className="lgn-facebook">
           <FaFacebookF className="icon" /> Connexion avec Facebook
         </button>
       </div>
 
       {/* Separator */}
-      <div className="separator">
+      <div className="lgn-separator">
         <span>ou avec email</span>
       </div>
 
       {/* Form fields */}
-      <form className="login-form" onSubmit={handleSubmit}>
-        <div className="form-group">
+      <form className="lgn-form" onSubmit={handleSubmit}>
+        <div className="lgn-form-group">
           <FaEnvelope className="input-icon" />
           <input
             type="email"
@@ -121,7 +121,7 @@ const LoginForm = () => {
           />
         </div>
 
-        <div className="form-group">
+        <div className="lgn-form-group">
           <FaLock className="input-icon" />
           <input
             type={showPassword ? "text" : "password"}
@@ -137,15 +137,15 @@ const LoginForm = () => {
           </span>
         </div>
 
-        <div className="form-options">
+        <div className="lgn-form-options">
           <label>
             <input type="checkbox" /> Se souvenir de moi
           </label>
           <a onClick={forgotPassword}>Mot de passe oublié ?</a>
         </div>
 
-        <button type="submit" className="login-btn" disabled={loading}>
-          {loading ? <CircularProgress /> : "Se connecter"}
+        <button type="submit" className="lgn-btn" disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : "Se connecter"}
         </button>
       </form>
     </div>

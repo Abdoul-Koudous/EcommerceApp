@@ -9,6 +9,7 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [categories, setCategories] = useState([]); // <- AJOUTÉ pour AddProduct
+  const [loading, setLoading] = useState(true); // ✅ distingue "session pas encore vérifiée" de "pas connecté"
   const { openToast } = useContext(ToastContext); // facultatif, pour messages
 
   // Charger les informations de l'utilisateur
@@ -18,6 +19,7 @@ export const UserProvider = ({ children }) => {
     if (!token) {
       setUser(null);
       setAddresses([]);
+      setLoading(false);
       return;
     }
 
@@ -26,11 +28,19 @@ export const UserProvider = ({ children }) => {
         if (res?.success) {
           setUser(res.data);
           setAddresses(res.data.address_details || []);
+        } else {
+          // ✅ token invalide/expiré (401 etc.) : on efface l'état au lieu de le laisser périmé,
+          // sinon un ancien `user` en mémoire continue de faire croire à une session valide
+          setUser(null);
+          setAddresses([]);
         }
       })
       .catch(() => {
         setUser(null);
         setAddresses([]);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -62,6 +72,7 @@ export const UserProvider = ({ children }) => {
         setAddresses,
         categories,     // ✅ pour AddProduct
         setCategories,  // ✅ pour AddProduct
+        loading,        // ✅ pour ProtectedRoute — attendre avant de décider d'une redirection
         loadUser,
         loadCategories, // possibilité de recharger à volonté
       }}

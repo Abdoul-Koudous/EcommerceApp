@@ -7,7 +7,7 @@ import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import PaginationPro from "../../components/paginnationpro/paginationpro";
 import AddBannersV1 from "./addBannersV1";
-import EditBannersV1 from "./editBannersV1"; // 🔹 À créer similaire à AddBannersV1
+import EditBannersV1 from "./editBannersV1";
 
 const BannerV1List = () => {
   const { openToast } = useContext(ToastContext);
@@ -21,12 +21,10 @@ const BannerV1List = () => {
   const [toDeleteId, setToDeleteId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
 
-  // 🔹 LOAD DATA
   const loadBanners = async () => {
     setLoading(true);
     try {
@@ -47,7 +45,6 @@ const BannerV1List = () => {
     loadBanners();
   }, [currentPage, itemsPerPage]);
 
-  // 🔹 DELETE
   const handleDeleteClick = (id) => {
     setToDeleteId(id);
     setConfirmOpen(true);
@@ -81,7 +78,6 @@ const BannerV1List = () => {
     setConfirmOpen(false);
   };
 
-  // 🔹 SELECT
   const toggleSelect = (id) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
@@ -96,29 +92,28 @@ const BannerV1List = () => {
     }
   };
 
-  // 🔹 EDIT
   const handleEdit = (banner) => {
     setCurrentBanner(banner);
     setOpenEdit(true);
   };
 
   return (
-    <div className="home-slide-page">
+    <div className="bnr-page">
       {/* HEADER */}
-      <div className="header">
+      <div className="bnr-header">
         <h2>Liste des Bannières</h2>
 
-        <div className="actions">
+        <div className="bnr-actions">
           {selected.length > 0 && (
             <button
-              className="btn delete-multiple"
+              className="bnr-btn bnr-btn-delete-multiple"
               onClick={() => setConfirmOpen(true)}
             >
               <FaTrash /> Supprimer ({selected.length})
             </button>
           )}
 
-          <button className="btn add" onClick={() => setOpenAdd(true)}>
+          <button className="bnr-btn bnr-btn-add" onClick={() => setOpenAdd(true)}>
             Ajouter
           </button>
         </div>
@@ -128,7 +123,7 @@ const BannerV1List = () => {
       {loading ? (
         <CircularProgress />
       ) : (
-        <div className="table-container">
+        <div className="bnr-table-container">
           <table>
             <thead>
               <tr>
@@ -160,7 +155,7 @@ const BannerV1List = () => {
                   </td>
 
                   <td>
-                    <div className="slide-image">
+                    <div className="bnr-thumb">
                       <img src={banner.images?.[0]} alt="" />
                     </div>
                   </td>
@@ -170,11 +165,11 @@ const BannerV1List = () => {
 
                   <td>
                     <FaEdit
-                      className="icon edit"
+                      className="bnr-icon bnr-icon-edit"
                       onClick={() => handleEdit(banner)}
                     />
                     <FaTrash
-                      className="icon delete"
+                      className="bnr-icon bnr-icon-delete"
                       onClick={() => handleDeleteClick(banner._id)}
                     />
                   </td>
@@ -190,8 +185,8 @@ const BannerV1List = () => {
           </table>
 
           {/* PAGINATION */}
-          <div className="table-footer">
-            <div className="items-selector">
+          <div className="bnr-table-footer">
+            <div className="bnr-items-selector">
               <label>Afficher</label>
               <select
                 value={itemsPerPage}

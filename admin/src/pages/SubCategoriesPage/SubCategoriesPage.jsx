@@ -14,26 +14,25 @@ const SubCategoriesPage = () => {
   const [editingData, setEditingData] = useState({ name: "", parentId: "" });
   const { openToast } = useContext(ToastContext);
   const [confirmOpen, setConfirmOpen] = useState(false);
-const [toDeleteId, setToDeleteId] = useState(null);
+  const [toDeleteId, setToDeleteId] = useState(null);
 
-const handleDeleteClick = (_id) => {
-  setToDeleteId(_id);
-  setConfirmOpen(true);
-};
+  const handleDeleteClick = (_id) => {
+    setToDeleteId(_id);
+    setConfirmOpen(true);
+  };
 
-const handleConfirmDelete = () => {
-  if (toDeleteId) {
-    deleteSubCategory(toDeleteId);
+  const handleConfirmDelete = () => {
+    if (toDeleteId) {
+      deleteSubCategory(toDeleteId);
+      setToDeleteId(null);
+      setConfirmOpen(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
     setToDeleteId(null);
     setConfirmOpen(false);
-  }
-};
-
-const handleCancelDelete = () => {
-  setToDeleteId(null);
-  setConfirmOpen(false);
-};
-
+  };
 
   useEffect(() => {
     fetchDataFromApi("/api/category").then((res) => {
@@ -41,12 +40,27 @@ const handleCancelDelete = () => {
     });
   }, []);
 
+  // 🔹 Retrait récursif — symétrique à updateCategory utilisée dans handleSave,
+  // nécessaire car une sous-catégorie supprimée peut être nichée dans .children
+  const removeCategoryById = (list, id) =>
+    list
+      .filter((cat) => cat._id !== id)
+      .map((cat) =>
+        cat.children?.length
+          ? { ...cat, children: removeCategoryById(cat.children, id) }
+          : cat
+      );
+
   const deleteSubCategory = async (_id) => {
     try {
       const res = await deleteData(`/api/category/${_id}`);
-      if (res?.data?.success) {
-        openToast("success", "Catégorie supprimée");
-        setCategories((prev) => prev.filter((c) => c._id !== _id));
+
+      // ✅ corrigé : deleteData renvoie le JSON directement, pas res.data.success
+      if (res?.success) {
+        openToast("success", res.message || "Catégorie supprimée");
+        setCategories((prev) => removeCategoryById(prev, _id));
+      } else {
+        openToast("error", res?.message || "Erreur lors de la suppression");
       }
     } catch {
       openToast("error", "Erreur serveur");
@@ -67,49 +81,42 @@ const handleCancelDelete = () => {
     setEditingData({ name: "", parentId: "" });
   };
 
- const handleSave = async (catId) => {
-  try {
-    // Préparer la payload pour le backend
-    const payload = {
-      name: editingData.name,
-      parentId: editingData.parentId || null, // null si pas de parent
-    };
+  const handleSave = async (catId) => {
+    try {
+      const payload = {
+        name: editingData.name,
+        parentId: editingData.parentId || null,
+      };
 
-    // Appel API pour mettre à jour la catégorie
-    const res = await editData(`/api/category/${catId}`, payload);
+      const res = await editData(`/api/category/${catId}`, payload);
 
-    if (res?.success) {
-      openToast("success", "Modification enregistrée");
+      if (res?.success) {
+        openToast("success", "Modification enregistrée");
 
-      // Mettre à jour localement sans re-fetch complet
-      setCategories((prevCategories) => {
-        // Fonction récursive pour mettre à jour la catégorie
-        const updateCategory = (list) =>
-          list.map((cat) => {
-            if (cat._id === catId) {
-              return { ...cat, name: payload.name, parentId: payload.parentId, parentCatName: res.category.parentCatName };
-            }
-            if (cat.children?.length) {
-              return { ...cat, children: updateCategory(cat.children) };
-            }
-            return cat;
-          });
-        return updateCategory(prevCategories);
-      });
+        setCategories((prevCategories) => {
+          const updateCategory = (list) =>
+            list.map((cat) => {
+              if (cat._id === catId) {
+                return { ...cat, name: payload.name, parentId: payload.parentId, parentCatName: res.category.parentCatName };
+              }
+              if (cat.children?.length) {
+                return { ...cat, children: updateCategory(cat.children) };
+              }
+              return cat;
+            });
+          return updateCategory(prevCategories);
+        });
 
-      handleCancel();
-    } else {
-      openToast("error", res?.message || "Erreur serveur");
+        handleCancel();
+      } else {
+        openToast("error", res?.message || "Erreur serveur");
+      }
+    } catch (err) {
+      console.error(err);
+      openToast("error", "Erreur serveur");
     }
-  } catch (err) {
-    console.error(err);
-    openToast("error", "Erreur serveur");
-  }
-};
+  };
 
-
-
-  // 🔹 Fonction récursive pour trouver une catégorie par id
   const findCategory = (list, id) => {
     for (let cat of list) {
       if (cat._id === id) return cat;
@@ -121,23 +128,22 @@ const handleCancelDelete = () => {
     return null;
   };
 
-  // 🔹 Récupérer les parents possibles selon le niveau exact
-  const getParentOptions = (cat) => {
-    if (!cat.parentId) return [{ _id: "", name: "-- Pas de parent --" }];
+  // ✅ corrigé : prend le parentId COURANT du formulaire (editingData.parentId),
+  // pas cat.parentId figé au moment de l'ouverture de l'édition — sinon les
+  // options ne se recalculaient jamais quand l'admin changeait de sélection
+  const getParentOptions = (currentParentId) => {
+    if (!currentParentId) return [{ _id: "", name: "-- Pas de parent --" }];
 
-    const parent = findCategory(categories, cat.parentId);
+    const parent = findCategory(categories, currentParentId);
     if (!parent) return [{ _id: "", name: "-- Pas de parent --" }];
 
-    // Si le parent est directement sous une catégorie principale
     if (!parent.parentId) {
-      // Sous-catégorie directe → options = toutes les catégories principales
       return [
         { _id: "", name: "-- Pas de parent --" },
         ...categories.map((c) => ({ _id: c._id, name: c.name })),
       ];
     }
 
-    // Sous-sous-catégorie → options = parent direct + toutes les sous-catégories du secteur
     let secteur = parent;
     while (secteur.parentId) {
       const next = findCategory(categories, secteur.parentId);
@@ -145,7 +151,7 @@ const handleCancelDelete = () => {
       secteur = next;
     }
 
-    const options = [{ _id: parent._id, name: parent.name }]; // parent direct
+    const options = [{ _id: parent._id, name: parent.name }];
     if (secteur.children?.length) {
       secteur.children.forEach((sub) => {
         if (sub._id !== parent._id) options.push({ _id: sub._id, name: sub.name });
@@ -162,7 +168,7 @@ const handleCancelDelete = () => {
 
       return (
         <React.Fragment key={cat._id}>
-          <div className={`row level-${level}`}>
+          <div className={`sct-row ${level === 0 ? "sct-level-0" : ""}`}>
             {editingId === cat._id ? (
               <>
                 <select
@@ -171,7 +177,8 @@ const handleCancelDelete = () => {
                     setEditingData((prev) => ({ ...prev, parentId: e.target.value }))
                   }
                 >
-                  {getParentOptions(cat).map((c) => (
+                  {/* ✅ corrigé : getParentOptions(cat) → getParentOptions(editingData.parentId) */}
+                  {getParentOptions(editingData.parentId).map((c) => (
                     <option key={c._id} value={c._id}>
                       {c.name}
                     </option>
@@ -186,32 +193,31 @@ const handleCancelDelete = () => {
                   }
                 />
 
-                <button className="btn save" onClick={() => handleSave(cat._id)}>
-                  Save
+                <button className="sct-edit-btn sct-save" onClick={() => handleSave(cat._id)}>
+                  Sauvegarder
                 </button>
-                <button className="btn cancel" onClick={handleCancel}>
-                  Cancel
+                <button className="sct-edit-btn sct-cancel" onClick={handleCancel}>
+                  Annulé
                 </button>
               </>
             ) : (
               <>
-                <div className="cell name">
-                  <span className="indent" style={{ marginLeft: level * 20 }} />
+                <div className="sct-cell sct-name">
+                  <span className="sct-indent" style={{ marginLeft: level * 20 }} />
                   {hasChildren && (
-                    <span className="toggle" onClick={() => toggle(cat._id)}>
+                    <span className="sct-toggle" onClick={() => toggle(cat._id)}>
                       {isOpen ? <FaChevronDown /> : <FaChevronRight />}
                     </span>
                   )}
                   {cat.name}
                 </div>
 
-                <div className="cell actions">
-                  <FaEdit className="icon edit" onClick={() => handleEditClick(cat)} />
-                 <FaTrash
-                  className="icon delete"
-                  onClick={() => handleDeleteClick(cat._id)}
-                />
-
+                <div className="sct-cell sct-actions-cell">
+                  <FaEdit className="sct-icon sct-icon-edit" onClick={() => handleEditClick(cat)} />
+                  <FaTrash
+                    className="sct-icon sct-icon-delete"
+                    onClick={() => handleDeleteClick(cat._id)}
+                  />
                 </div>
               </>
             )}
@@ -223,18 +229,18 @@ const handleCancelDelete = () => {
     });
 
   return (
-    <div className="subcategories-page">
-      <div className="header">
+    <div className="sct-page">
+      <div className="sct-header">
         <h2>Catégories & Sous-catégories</h2>
-        <div className="actions">
-          <button className="btn export">Exporter</button>
-          <button className="btn add" onClick={() => setOpenAdd(true)}>
+        <div className="sct-actions">
+          <button className="sct-btn sct-btn-export">Exporter</button>
+          <button className="sct-btn sct-btn-add" onClick={() => setOpenAdd(true)}>
             Ajouter
           </button>
         </div>
       </div>
 
-      <div className="tree-table">{renderRows(categories)}</div>
+      <div className="sct-tree-table">{renderRows(categories)}</div>
 
       {openAdd && (
         <AddSubCategory
@@ -243,19 +249,16 @@ const handleCancelDelete = () => {
             setCategories((prev) => [...prev, newCategory])
           }
         />
-        
       )}
       <ConfirmDialog
         open={confirmOpen}
-        message="Vouler vous vraiment supprimer cette catégorie ?"
+        message="Voulez-vous vraiment supprimer cette catégorie ?"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
 
     </div>
   );
-
-
 };
 
 export default SubCategoriesPage;

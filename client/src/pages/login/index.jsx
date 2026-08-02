@@ -4,7 +4,7 @@ import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { postData } from "../utils/api";
 import { ToastContext } from "../../context/ToastContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { UserContext } from "../../UserContext/UserContext";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -33,16 +33,17 @@ const Login = () => {
       email,
       password,
     })
-      .then((res) => {
+      .then(async (res) => {
         if (res?.success === true) {
           openToast("success", res?.message);
 
           localStorage.setItem("accesstoken", res?.data?.accesstoken);
           localStorage.setItem("refreshToken", res?.data?.refreshToken);
           localStorage.setItem("userEmail", email);
-          setTimeout(() => {
-            loadUser();
-          }, 50);
+
+          // ✅ on attend vraiment que le contexte soit à jour avant de naviguer,
+          // plus de setTimeout arbitraire qui pouvait arriver trop tôt
+          await loadUser();
 
           navigate("/");
         } else {
@@ -102,7 +103,7 @@ const Login = () => {
         };
 
         postData("/api/users/authWithGoogle", fields)
-          .then((res) => {
+          .then(async (res) => {
             if (res.error) {
               openToast("error", res.message);
             } else {
@@ -110,9 +111,9 @@ const Login = () => {
               localStorage.setItem("userEmail", fields.email);
               localStorage.setItem("accesstoken", res?.data?.accesstoken);
               localStorage.setItem("refreshToken", res?.data?.refreshToken);
-              setTimeout(() => {
-                loadUser();
-              }, 50);
+
+              // ✅ on attend vraiment que le contexte soit à jour, plus de setTimeout arbitraire
+              await loadUser();
 
               navigate("/");
             }
@@ -201,7 +202,7 @@ const Login = () => {
           </div>
 
           <p className="lg-register-text">
-            Pas encore de compte ? <a href="/register">Inscrivez-vous</a>
+            Pas encore de compte ? <Link to="/register">Inscrivez-vous</Link>
           </p>
         </form>
       </div>

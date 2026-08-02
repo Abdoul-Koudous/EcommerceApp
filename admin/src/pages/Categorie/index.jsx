@@ -20,12 +20,10 @@ const CategoriesPage = () => {
   const [toDeleteId, setToDeleteId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
 
-  // 🔥 Charger catégories paginées
   const loadCategories = async () => {
     setLoading(true);
     try {
@@ -47,25 +45,30 @@ const CategoriesPage = () => {
     loadCategories();
   }, [currentPage, itemsPerPage]);
 
-  // 🔥 DELETE
   const handleDeleteClick = (_id) => {
     setToDeleteId(_id);
     setConfirmOpen(true);
   };
 
+  // ✅ suppression un par un (patron BannerV1) — pas d'endpoint deleteMultipleCategories côté backend
   const handleConfirmDelete = async () => {
-    if (!toDeleteId) return;
-
     try {
-      const res = await deleteData(`/api/category/${toDeleteId}`);
-
-      if (res?.success) {
-        setCatData(prev => prev.filter(cat => cat._id !== toDeleteId));
-        openToast("success", res.message || "Catégorie supprimée");
-      } else {
-        openToast("error", res.message || "Erreur suppression");
+      if (toDeleteId) {
+        const res = await deleteData(`/api/category/${toDeleteId}`);
+        if (res?.success) {
+          setCatData(prev => prev.filter(cat => cat._id !== toDeleteId));
+          openToast("success", res.message || "Catégorie supprimée");
+        } else {
+          openToast("error", res.message || "Erreur suppression");
+        }
+      } else if (selected.length > 0) {
+        for (let id of selected) {
+          await deleteData(`/api/category/${id}`);
+        }
+        setCatData(prev => prev.filter(cat => !selected.includes(cat._id)));
+        setSelected([]);
+        openToast("success", "Catégories supprimées");
       }
-
     } catch {
       openToast("error", "Erreur suppression");
     }
@@ -79,7 +82,6 @@ const CategoriesPage = () => {
     setConfirmOpen(false);
   };
 
-  // 🔥 SELECT
   const toggleSelect = (_id) => {
     setSelected(prev =>
       prev.includes(_id)
@@ -102,11 +104,26 @@ const CategoriesPage = () => {
   };
 
   return (
-    <div className="categories-page">
-      <div className="header">
+    <div className="ctg-page">
+      <div className="ctg-header">
         <h2>Liste des catégories</h2>
-        <div className="actions">
-          <button className="btn add" onClick={() => setOpenAdd(true)}>
+        <div className="ctg-actions">
+          {/* ✅ ajouté */}
+          {selected.length > 0 && (
+            <button
+              className="ctg-btn-delete-multiple"
+              onClick={() => {
+                setToDeleteId(null);
+                setConfirmOpen(true);
+              }}
+            >
+              <FaTrash />
+              <span>Supprimer</span>
+              <strong>{selected.length}</strong>
+            </button>
+          )}
+
+          <button className="ctg-btn ctg-btn-add" onClick={() => setOpenAdd(true)}>
             Ajouter
           </button>
         </div>
@@ -115,7 +132,7 @@ const CategoriesPage = () => {
       {loading ? (
         <CircularProgress />
       ) : (
-        <div className="table-container">
+        <div className="ctg-table-container">
           <table>
             <thead>
               <tr>
@@ -143,12 +160,14 @@ const CategoriesPage = () => {
                     />
                   </td>
                   <td>
-                    <img src={cat.images?.[0]} alt={cat.name} width={50} />
+                    <div className="ctg-thumb">
+                      <img src={cat.images?.[0]} alt={cat.name} />
+                    </div>
                   </td>
                   <td>{cat.name}</td>
                   <td>
-                    <FaEdit className="icon edit" onClick={() => handleEdit(cat)} />
-                    <FaTrash className="icon delete" onClick={() => handleDeleteClick(cat._id)} />
+                    <FaEdit className="ctg-icon ctg-icon-edit" onClick={() => handleEdit(cat)} />
+                    <FaTrash className="ctg-icon ctg-icon-delete" onClick={() => handleDeleteClick(cat._id)} />
                   </td>
                 </tr>
               ))}
@@ -161,9 +180,8 @@ const CategoriesPage = () => {
             </tbody>
           </table>
 
-          {/* 🔥 PAGINATION */}
-          <div className="table-footer">
-            <div className="items-selector">
+          <div className="ctg-table-footer">
+            <div className="ctg-items-selector">
               <label>Afficher</label>
               <select
                 value={itemsPerPage}
@@ -190,7 +208,6 @@ const CategoriesPage = () => {
         </div>
       )}
 
-      {/* ADD */}
       {openAdd && (
         <AddCategory
           onClose={() => setOpenAdd(false)}
@@ -198,7 +215,6 @@ const CategoriesPage = () => {
         />
       )}
 
-      {/* EDIT */}
       {openEdit && currentCategory && (
         <EditCategory
           category={currentCategory}
@@ -210,10 +226,13 @@ const CategoriesPage = () => {
         />
       )}
 
-      {/* CONFIRM */}
       <ConfirmDialog
         open={confirmOpen}
-        message="Voulez-vous vraiment supprimer cette catégorie ?"
+        message={
+          toDeleteId
+            ? "Voulez-vous vraiment supprimer cette catégorie ?"
+            : `Voulez-vous vraiment supprimer ${selected.length} catégorie(s) ?`
+        }
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

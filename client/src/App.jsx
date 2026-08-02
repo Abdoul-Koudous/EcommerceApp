@@ -27,6 +27,7 @@ import SettingsPage from "./pages/myaccount/settingspage";
 import LogoutPage from "./pages/myaccount/logoutpage";
 
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import GuestOnlyRoute from "./components/GuestOnlyRoute/GuestOnlyRoute"; // ✅ ajouté
 import AddressPage from "./pages/myaccount/AddressPage";
 import AccountLayout from "./pages/myaccount/accountlayout";
 import SearchPage from "./components/searchs";
@@ -41,8 +42,25 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/productlisting" element={<ProductListing />} />
           <Route path="/product/:id" element={<ProductDetails />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+
+          {/* ✅ accessibles uniquement si NON connecté */}
+          <Route
+            path="/login"
+            element={
+              <GuestOnlyRoute>
+                <Login />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <GuestOnlyRoute>
+                <Register />
+              </GuestOnlyRoute>
+            }
+          />
+
           <Route path="/cart" element={<CartPage />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />

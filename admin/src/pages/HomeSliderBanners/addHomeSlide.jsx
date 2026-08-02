@@ -12,10 +12,6 @@ const AddHomeSlide = ({ onClose, onAddSlide }) => {
   const { openToast } = useContext(ToastContext);
   const [loading, setLoading] = useState(false);
 
-  const setPreviewsFun = (previewsArr) => {
-    setPreviews(previewsArr);
-  };
-
   const removeImage = async (imgUrl, index) => {
     try {
       const res = await deleteImages(
@@ -56,7 +52,6 @@ const AddHomeSlide = ({ onClose, onAddSlide }) => {
         return openToast("error", res.message);
       }
 
-      // On stocke uniquement les URLs
       setPreviews((prev) => [...prev, ...res.images]);
       openToast("success", "Images uploadées");
       e.target.value = "";
@@ -108,12 +103,12 @@ const AddHomeSlide = ({ onClose, onAddSlide }) => {
   };
 
   return (
-    <div className="fullscreen-dialog">
-      <div className={`dialog-content ${isClosing ? "closing" : "opening"}`}>
+    <div className="hsf-overlay">
+      <div className={`hsf-content ${isClosing ? "closing" : "opening"}`}>
         {/* HEADER */}
-        <div className="dialog-header">
-          <div className="header-left">
-            <button className="close-btn" onClick={handleClose}>
+        <div className="hsf-header">
+          <div className="hsf-header-left">
+            <button className="hsf-close-btn" onClick={handleClose}>
               <FaTimes />
             </button>
             <h2>Ajouter un slide</h2>
@@ -121,16 +116,16 @@ const AddHomeSlide = ({ onClose, onAddSlide }) => {
         </div>
 
         {/* BODY */}
-        <div className="dialog-body">
-          <form className="slide-form" onSubmit={handleSubmit}>
+        <div className="hsf-body">
+          <form className="hsf-form" onSubmit={handleSubmit}>
             {/* IMAGES */}
-            <div className="images-wrapper">
+            <div className="hsf-images-wrapper">
               {previews.map((img, index) => (
-                <div className="image-circle" key={index}>
+                <div className="hsf-image-circle" key={index}>
                   <img src={img} alt="slide" />
                   <button
                     type="button"
-                    className="remove-btn"
+                    className="hsf-remove-btn"
                     onClick={() => removeImage(img, index)}
                   >
                     <FaTimes />
@@ -138,7 +133,7 @@ const AddHomeSlide = ({ onClose, onAddSlide }) => {
                 </div>
               ))}
 
-              <label className={`image-circle add ${uploading ? "disabled" : ""}`}>
+              <label className={`hsf-image-circle hsf-add ${uploading ? "hsf-disabled" : ""}`}>
                 {uploading ? <CircularProgress size={28} /> : <FaPlus />}
                 <input
                   type="file"
@@ -151,7 +146,7 @@ const AddHomeSlide = ({ onClose, onAddSlide }) => {
               </label>
             </div>
 
-            <button type="submit" className="publish-btn" disabled={loading}>
+            <button type="submit" className="hsf-publish-btn" disabled={loading}>
               {loading ? <CircularProgress /> : " Publier"}
             </button>
           </form>

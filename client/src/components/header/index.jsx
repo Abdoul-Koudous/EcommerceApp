@@ -21,35 +21,37 @@ const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
-  const [catData, setCatData] = useState([]);
-  const { user, cartItems, categories, myListItems } = useContext(UserContext);
+  const { user, setUser, cartItems, categories, myListItems } = useContext(UserContext);
 
   const { openToast } = useContext(ToastContext);
 
   const isLoggedIn = !!user?._id;
 
   const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
+    setDropdownOpen((prev) => !prev);
   };
 
   const toggleCart = () => setCartOpen(!cartOpen);
 
   const logout = async () => {
     try {
-      // Appel backend pour supprimer cookies
-      await fetchDataFromApi("/api/users/logout", { method: "POST" });
+      // ✅ la route est bien un GET côté backend (userRouter.get('/logout', ...)) —
+      // le { method: "POST" } précédent était ignoré par fetchDataFromApi, retiré pour ne pas induire en erreur
+      await fetchDataFromApi("/api/users/logout");
 
       // Nettoyage localStorage
       localStorage.removeItem("accesstoken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userEmail");
-      setCatData(categories);
 
-      // Redirection vers accueil
+      // ✅ met à jour le contexte directement au lieu de forcer un reload complet de la page
+      setUser(null);
+      setDropdownOpen(false);
+
       navigate("/");
-      window.location.reload(); // pour rafraîchir le header
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
+      openToast("error", "Erreur lors de la déconnexion");
     }
   };
 
@@ -110,10 +112,7 @@ const Header = () => {
                 </div>
               ) : (
                 <li className="user-menu">
-                  <div
-                    className="user-info"
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                  >
+                  <div className="user-info" onClick={toggleDropdown}>
                     <img
                       src={user?.avatar || "/user.jpg"}
                       alt="User"

@@ -1,7 +1,7 @@
-.fullscreen-dialog {
+.apd-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
@@ -9,303 +9,351 @@
   z-index: 2000;
   overflow: hidden;
 
-  .dialog-content {
+  .apd-content {
     width: 80%;
     height: 100vh;
-    background: #fff;
+    background: var(--color-surface);
     display: flex;
     flex-direction: column;
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
 
-    &.closing { animation: slideDown 0.4s ease forwards; }
-    &.opening { animation: slideUp 0.4s ease forwards; }
+    &.closing {
+      animation: apdSlideDown 0.4s ease forwards;
+    }
+    &.opening {
+      animation: apdSlideUp 0.4s ease forwards;
+    }
   }
 
-  .dialog-header {
+  .apd-header {
     display: flex;
     align-items: center;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #eee;
-    background: #f9fafb;
+    border-bottom: 1px solid var(--color-border-light);
+    background: var(--color-surface-alt);
 
-    .header-left {
+    .apd-header-left {
       display: flex;
       align-items: center;
       gap: 0.8rem;
 
-      h2 { font-size:1.4rem; font-weight:600; color:#222; }
-      .close-btn { 
-        background:none; border:none; font-size:1.3rem; cursor:pointer; color:#444;
-        &:hover { color:#e63946; }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--color-text);
+      }
+
+      .apd-close-btn {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        color: var(--color-text-secondary);
+        transition: var(--transition-fast);
+
+        &:hover {
+          color: var(--color-primary);
+        }
       }
     }
   }
 
-  .dialog-body {
+  .apd-body {
     flex: 1;
     padding: 1.5rem;
-    overflow-y:auto;
-    background-color: #d6d6d6;
+    overflow-y: auto;
+    background-color: var(--color-surface-alt);
 
-    .product-form{
-      display:flex; 
-      flex-direction:column; 
-      gap:1rem;
+    .apd-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
 
-      input, textarea, select {
-        width:100%;
-        padding:.7rem 1rem;
-        border:1px solid #ccc;
-        border-radius:8px;
-        font-size:1rem;
-        resize:none;
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 1rem;
+        background: var(--color-surface);
+        color: var(--color-text);
+        resize: none;
       }
 
-      .row{
-        display:flex;
-        gap:1rem;
-        flex-wrap:wrap; 
-        input, select { flex:1; }
+      textarea {
+        resize: vertical; // ✅ remis : permet de tirer la poignée en bas à droite avec le curseur
+        overflow: hidden; // évite le flash de scrollbar pendant l'auto-resize JS
+        min-height: 100px;
+        // max-height: 400px;
+      }
 
-        .rating{
-          display:flex;
-          align-items:center; 
-          gap:0.2rem; 
+      .apd-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap; // ✅ passe à la ligne dès que min-width des enfants n'est plus respecté
+      }
 
-          svg{
-            cursor:pointer;
-            color:#ccc; 
-            &.filled { color:#f1c40f; }
-          }
+      .apd-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 150px; // ✅ empêche l'écrasement des selects/inputs sur mobile
+
+        label {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+        }
+
+        input,
+        select {
+          flex: 1;
         }
       }
 
-      .multi-select {
-        flex:1;
-        display:flex;
-        flex-direction:column;
-        gap:0.3rem;
+      .apd-multi-select {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
         position: relative;
+        min-width: 150px; // ✅ même traitement que .apd-form-group, sur la même ligne qu'elles
 
-        label { font-weight:500; }
+        label {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+        }
 
-        .selected-values {
-          padding:0.5rem 0.7rem;
-          border:1px solid #ccc;
-          border-radius:6px;
-          min-height:35px;
-          background:#fafafa;
-          display:flex;
+        .apd-selected-values {
+          padding: 0.5rem 0.7rem;
+          border: 1px solid var(--color-border);
+          border-radius: 6px;
+          min-height: 35px;
+          background: var(--color-surface-alt);
+          display: flex;
           justify-content: space-between;
-          align-items:center;
-          cursor:pointer;
-          font-size:0.95rem;
+          align-items: center;
+          cursor: pointer;
+          font-size: 0.95rem;
           flex-wrap: wrap;
+          transition: var(--transition-fast);
 
-          .icon { margin-left:0.5rem; }
+          &:hover {
+            border-color: var(--color-primary);
+          }
 
-          .tag {
-            background:#e63946;
-            color:#fff;
-            padding:0.2rem 0.5rem;
-            border-radius:4px;
-            font-size:0.85rem;
+          .icon {
+            margin-left: 0.5rem;
+            color: var(--color-text-secondary);
+          }
+
+          .apd-tag {
+            background: var(--color-primary);
+            color: var(--color-text-on-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
           }
         }
 
-        .options {
+        .apd-options {
           position: absolute;
           top: 100%;
           left: 0;
           width: 100%;
           max-height: 180px;
           overflow-y: auto;
-          border:1px solid #ccc;
-          border-radius:6px;
-          background:#fff;
-          margin-top:4px;
+          border: 1px solid var(--color-border);
+          border-radius: 6px;
+          background: var(--color-surface);
+          margin-top: 4px;
           z-index: 100;
-          display:flex;
-          flex-direction:column;
-          gap:0.2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+          box-shadow: var(--shadow-card);
 
-          .option {
-            padding:0.4rem 0.6rem;
-            cursor:pointer;
-            font-size:0.9rem;
-            background:#fff;
-            border-radius:6px;
-            transition: all 0.2s;
+          .apd-option {
+            padding: 0.4rem 0.6rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            background: var(--color-surface);
+            color: var(--color-text);
+            border-radius: 6px;
+            transition: var(--transition-fast);
 
-            &:hover { background:#f1f1f1; }
-            &.selected { background:#e63946; color:#fff; border-color:#e63946; }
-          }
-        }
-      }
-
-      .image-upload{
-        display:flex; 
-        flex-direction:column; 
-        gap:0.5rem;
-
-        .image-box{
-          width:100px;
-          height:100px;
-          border:2px dashed #ccc; 
-          display:flex;
-          justify-content:center;
-          align-items:center; 
-          cursor:pointer; 
-          border-radius:8px; 
-          position:relative;
-
-          img{
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            border-radius:8px;
-          }
-
-          .plus-icon{ font-size:1.5rem; color:#666; }
-        }
-
-        .extra-images{
-          display:flex; 
-          gap:0.5rem; 
-          flex-wrap:wrap; 
-
-          .image-preview{
-            position:relative; 
-            width:100px;
-            height:100px; 
-
-            img{
-              width:100%;
-              height:100%;
-              object-fit:cover;
-              border-radius:8px;
+            &:hover {
+              background: var(--color-surface-alt);
             }
 
-            button{
-              position:absolute;
-              top:-8px;
-              right:-8px;
-              background:red;
-              border:none;
-              color:white;
-              border-radius:50%; 
-              width:22px;
-              height:22px;
-              cursor:pointer; 
-              display:flex;
-              align-items:center; 
-              justify-content:center;
+            &.selected {
+              background: var(--color-primary);
+              color: var(--color-text-on-primary);
             }
           }
         }
       }
 
-      .publish-btn{
-        padding:.8rem 1rem;
+      .apd-image-upload {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .apd-image-box {
+          width: 120px;
+          height: 120px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          border: 2px dashed var(--color-border);
+          border-radius: 8px;
+          cursor: pointer;
+          position: relative;
+          background: var(--color-surface-alt);
+          transition: var(--transition-base);
+
+          &:hover {
+            border-color: var(--color-info);
+            background: color-mix(in srgb, var(--color-info) 12%, transparent);
+          }
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+          }
+
+          svg {
+            font-size: 1.5rem;
+            color: var(--color-info);
+          }
+
+          span {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            text-align: center;
+          }
+        }
+
+        .apd-extra-images {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+
+          .apd-image-preview {
+            position: relative;
+            width: 100px;
+            height: 100px;
+
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border-radius: 8px;
+            }
+
+            button {
+              position: absolute;
+              top: -8px;
+              right: -8px;
+              background: var(--color-danger);
+              border: none;
+              color: var(--color-text-on-primary);
+              border-radius: 50%;
+              width: 22px;
+              height: 22px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+          }
+        }
+      }
+
+      .apd-publish-btn {
+        padding: 0.8rem 1rem;
         width: 30%;
-        background:#e63946;
-        color:#fff;
-        border:none;
-        border-radius:8px;
-        font-size:1rem;
-        cursor:pointer;
-        margin-top:1rem; 
+        min-width: 160px; // ✅ évite un bouton trop écrasé sur mobile étroit
+        background: var(--color-primary);
+        color: var(--color-text-on-primary);
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: var(--transition-base);
 
-        &:hover{background:#c62b38;}
+        &:hover {
+          filter: brightness(0.9);
+        }
+      }
+
+      .apd-switch {
+        width: 50px;
+        height: 26px;
+        background: var(--color-border);
+        border-radius: 50px;
+        position: relative;
+        cursor: pointer;
+        flex-shrink: 0; // ✅ ne se laisse pas écraser par le label à côté
+        transition: var(--transition-base);
+
+        .apd-slider {
+          width: 22px;
+          height: 22px;
+          background: var(--color-surface);
+          border-radius: 50%;
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          transition: var(--transition-base);
+        }
+
+        &.active {
+          background: var(--color-success);
+
+          .apd-slider {
+            transform: translateX(24px);
+          }
+        }
+      }
+
+      .apd-banner-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
       }
     }
   }
 }
 
-@keyframes slideUp{
-  0%{transform:translateY(100%) scaleY(0.9);opacity:0;}
-  100%{transform:translateY(0) scaleY(1);opacity:1;}
-}
-@keyframes slideDown{
-  0%{transform:translateY(0) scaleY(1);opacity:1;}
-  100%{transform:translateY(100%) scaleY(0.9);opacity:0;}
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.form-group label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #444;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: .7rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-.image-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  padding: 20px;
-  cursor: pointer;
-  min-width: 120px;
-  min-height: 120px;
-  transition: all 0.2s ease;
-  background-color: #fafafa;
-
-  &:hover {
-    border-color: #1976d2;
-    background-color: #e3f2fd;
+@keyframes apdSlideUp {
+  0% {
+    transform: translateY(100%) scaleY(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
   }
 }
-
-.switch {
-  width: 50px;
-  height: 26px;
-  background: #ccc;
-  border-radius: 50px;
-  position: relative;
-  cursor: pointer;
-  transition: 0.3s;
-
-  .slider {
-    width: 22px;
-    height: 22px;
-    background: white;
-    border-radius: 50%;
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    transition: 0.3s;
+@keyframes apdSlideDown {
+  0% {
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
   }
-
-  &.active {
-    background: #4caf50;
-
-    .slider {
-      transform: translateX(24px);
-    }
+  100% {
+    transform: translateY(100%) scaleY(0.9);
+    opacity: 0;
   }
 }
-
-.banner-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-

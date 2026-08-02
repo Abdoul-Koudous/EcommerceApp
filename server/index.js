@@ -23,12 +23,40 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// ✅ derrière un reverse proxy (Nginx en prod) : nécessaire pour que req.secure,
+// les IP clientes réelles, et les cookies "secure" se comportent correctement
+app.set("trust proxy", 1);
+
+// ✅ liste blanche d'origines — CLIENT_URL/ADMIN_URL à définir dans .env
+// (ex: "https://yeboushop.com,https://admin.yeboushop.com")
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Autorise les requêtes sans origine (ex: Postman, requêtes serveur-à-serveur)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Non autorisé par la politique CORS"));
+  },
+  credentials: true, // ✅ nécessaire pour les cookies httpOnly (accessToken/refreshToken)
+};
+
 // 🧩 Middlewares globaux
-app.use(cors());
-// app.options("*", cors());
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // ✅ ajouté par sécurité, en plus de json()
 app.use(cookieParser());
-app.use(morgan("dev"));
+
+// ✅ logs plus légers en prod, verbeux en dev uniquement
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
@@ -55,12 +83,42 @@ app.use('/api/order', orderRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/dashboard', dashboardRouter);
 
-// 🔗 Connexion à MongoDB + Lancement du serveur
-connectDB().then(() => {
-  app.listen(PORT, "0.0.0.0",() => {
-    console.log(`✅ Serveur en cours d'exécution sur le port ${PORT}`);
+// ✅ 404 — route inconnue
+app.use((req, res) => {
+  res.status(404).json({
+    error: true,
+    success: false,
+    message: "Route introuvable",
   });
 });
+
+// ✅ middleware d'erreur global — dernier rempart, évite toute fuite de stack trace en prod
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  // En prod, jamais renvoyer err.stack ou des détails internes au client
+  const isProd = process.env.NODE_ENV === "production";
+
+  res.status(err.status || 500).json({
+    error: true,
+    success: false,
+    message: isProd ? "Erreur serveur" : err.message || "Erreur serveur",
+  });
+});
+
+// 🔗 Connexion à MongoDB + Lancement du serveur
+connectDB()
+  .then(() => {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`✅ Serveur en cours d'exécution sur le port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    // ✅ échec explicite au démarrage plutôt qu'une promesse rejetée silencieuse
+    console.error("❌ Impossible de se connecter à la base de données :", err);
+    process.exit(1);
+  });
+
 // docker compose -f docker-compose.prod.yml down
 // docker compose -f docker-compose.prod.yml build --no-cache
 // docker compose -f docker-compose.prod.yml up

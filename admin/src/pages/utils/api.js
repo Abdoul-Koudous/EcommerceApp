@@ -24,22 +24,28 @@ export const postData = async (url, formData) => {
 };
 
 
-export const fetchDataFromApi = async (url)=>{
+export const fetchDataFromApi = async (url) => {
   try {
-    const params={
+    const params = {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
         "Content-Type": "application/json",
       },
-    }
-    const {data} = await axios.get(apiUrl + url, params)
+    };
+    const { data } = await axios.get(apiUrl + url, params);
     return data;
   } catch (error) {
     console.log(error);
-    return error;
-    
+    // ✅ forme normalisée, cohérente avec postData/editData/deleteData —
+    // permet à l'appelant de fiabiliser un `if (res?.success)` / `else`
+    // au lieu de recevoir l'objet d'erreur brut d'axios (qui n'a pas `success`)
+    return {
+      error: true,
+      success: false,
+      message: error.response?.data?.message || error.message || "Erreur serveur",
+    };
   }
-}
+};
 
 
 export const uploadImage = async (url, updatedData) => {
@@ -120,4 +126,3 @@ export const deleteData = async (url, data = {}) => {
   const res = await axios.delete(apiUrl + url, params);
   return res.data; 
 }
-

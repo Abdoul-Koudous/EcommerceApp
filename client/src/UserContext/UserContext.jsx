@@ -12,6 +12,7 @@ export const UserProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [products, setProducts] = useState([]);
   const [myListItems, setMyListItems] = useState([]);
+  const [loading, setLoading] = useState(true); // ✅ distingue "session pas encore vérifiée" de "pas connecté"
 
   const { openToast } = useContext(ToastContext);
 
@@ -32,29 +33,35 @@ export const UserProvider = ({ children }) => {
       console.log("❌ No token found");
       setUser(null);
       setAddresses([]);
-      return;
+      setLoading(false);
+      return Promise.resolve(null);
     }
 
-    fetchDataFromApi("/api/users/user-details")
+    return fetchDataFromApi("/api/users/user-details")
       .then((res) => {
         console.log("👤 USER API RESPONSE:", res);
 
         if (res?.success) {
           setUser(res.data);
           setAddresses(res.data.address_details || []);
+          return res.data;
         } else {
-          // Token présent mais invalide côté serveur → on nettoie
           console.log("❌ Token invalide, nettoyage");
           localStorage.removeItem("accesstoken");
           localStorage.removeItem("refreshToken");
           setUser(null);
           setAddresses([]);
+          return null;
         }
       })
       .catch((err) => {
         console.error("❌ USER ERROR:", err);
         setUser(null);
         setAddresses([]);
+        return null;
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -78,7 +85,7 @@ export const UserProvider = ({ children }) => {
   };
 
   // =========================
-  // PRODUCTS (🔥 CORRIGÉ ICI)
+  // PRODUCTS
   // =========================
   const loadProducts = async () => {
     try {
@@ -88,7 +95,6 @@ export const UserProvider = ({ children }) => {
 
       console.log("📦 RAW PRODUCTS API RESPONSE:", res);
 
-      // 🔥 CORRECTION ICI
       if (res?.success && res?.products) {
         console.log("✅ PRODUCTS FROM BACKEND:", res.products);
         console.log("📊 NOMBRE DE PRODUITS:", res.products.length);
@@ -179,6 +185,9 @@ export const UserProvider = ({ children }) => {
         products,
         setProducts,
         loadProducts,
+
+        loading, // ✅ pour ProtectedRoute / GuestOnlyRoute
+        loadUser,
       }}
     >
       {children}

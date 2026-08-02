@@ -112,14 +112,14 @@ const Users = () => {
   };
 
   return (
-    <div className="users-page">
-      <div className="users-header">
+    <div className="usr-page">
+      <div className="usr-header">
         <h2>Liste des utilisateurs</h2>
 
-        <div className="header-actions">
+        <div className="usr-header-actions">
           {selected.length > 0 && (
             <button
-              className="delete-multiple-btn show"
+              className="usr-delete-multiple-btn show"
               onClick={() => {
                 setToDeleteId(null);
                 setConfirmOpen(true);
@@ -131,8 +131,8 @@ const Users = () => {
             </button>
           )}
 
-          <div className="search-box">
-            <FaSearch className="search-icon" />
+          <div className="usr-search-box">
+            <FaSearch className="usr-search-icon" />
             <input
               type="text"
               placeholder="Rechercher..."
@@ -146,18 +146,18 @@ const Users = () => {
         </div>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && <div className="usr-error-banner">{error}</div>}
 
-      <div className="table-wrapper">
+      <div className="usr-table-wrapper">
         {loading ? (
-          <div className="table-loading">
+          <div className="usr-table-loading">
             <CircularProgress />
           </div>
         ) : (
-          <table className="users-table">
+          <table className="usr-table">
             <thead>
               <tr>
-                <th className="checkbox-col">
+                <th className="usr-checkbox-col">
                   <input
                     type="checkbox"
                     checked={
@@ -178,7 +178,7 @@ const Users = () => {
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="empty-row">
+                  <td colSpan="8" className="usr-empty-row">
                     Aucun utilisateur trouvé.
                   </td>
                 </tr>
@@ -193,11 +193,11 @@ const Users = () => {
                       />
                     </td>
                     <td>
-                      <div className="user-avatar">
+                      <div className="usr-avatar">
                         {user.avatar ? (
                           <img src={user.avatar} alt={user.name} />
                         ) : (
-                          <span className="avatar-fallback">
+                          <span className="usr-avatar-fallback">
                             {user.name?.charAt(0)?.toUpperCase()}
                           </span>
                         )}
@@ -208,13 +208,13 @@ const Users = () => {
                     <td>{user.mobile || "-"}</td>
                     <td>
                       <span
-                        className={`status-badge ${user.verify_email ? "active" : "inactive"}`}
+                        className={`usr-status-badge ${user.verify_email ? "active" : "inactive"}`}
                       >
                         {user.verify_email ? "Vérifié" : "Non vérifié"}
                       </span>
                     </td>
                     <td>{formatDate(user.createdAt)}</td>
-                    <td className="actions">
+                    <td className="usr-actions">
                       <button onClick={() => handleDeleteClick(user._id)}>
                         <FaTrash />
                       </button>
@@ -227,8 +227,8 @@ const Users = () => {
         )}
       </div>
 
-      <div className="table-footer">
-        <div className="page-size">
+      <div className="usr-table-footer">
+        <div className="usr-page-size">
           Afficher
           <select
             value={limit}
@@ -252,7 +252,7 @@ const Users = () => {
           onPageChange={setPage}
         />
 
-        <div className="total-count">{totalCount} utilisateur(s)</div>
+        <div className="usr-total-count">{totalCount} utilisateur(s)</div>
       </div>
 
       <ConfirmDialog
