@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
-import connectDB from "./config/connectDB.js";
+import connectDB from "./config/connectDb.js";
 import userRouter from './route/user.route.js'
 import categoryRouter from "./route/category.route.js";
 import productRouter from "./route/product.route.js";
