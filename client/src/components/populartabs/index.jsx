@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./popularTabs.scss";
+import "./populartabs.scss";
 import ProductSlider from "../productslider";
 import { fetchDataFromApi } from "../../pages/utils/api";
 import { ProductLoading } from "../ProductLoading";
