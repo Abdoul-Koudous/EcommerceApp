@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# ✅ nécessaire pour une SPA React Router : sans ça, un utilisateur qui recharge
+# la page sur /account/profile ou /product/123 reçoit une 404 de Netlify
+# au lieu de laisser React Router gérer la route côté client
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
