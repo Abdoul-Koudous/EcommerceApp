@@ -375,21 +375,23 @@ export async function userAvatarController(request, response) {
         }
 
         // --- UPLOAD DES NOUVEAUX AVATARS ---
-        const options = {
-            use_filename: true,
-            unique_filename: false,
-            overwrite: false,
+        // ✅ upload_stream depuis le buffer en mémoire, plus de fichier temporaire sur disque
+        const uploadFromBuffer = (fileBuffer) => {
+            return new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { use_filename: true, unique_filename: false, overwrite: false },
+                    (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result);
+                    }
+                );
+                uploadStream.end(fileBuffer);
+            });
         };
 
         for (let i = 0; i < image?.length; i++) {
-            await cloudinary.uploader.upload(
-                image[i].path,
-                options,
-                function (error, result) {
-                    imagesArr.push(result.secure_url);
-                    fs.unlinkSync(`telechargements/${request.files[i].filename}`);
-                }
-            );
+            const result = await uploadFromBuffer(image[i].buffer);
+            imagesArr.push(result.secure_url);
         }
 
         user.avatar = imagesArr[0];
@@ -408,7 +410,6 @@ export async function userAvatarController(request, response) {
         });
     }
 }
-
 
 
 export async function removeImageFromCloudinary(request,response) {
