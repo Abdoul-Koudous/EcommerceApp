@@ -2,7 +2,6 @@ import CategoryModel from '../models/category.model.js';
 
 import { v2 as cloudinary} from 'cloudinary';
 import { error } from 'console';
-import fs from 'fs';
 
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -11,30 +10,30 @@ cloudinary.config({
     secure: true,
 })
 
+// ✅ Upload depuis le buffer en mémoire (multer memoryStorage), plus d'écriture disque
+const uploadFromBuffer = (fileBuffer) => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { use_filename: true, unique_filename: false, overwrite: false },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+        uploadStream.end(fileBuffer);
+    });
+};
+
 var imagesArr = [];
 export async function uploadImages(request, response) {
     try {
         imagesArr = [];
 
-       
         const image = request.files;
 
-        // --- UPLOAD DES NOUVEAUX AVATARS ---
-        const options = {
-            use_filename: true,
-            unique_filename: false,
-            overwrite: false,
-        };
-
         for (let i = 0; i < image?.length; i++) {
-            await cloudinary.uploader.upload(
-                image[i].path,
-                options,
-                function (error, result) {
-                    imagesArr.push(result.secure_url);
-                    fs.unlinkSync(`telechargements/${request.files[i].filename}`);
-                }
-            );
+            const result = await uploadFromBuffer(image[i].buffer);
+            imagesArr.push(result.secure_url);
         }
 
         return response.status(200).json({
@@ -50,6 +49,8 @@ export async function uploadImages(request, response) {
     }
 }
 
+// ... tout le reste du fichier (createCategory, getCategories, deleteCategory,
+// updatedCategory, etc.) reste identique, aucun changement nécessaire.
 
 export async function createCategory(request, response) {
     try {

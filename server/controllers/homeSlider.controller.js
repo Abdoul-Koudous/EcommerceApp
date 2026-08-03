@@ -1,9 +1,5 @@
 import HomeSliderModel from "../models/homeSlider.model.js";
-
-
 import { v2 as cloudinary} from 'cloudinary';
-import { error } from 'console';
-import fs from 'fs';
 
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -11,6 +7,20 @@ cloudinary.config({
     api_secret: process.env.cloudinary_Config_api_secret,
     secure: true,
 })
+
+// ✅ Upload depuis le buffer en mémoire (multer memoryStorage), plus d'écriture disque
+const uploadFromBuffer = (fileBuffer, options = {}) => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            options,
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+        uploadStream.end(fileBuffer);
+    });
+};
 
 var imagesArr = [];
 // Upload images
@@ -24,34 +34,19 @@ export async function uploadImages(req, res) {
 
   try {
     for (const file of files) {
-      try {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "homeSlides"
-        });
-
-        uploadedUrls.push(result.secure_url);
-      } finally {
-        // Supprime toujours le fichier local, même en cas d'erreur Cloudinary
-        if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
-        }
-      }
+      const result = await uploadFromBuffer(file.buffer, { folder: "homeSlides" });
+      uploadedUrls.push(result.secure_url);
     }
 
     return res.status(200).json({ success: true, images: uploadedUrls });
   } catch (err) {
-    // Supprime tous les fichiers restants en cas d'erreur générale
-    files.forEach(file => {
-      if (fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
-      }
-    });
-
     console.error("UploadImages error:", err);
     return res.status(500).json({ success: false, error: true, message: err.message });
   }
 }
 
+// ... tout le reste du fichier (addHomeSlide, getHomeSlides, deleteSlide,
+// updatedSlide, deleteMultipleSlides, etc.) reste identique, aucun changement nécessaire.
 // Ajouter un slide
 export async function addHomeSlide(req, res) {
   try {

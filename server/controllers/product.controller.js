@@ -4,7 +4,6 @@ import productSIZEModel from "../models/productSIZE.js";
 import productWEIGHTModel from "../models/productWEIGHT.js";
 
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 import CategoryModel from "../models/category.model.js";
 import { error } from "console";
 
@@ -15,6 +14,21 @@ cloudinary.config({
   secure: true,
 });
 
+// ✅ Helper réutilisé par toutes les fonctions d'upload : envoie le buffer en
+// mémoire directement à Cloudinary via upload_stream, sans jamais écrire sur disque.
+const uploadFromBuffer = (fileBuffer, options = {}) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { use_filename: true, unique_filename: false, overwrite: false, ...options },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
+
 var imagesArr = [];
 export async function uploadImages(request, response) {
   try {
@@ -22,22 +36,9 @@ export async function uploadImages(request, response) {
 
     const image = request.files;
 
-    // --- UPLOAD DES NOUVEAUX AVATARS ---
-    const options = {
-      use_filename: true,
-      unique_filename: false,
-      overwrite: false,
-    };
-
     for (let i = 0; i < image?.length; i++) {
-      await cloudinary.uploader.upload(
-        image[i].path,
-        options,
-        function (error, result) {
-          imagesArr.push(result.secure_url);
-          fs.unlinkSync(`telechargements/${request.files[i].filename}`);
-        },
-      );
+      const result = await uploadFromBuffer(image[i].buffer);
+      imagesArr.push(result.secure_url);
     }
 
     return response.status(200).json({
@@ -60,21 +61,9 @@ export async function uploadBannerImages(request, response) {
 
     const image = request.files;
 
-    const options = {
-      use_filename: true,
-      unique_filename: false,
-      overwrite: false,
-    };
-
     for (let i = 0; i < image?.length; i++) {
-      await cloudinary.uploader.upload(
-        image[i].path,
-        options,
-        function (error, result) {
-          bannerImage.push(result.secure_url); // ✅ CORRIGÉ
-          fs.unlinkSync(`telechargements/${request.files[i].filename}`);
-        },
-      );
+      const result = await uploadFromBuffer(image[i].buffer);
+      bannerImage.push(result.secure_url);
     }
 
     return response.status(200).json({

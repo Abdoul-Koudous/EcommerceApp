@@ -1,6 +1,5 @@
 import BannerV1Model from "../models/bannerV1.model.js";
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 import CategoryModel from "../models/category.model.js";
 
 cloudinary.config({
@@ -12,6 +11,19 @@ cloudinary.config({
 
 let imagesArr = [];
 
+// ✅ Upload depuis le buffer en mémoire (multer memoryStorage), plus d'écriture disque
+const uploadFromBuffer = (fileBuffer) => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { use_filename: true, unique_filename: false, overwrite: false },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+        uploadStream.end(fileBuffer);
+    });
+};
 
 // 🔹 UPLOAD IMAGES
 export async function uploadImages(req, res) {
@@ -20,21 +32,9 @@ export async function uploadImages(req, res) {
 
         const files = req.files;
 
-        const options = {
-            use_filename: true,
-            unique_filename: false,
-            overwrite: false,
-        };
-
         for (let i = 0; i < files?.length; i++) {
-            const result = await cloudinary.uploader.upload(
-                files[i].path,
-                options
-            );
-
+            const result = await uploadFromBuffer(files[i].buffer);
             imagesArr.push(result.secure_url);
-
-            fs.unlinkSync(files[i].path);
         }
 
         return res.status(200).json({
@@ -51,6 +51,8 @@ export async function uploadImages(req, res) {
     }
 }
 
+// ... tout le reste du fichier (addBanner, getBanners, deleteBanner, updatedBanner, etc.)
+// reste identique, aucun changement nécessaire.
 
 // 🔹 CREATE BANNER
 export async function addBanner(req, res) {
