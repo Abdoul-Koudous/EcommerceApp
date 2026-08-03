@@ -309,19 +309,10 @@ const EditProduct = ({ product, onClose }) => {
     if (!formFields.mainImage && !mainImageFile)
       return openToast("error", "Veuillez ajouter une image principale");
 
-    const hasOldImages = product?.images?.length > 1;
-
-    if (existingExtraImages.length === 0 && extraImageFiles.length === 0) {
-      return openToast(
-        "error",
-        "Veuillez ajouter au moins une image secondaire",
-      );
-    }
-    if (!formFields.brand.trim())
-      return openToast("error", "La marque du produit est obligatoire");
-
-    if (formFields.countIntStock <= 0)
-      return openToast("error", "Le stock doit être supérieur à zéro");
+    // ✅ retiré : l'exigence d'une image secondaire (un produit avec une seule photo est valide)
+    if (formFields.countIntStock < 0)
+      return openToast("error", "Le stock ne peut pas être négatif");
+    // ✅ assoupli : "< 0" au lieu de "<= 0" — un stock à 0 (rupture / précommande) est valide
     if (formFields.discount < 0)
       return openToast("error", "La remise ne peut pas être négative");
     if (formFields.price < 0)

@@ -29,12 +29,10 @@ const uploadFromBuffer = (fileBuffer, options = {}) => {
   });
 };
 
-var imagesArr = [];
 export async function uploadImages(request, response) {
   try {
-    imagesArr = [];
-
     const image = request.files;
+    const imagesArr = []; // ✅ locale à la requête, plus de variable partagée au niveau module
 
     for (let i = 0; i < image?.length; i++) {
       const result = await uploadFromBuffer(image[i].buffer);
@@ -53,13 +51,10 @@ export async function uploadImages(request, response) {
   }
 }
 
-var bannerImage = [];
-
 export async function uploadBannerImages(request, response) {
   try {
-    bannerImage = [];
-
     const image = request.files;
+    const bannerImage = []; // ✅ locale à la requête
 
     for (let i = 0; i < image?.length; i++) {
       const result = await uploadFromBuffer(image[i].buffer);
@@ -77,13 +72,14 @@ export async function uploadBannerImages(request, response) {
     });
   }
 }
+
 export async function createProduct(request, response) {
   try {
     let product = new ProductModel({
       name: request.body.name,
       description: request.body.description,
-      images: imagesArr, // ou request.body.images
-      bannerimages: bannerImage,
+      images: request.body.images || [], // ✅ vient du payload envoyé par le front, plus de variable globale partagée
+      bannerimages: request.body.bannerimages || [], // ✅ idem
       brand: request.body.brand,
       price: request.body.price,
       oldPrice: request.body.oldPrice,
@@ -108,8 +104,6 @@ export async function createProduct(request, response) {
     });
 
     product = await product.save();
-
-    imagesArr = []; // reset
 
     return response.status(200).json({
       message: "Product créé avec succès",
@@ -814,7 +808,7 @@ export async function updateProduct(request, response) {
         name: request.body.name,
         description: request.body.description,
         images: request.body.images,
-        bannerimages: request.body.bannerImage,
+        bannerimages: request.body.bannerimages, // ✅ corrigé : le front envoie "bannerimages" (minuscule), pas "bannerImage"
         bannerTitleName: request.body.bannerTitleName,
         isDisplayOnHomeBanner: request.body.isDisplayOnHomeBanner,
         brand: request.body.brand,
@@ -846,8 +840,6 @@ export async function updateProduct(request, response) {
         success: false,
       });
     }
-
-    imagesArr = [];
 
     return response.status(200).json({
       message: "Le produit a été mis à jour avec succès",
@@ -1458,14 +1450,6 @@ export async function getProductSIZEById(request, response) {
   }
 }
 
-// Remplace ta fonction `filters` existante dans product.controller.js par celle-ci.
-// Elle gère maintenant aussi sortBy/order, donc SideBar peut être la seule source de fetch.
-
-// Remplace ta fonction `filters` existante dans product.controller.js par celle-ci.
-// Ajouts : support du tri (sortBy/order) + comptage dynamique par étoile (ratingCounts),
-// calculé avec les MÊMES filtres actifs (catégorie, prix, recherche...) mais SANS le filtre
-// de note lui-même, pour que les 5 options restent toutes visibles avec leur vrai total.
-
 export async function filters(request, response) {
   const {
     catId = [],
@@ -1681,10 +1665,6 @@ export async function searchProductController(request, response){
     })
   }
 }
-
-// À ajouter dans product.controller.js (nouvelle fonction, ne remplace rien).
-// Renvoie un aperçu léger (6 produits max) pour l'autocomplete — pas de pagination,
-// juste ce qu'il faut pour afficher le dropdown de suggestions.
 
 export async function searchSuggestions(request, response) {
   try {

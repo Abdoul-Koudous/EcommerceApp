@@ -64,8 +64,9 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius-sm);
       background: var(--color-surface);
-      flex: 1;
-      min-width: 220px;
+      flex: 0 1 280px; // ✅ largeur cible de 280px au lieu de "flex: 1" qui prenait tout l'espace restant
+      min-width: 200px; // ✅ largeur minimale conservée pour rester utilisable
+      max-width: 320px; // ✅ ne dépasse jamais cette largeur, même si l'espace est disponible
       transition: var(--transition-fast);
 
       .icon {
