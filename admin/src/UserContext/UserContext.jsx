@@ -20,10 +20,10 @@ export const UserProvider = ({ children }) => {
       setUser(null);
       setAddresses([]);
       setLoading(false);
-      return;
+      return Promise.resolve(); // ✅ pour pouvoir faire "await loadUser()" même dans ce cas
     }
 
-    fetchDataFromApi("/api/users/user-details")
+    return fetchDataFromApi("/api/users/user-details") // ✅ return ajouté : loadUser renvoie maintenant la Promise
       .then((res) => {
         if (res?.success) {
           setUser(res.data);

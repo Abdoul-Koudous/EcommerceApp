@@ -53,8 +53,8 @@ const LoginForm = () => {
         localStorage.setItem("refreshToken", res.data.refreshToken);
         localStorage.setItem("userEmail", email);
 
-        setTimeout(() => loadUser(), 50);
-        navigate("/"); // redirection après login
+        await loadUser();   // ✅ attend que le contexte utilisateur soit vraiment à jour
+        navigate("/");      // ✅ puis seulement on redirige
       } else {
         openToast("error", res.message);
       }
