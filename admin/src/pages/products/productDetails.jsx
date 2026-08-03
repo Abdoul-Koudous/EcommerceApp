@@ -11,6 +11,9 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
   useEffect(() => {
     const fetchProduct = async () => {
       const res = await fetchDataFromApi(`/api/product/${id}`);
@@ -18,6 +21,27 @@ const ProductDetails = () => {
       setLoading(false);
     };
     fetchProduct();
+  }, [id]);
+
+  // ✅ récupère les vrais avis du produit depuis le backend
+  // (même endpoint public utilisé côté client)
+  useEffect(() => {
+    const fetchReviews = async () => {
+      setReviewsLoading(true);
+
+      const res = await fetchDataFromApi(`/api/users/getReviews?productId=${id}`);
+
+      if (res?.success) {
+        const sorted = (res?.reviews || []).sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setReviews(sorted);
+      }
+
+      setReviewsLoading(false);
+    };
+
+    if (id) fetchReviews();
   }, [id]);
 
   if (loading)
@@ -96,7 +120,9 @@ const ProductDetails = () => {
               <FaStar className="icon" />
               <span className="label">Avis </span>
               <span className="colon">:</span>
-              <span className="value">({product.rating}) avis</span>
+              {/* ✅ reflète le vrai nombre d'avis chargés, plus product.rating
+                 qui était trompeur ici (c'était une note, pas un compteur) */}
+              <span className="value">{reviews.length} avis</span>
             </div>
           </div>
 
@@ -109,70 +135,46 @@ const ProductDetails = () => {
 
       {/* Liste des avis */}
       <div className="pdt-reviews-list">
-        <h4>Avis clients</h4>
+        <h4>Avis clients ({reviews.length})</h4>
 
-        {[
-          {
-            name: "Jean Dupont",
-            date: "25 Octobre 2025",
-            comment: `Super produit, très bonne qualité ! 
-                Je le recommande vivement. 
-                pour les amateurs de technologie. on peut l'utiliser pour
-                 diverses tâches et il fonctionne parfaitement.`,
-            rating: 5,
-            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCzK6DKnIE7MM_7cuaQAJlpxUHYs8yKDT3yg&s",
-          },
-          {
-            name: "Awa Diop",
-            date: "22 Octobre 2025",
-            comment: "Bon rapport qualité-prix, livraison rapide.",
-            rating: 4,
-            img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-          },
-          {
-            name: "Awa Diop",
-            date: "22 Octobre 2025",
-            comment: "Bon rapport qualité-prix, livraison rapide.",
-            rating: 4,
-            img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-          },
-          {
-            name: "Awa Diop",
-            date: "22 Octobre 2025",
-            comment: "Bon rapport qualité-prix, livraison rapide.",
-            rating: 4,
-            img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-          },
-          {
-            name: "Awa Diop",
-            date: "22 Octobre 2025",
-            comment: "Bon rapport qualité-prix, livraison rapide.",
-            rating: 4,
-            img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-          },
-          {
-            name: "Awa Diop",
-            date: "22 Octobre 2025",
-            comment: "Bon rapport qualité-prix, livraison rapide.",
-            rating: 4,
-            img: "https://www.amity.edu/gurugram/microbackoffice/Uploads/TestimonialImage/98testi_RajivBasavaalumni.jpg",
-          },
-        ].map((review, i) => (
-          <div className="pdt-review-item" key={i}>
-            <img src={review.img} alt={review.name} className="pdt-review-avatar" />
-
-            <div className="pdt-review-content">
-              <h5>{review.name}</h5>
-              <span className="pdt-review-date">{review.date}</span>
-              <p>{review.comment}</p>
-            </div>
-
-            <div className="pdt-review-rating">
-              {"★".repeat(review.rating)}
-              {"☆".repeat(5 - review.rating)}
-            </div>
+        {reviewsLoading ? (
+          <div className="pdt-reviews-loading">
+            <CircularProgress />
           </div>
-        ))}
+        ) : reviews.length === 0 ? (
+          <p className="pdt-no-reviews">Aucun avis pour ce produit.</p>
+        ) : (
+          reviews.map((review) => {
+            const formattedDate = review.createdAt
+              ? new Date(review.createdAt).toLocaleDateString("fr-FR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })
+              : "—";
+
+            return (
+              <div className="pdt-review-item" key={review._id}>
+                <img
+                  src={review.image || "/user.jpg"}
+                  alt={review.userName}
+                  className="pdt-review-avatar"
+                />
+
+                <div className="pdt-review-content">
+                  <h5>{review.userName}</h5>
+                  <span className="pdt-review-date">{formattedDate}</span>
+                  <p>{review.review}</p>
+                </div>
+
+                <div className="pdt-review-rating">
+                  {"★".repeat(Number(review.rating) || 0)}
+                  {"☆".repeat(5 - (Number(review.rating) || 0))}
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

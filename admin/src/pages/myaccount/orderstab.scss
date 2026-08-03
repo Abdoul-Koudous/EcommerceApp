@@ -132,7 +132,8 @@
 
   .otb-table {
     display: block;
-    min-width: 1100px;
+    width: 100%;        // ✅ occupe toute la largeur du conteneur au lieu de rester figée à min-width
+    min-width: 1100px;  // conservé : garantit un scroll horizontal propre sur petit écran
   }
 
   // 9 colonnes : flèche, Commande, Client, Livraison, Total, Paiement, Date, Statut, Actions
@@ -140,7 +141,12 @@
   .otb-summary {
     display: grid;
     grid-template-columns:
-      40px 140px 200px 240px 120px 160px 110px 150px 50px;
+      40px 140px 1.4fr 1.6fr 120px 160px 110px 150px 50px;
+      // ✅ Client et Livraison passent en fr : elles se partagent
+      // proportionnellement tout l'espace restant une fois les colonnes
+      // fixes posées, ce qui élimine le vide à droite du tableau sur
+      // les écrans larges. Livraison légèrement plus large que Client
+      // (adresse souvent longue).
     padding: 1rem;
     align-items: center;
     background: var(--color-surface-alt);
