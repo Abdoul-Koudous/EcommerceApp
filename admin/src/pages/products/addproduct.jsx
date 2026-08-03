@@ -127,7 +127,7 @@ const AddProduct = ({ onClose }) => {
     thirdSubCatId: "",
     countIntStock: 0,
     rating: 0,
-    isFeatured: false,
+    isFeatured: false, // ✅ valeur par défaut explicite (au lieu de "") : le select affiche "Non" dès le départ
     discount: 0,
     productRam: [],
     size: [],
@@ -296,13 +296,10 @@ const AddProduct = ({ onClose }) => {
 
     if (!mainImageFile)
       return openToast("error", "Veuillez ajouter une image principale");
-    if (extraImageFiles.length === 0)
-      return openToast(
-        "error",
-        "Veuillez ajouter au moins une image secondaire",
-      );
-    if (formFields.countIntStock <= 0)
-      return openToast("error", "Le stock doit être supérieur à zéro");
+    // ✅ retiré : l'exigence d'une image secondaire (un produit avec une seule photo est valide)
+    if (formFields.countIntStock < 0)
+      return openToast("error", "Le stock ne peut pas être négatif");
+    // ✅ assoupli : "< 0" au lieu de "<= 0" — un stock à 0 (rupture / précommande) est valide
     if (formFields.discount < 0)
       return openToast("error", "La remise ne peut pas être négative");
     if (formFields.price < 0)
@@ -313,16 +310,17 @@ const AddProduct = ({ onClose }) => {
       return openToast("error", "La note doit être comprise entre 0 et 5");
     if (formFields.discount > 100)
       return openToast("error", "La remise ne peut pas dépasser 100%");
-    if (Number(formFields.oldPrice) < Number(formFields.price))
+    // ✅ cette règle ne s'applique que si un ancien prix a été renseigné (> 0) ;
+    // sinon on considère qu'il n'y a simplement pas de promo affichée sur ce produit
+    if (
+      Number(formFields.oldPrice) > 0 &&
+      Number(formFields.oldPrice) < Number(formFields.price)
+    )
       return openToast(
         "error",
         "L'ancien prix doit être supérieur au prix actuel",
       );
-    if (formFields.isFeatured === "")
-      return openToast(
-        "error",
-        "Veuillez indiquer si le produit est en vedette",
-      );
+    // ✅ retiré : le blocage sur isFeatured === "" — la valeur par défaut (false) est maintenant valide
     if (formFields.countIntStock % 1 !== 0)
       return openToast("error", "Le stock doit être un nombre entier");
     if (formFields.isDisplayOnHomeBanner && bannerFiles.length === 0) {
@@ -589,9 +587,8 @@ const AddProduct = ({ onClose }) => {
                     }))
                   }
                 >
-                  <option value="">Sélectionner</option>
-                  <option value={true}>Oui</option>
                   <option value={false}>Non</option>
+                  <option value={true}>Oui</option>
                 </select>
               </div>
 

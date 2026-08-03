@@ -44,6 +44,7 @@ const ProductItem = ({ product }) => {
 
   // 🔹 Images provenant uniquement de la base
   const images = product.images || [];
+  const hasMultipleImages = images.length > 1; // ✅ true seulement s'il y a au moins 2 images
 
   const truncateName = (name, maxWords = 3) => {
     if (!name) return "";
@@ -332,7 +333,7 @@ const currentCartItem = cartItems?.find(
             <>
               {!imageLoaded && <div className="skeleton-image"></div>}
               <img
-                src={hovered && images[1] ? images[1] : images[0]}
+                src={hovered && hasMultipleImages ? images[1] : images[0]}
                 alt={product.name}
                 style={{ display: imageLoaded ? "block" : "none" }}
                 onLoad={() => setImageLoaded(true)}

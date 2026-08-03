@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   FaStar,
   FaRegStar,
@@ -19,6 +20,16 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
   const [selectedWeight, setSelectedWeight] = useState(null);
 
   const isOutOfStock = !product?.countIntStock || product.countIntStock <= 0;
+
+  // ✅ bloque le scroll de la page tant que le popup est ouvert,
+  // et le restaure proprement à la fermeture (même si le composant est démonté brutalement)
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const handleAddToCart = () => {
     console.log("CLICK ADD", {
@@ -70,9 +81,11 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
   const handleDecrement = () =>
     setQuantity(quantity > 1 ? quantity - 1 : 1);
 
-  return (
-    <div className="pp-overlay">
-      <div className="pp-content">
+  // ✅ rendu dans un portal directement sous <body>, en dehors de la grille de produits :
+  // le popup ne dépend plus jamais d'un transform/filter appliqué à une carte produit
+  return createPortal(
+    <div className="pp-overlay" onClick={onClose}>
+      <div className="pp-content" onClick={(e) => e.stopPropagation()}>
         <button className="pp-close-btn" onClick={onClose}>
           <FaTimes />
         </button>
@@ -218,7 +231,8 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
