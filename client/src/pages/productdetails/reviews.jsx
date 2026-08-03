@@ -39,6 +39,14 @@ export const Reviews = ({ product, user, setReviewsCount }) => {
   const addReview = (e) => {
     e.preventDefault();
 
+    // ✅ on exige que l'utilisateur soit connecté avant de soumettre
+    // (addReview est protégée par `auth` côté backend, autant prévenir
+    // clairement plutôt que de laisser échouer la requête)
+    if (!user?._id) {
+      openToast("error", "Connectez-vous pour laisser un avis");
+      return;
+    }
+
     if (selectedRating === 0) {
       openToast("error", "Veuillez sélectionner une note");
       return;
@@ -86,16 +94,17 @@ export const Reviews = ({ product, user, setReviewsCount }) => {
 
           setReviewsList(sortedReviews);
 
-          // ✅ MAJ DU COUNT ICI
           if (typeof setReviewsCount === "function") {
             setReviewsCount(sortedReviews.length);
           }
-        } else {
-          openToast("error", res?.message);
         }
+        // ✅ pas de toast ici : ce chargement se fait automatiquement à
+        // l'ouverture de la page, sans action de l'utilisateur. Un échec
+        // silencieux (liste vide affichée) est plus adapté qu'une bannière
+        // d'erreur agressive dès l'arrivée sur la fiche produit.
       })
       .catch((err) => {
-        openToast("error", err?.message || "Erreur serveur");
+        console.error("Erreur chargement avis:", err);
       });
   };
 
@@ -110,12 +119,6 @@ export const Reviews = ({ product, user, setReviewsCount }) => {
       {/* Formulaire d'avis */}
       <form className="review-form" onSubmit={addReview}>
         <h4>Laisser un avis</h4>
-
-        {/* Champs Nom + Email */}
-        <div className="form-row">
-          <input type="text" placeholder="Votre nom" />
-          <input type="email" placeholder="Votre email" />
-        </div>
 
         {/* Champ commentaire */}
         <textarea
@@ -143,14 +146,6 @@ export const Reviews = ({ product, user, setReviewsCount }) => {
           ))}
         </div>
 
-        {/* Checkbox */}
-        <div className="save-info">
-          <input type="checkbox" id="save-info" />
-          <label htmlFor="save-info">
-            Enregistrer mon nom et mon email pour les prochains commentaires.
-          </label>
-        </div>
-
         <button className="btn-submit">Soumettre</button>
       </form>
 
@@ -160,7 +155,6 @@ export const Reviews = ({ product, user, setReviewsCount }) => {
 
         {reviewsList.map((review, i) => {
 
-          // ✅ FORMAT DATE
           const formattedDate = new Date(review.createdAt).toLocaleDateString("fr-FR", {
             day: "2-digit",
             month: "long",

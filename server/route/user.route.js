@@ -42,7 +42,7 @@ userRouter.post('/reset-password', resetpassword);
 userRouter.post('/refresh-token', refreshToken);
 userRouter.get('/user-details', auth, UserDetails);
 userRouter.post('/addReview', auth, addReview);
-userRouter.get('/getReviews', auth, getReviews);
+userRouter.get('/getReviews',getReviews);
 
 // Liste des utilisateurs (admin, paginée + recherche)
 userRouter.get('/lists', auth, adminAuth, getAllUsersController);

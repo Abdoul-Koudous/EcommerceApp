@@ -4,11 +4,20 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 // 🔥 Fonction pour éviter répétition des headers
 const getHeaders = (type = "json") => {
-  return {
+  const headers = {
     Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
-    "Content-Type":
-      type === "form" ? "multipart/form-data" : "application/json",
   };
+
+  // ✅ Pour "form" (multipart), on NE fixe PAS Content-Type manuellement.
+  // Le navigateur/axios doit le générer lui-même pour inclure le "boundary"
+  // (ex: multipart/form-data; boundary=----WebKitFormBoundary...), sinon
+  // le serveur (multer) ne peut pas parser correctement les fichiers,
+  // ce qui cause des uploads qui échouent de façon intermittente.
+  if (type !== "form") {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
 };
 
 // ✅ POST (création)

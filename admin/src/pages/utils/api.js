@@ -18,7 +18,7 @@ export const postData = async (url, formData) => {
     return data;
   } catch (error) {
     console.error(error);
-    // On retourne une structure d’erreur pour que le composant puisse afficher le toast
+    // On retourne une structure d'erreur pour que le composant puisse afficher le toast
     return { error: true, message: "Erreur serveur" };
   }
 };
@@ -36,9 +36,6 @@ export const fetchDataFromApi = async (url) => {
     return data;
   } catch (error) {
     console.log(error);
-    // ✅ forme normalisée, cohérente avec postData/editData/deleteData —
-    // permet à l'appelant de fiabiliser un `if (res?.success)` / `else`
-    // au lieu de recevoir l'objet d'erreur brut d'axios (qui n'a pas `success`)
     return {
       error: true,
       success: false,
@@ -53,7 +50,10 @@ export const uploadImage = async (url, updatedData) => {
     const params = {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
-        "Content-Type": "multipart/form-data",
+        // ✅ Content-Type retiré : le navigateur/axios doit le générer lui-même
+        // pour inclure le "boundary" (ex: multipart/form-data; boundary=...),
+        // sinon multer côté serveur ne peut pas parser correctement les fichiers,
+        // ce qui cause des uploads d'images qui échouent de façon intermittente.
       },
     };
     const response = await axios.put(apiUrl + url, updatedData, params);
@@ -70,7 +70,7 @@ export const uploadImages = async (url, formData) => {
     const params = {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
-        "Content-Type": "multipart/form-data",
+        // ✅ idem : pas de Content-Type manuel pour un envoi multipart
       },
     };
     const response = await axios.post(apiUrl + url, formData, params);
@@ -121,7 +121,7 @@ export const deleteData = async (url, data = {}) => {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
     },
-    data, // maintenant défini via l’argument
+    data,
   };
   const res = await axios.delete(apiUrl + url, params);
   return res.data; 

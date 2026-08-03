@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { FaEdit, FaEye, FaTrash, FaPlus, FaDownload, FaSearch } from "react-icons/fa";
 import "./productslist.scss";
@@ -54,31 +54,26 @@ const Product = () => {
     fetchFilters();
   }, []);
 
+  // ✅ extraite du useEffect via useCallback pour pouvoir être rappelée
+  // manuellement (ex: après ajout/édition/suppression) sans dupliquer le code
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+
+    const res = await fetchDataFromApi(
+      `/api/product?catName=${productCat}&subCat=${productSubCat}&thirdsubCat=${productThirdSubCat}&search=${searchTerm}&page=${currentPage}&perPage=${itemsPerPage}`
+    );
+
+    if (!res?.error) {
+      setProductData(res.products || []);
+      setTotalItems(res.total || 0);
+    }
+
+    setLoading(false);
+  }, [productCat, productSubCat, productThirdSubCat, searchTerm, currentPage, itemsPerPage]);
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-
-      const res = await fetchDataFromApi(
-        `/api/product?catName=${productCat}&subCat=${productSubCat}&thirdsubCat=${productThirdSubCat}&search=${searchTerm}&page=${currentPage}&perPage=${itemsPerPage}`
-      );
-
-      if (!res?.error) {
-        setProductData(res.products || []);
-        setTotalItems(res.total || 0);
-      }
-
-      setLoading(false);
-    };
-
     fetchProducts();
-  }, [
-    productCat,
-    productSubCat,
-    productThirdSubCat,
-    searchTerm,
-    currentPage,
-    itemsPerPage
-  ]);
+  }, [fetchProducts]);
 
   const allSelected =
     productData.length > 0 &&
@@ -336,9 +331,24 @@ const Product = () => {
         </div>
       </div>
 
-      {showAddDialog && <AddProduct onClose={() => setShowAddDialog(false)} />}
+      {/* ✅ à la fermeture du dialogue (que ce soit après un ajout réussi ou
+         une simple fermeture), on rafraîchit la liste — plus besoin de F5 */}
+      {showAddDialog && (
+        <AddProduct
+          onClose={() => {
+            setShowAddDialog(false);
+            fetchProducts();
+          }}
+        />
+      )}
       {showEditDialog && productToEdit && (
-        <EditProduct product={productToEdit} onClose={() => setShowEditDialog(false)} />
+        <EditProduct
+          product={productToEdit}
+          onClose={() => {
+            setShowEditDialog(false);
+            fetchProducts();
+          }}
+        />
       )}
 
       <ConfirmDialog
