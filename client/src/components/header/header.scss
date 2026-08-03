@@ -77,10 +77,10 @@ header {
       }
 
       img {
-        width: 110px;
+        width: 140px; // Adapté pour la lisibilité de vos nouveaux logos textuels
 
         @include respond("mobile") {
-          width: 85px;
+          width: 100px;
         }
       }
     }
@@ -286,6 +286,7 @@ header {
     }
   }
 }
+
 .theme-toggle-item {
   display: flex;
   align-items: center;

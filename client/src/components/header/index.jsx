@@ -16,13 +16,16 @@ import "./header.scss";
 import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import ThemeToggle from "../themetoggle";
+import { ThemeContext } from "../../context/ThemeContext"; // 👈 Adaptez le chemin selon votre structure
 
 const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  
+  // Consommation du contexte de thème React
+  const { theme } = useContext(ThemeContext);
   const { user, setUser, cartItems, categories, myListItems } = useContext(UserContext);
-
   const { openToast } = useContext(ToastContext);
 
   const isLoggedIn = !!user?._id;
@@ -35,16 +38,12 @@ const Header = () => {
 
   const logout = async () => {
     try {
-      // ✅ la route est bien un GET côté backend (userRouter.get('/logout', ...)) —
-      // le { method: "POST" } précédent était ignoré par fetchDataFromApi, retiré pour ne pas induire en erreur
       await fetchDataFromApi("/api/users/logout");
 
-      // Nettoyage localStorage
       localStorage.removeItem("accesstoken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userEmail");
 
-      // ✅ met à jour le contexte directement au lieu de forcer un reload complet de la page
       setUser(null);
       setDropdownOpen(false);
 
@@ -85,9 +84,14 @@ const Header = () => {
 
       <div className="header">
         <div className="container">
+          {/* Rendu dynamique basé sur l'état du contexte React */}
           <div className="cont1">
             <Link to={"/"}>
-              <img src="/logo.png" alt="logo" />
+              {theme === "dark" ? (
+                <img src="/logo-dark.png" alt="logo dark" />
+              ) : (
+                <img src="/logo-light.png" alt="logo light" />
+              )}
             </Link>
           </div>
 
