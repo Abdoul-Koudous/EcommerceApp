@@ -4,6 +4,7 @@ import productSIZEModel from "../models/productSIZE.js";
 import productWEIGHTModel from "../models/productWEIGHT.js";
 
 import { v2 as cloudinary } from "cloudinary";
+import crypto from "crypto"; // ✅ à ajouter en haut du fichier avec les autres imports
 import CategoryModel from "../models/category.model.js";
 import { error } from "console";
 
@@ -16,10 +17,27 @@ cloudinary.config({
 
 // ✅ Helper réutilisé par toutes les fonctions d'upload : envoie le buffer en
 // mémoire directement à Cloudinary via upload_stream, sans jamais écrire sur disque.
-const uploadFromBuffer = (fileBuffer, options = {}) => {
+
+
+// ...
+
+// ✅ Helper réutilisé par toutes les fonctions d'upload : envoie le buffer en
+// mémoire directement à Cloudinary via upload_stream, avec un public_id UNIQUE
+// à chaque appel (résout le bug où toutes les images atterrissaient sur le
+// même public_id "file", causant un refus d'écrasement par Cloudinary).
+const uploadFromBuffer = (fileBuffer, originalName = "", options = {}) => {
   return new Promise((resolve, reject) => {
+    const baseName = originalName
+      ? originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_")
+      : "product";
+    const uniqueId = `${baseName}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+
     const uploadStream = cloudinary.uploader.upload_stream(
-      { use_filename: true, unique_filename: false, overwrite: false, ...options },
+      {
+        public_id: uniqueId, // ✅ garantit un asset distinct à chaque upload
+        overwrite: false,
+        ...options,
+      },
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
@@ -32,10 +50,10 @@ const uploadFromBuffer = (fileBuffer, options = {}) => {
 export async function uploadImages(request, response) {
   try {
     const image = request.files;
-    const imagesArr = []; // ✅ locale à la requête, plus de variable partagée au niveau module
+    const imagesArr = []; // locale à la requête
 
     for (let i = 0; i < image?.length; i++) {
-      const result = await uploadFromBuffer(image[i].buffer);
+      const result = await uploadFromBuffer(image[i].buffer, image[i].originalname);
       imagesArr.push(result.secure_url);
     }
 
@@ -54,10 +72,10 @@ export async function uploadImages(request, response) {
 export async function uploadBannerImages(request, response) {
   try {
     const image = request.files;
-    const bannerImage = []; // ✅ locale à la requête
+    const bannerImage = []; // locale à la requête
 
     for (let i = 0; i < image?.length; i++) {
-      const result = await uploadFromBuffer(image[i].buffer);
+      const result = await uploadFromBuffer(image[i].buffer, image[i].originalname);
       bannerImage.push(result.secure_url);
     }
 
@@ -72,7 +90,6 @@ export async function uploadBannerImages(request, response) {
     });
   }
 }
-
 export async function createProduct(request, response) {
   try {
     let product = new ProductModel({

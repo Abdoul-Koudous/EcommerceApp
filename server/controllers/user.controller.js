@@ -6,6 +6,7 @@ import VerificationEmail from '../utils/verifyEmailTemplate.js';
 import generatedAccessToken from "../utils/generatedAccessToken.js";
 import generatedRefreshToken from "../utils/generatedRefreshToken.js";
 import { v2 as cloudinary} from 'cloudinary';
+import crypto from "crypto"; // ✅ à ajouter en haut du fichier avec les autres imports
 import fs from 'fs';
 import { match } from "assert";
 import { text } from "stream/consumers";
@@ -343,13 +344,15 @@ export async function logoutController(request,response) {
     
 }
 
-var imagesArr = [];
+
+
+// ...
+
 export async function userAvatarController(request, response) {
     try {
-        imagesArr = [];
-
         const userId = request.userId;
         const image = request.files;
+        const imagesArr = []; // ✅ locale à la fonction, plus de variable globale au niveau module
 
         const user = await UserModel.findOne({ _id: userId });
 
@@ -361,7 +364,7 @@ export async function userAvatarController(request, response) {
             });
         }
 
-        // --- SUPPRESSION DE L’ANCIEN AVATAR ---
+        // --- SUPPRESSION DE L'ANCIEN AVATAR ---
         const imgUrl = user.avatar;
 
         if (imgUrl) {
@@ -374,12 +377,18 @@ export async function userAvatarController(request, response) {
             }
         }
 
-        // --- UPLOAD DES NOUVEAUX AVATARS ---
-        // ✅ upload_stream depuis le buffer en mémoire, plus de fichier temporaire sur disque
-        const uploadFromBuffer = (fileBuffer) => {
+        // --- UPLOAD DU NOUVEL AVATAR ---
+        // ✅ public_id unique à chaque upload, on ne dépend plus de l'ordre
+        // destroy → upload pour éviter une collision de nom
+        const uploadFromBuffer = (fileBuffer, originalName = "") => {
             return new Promise((resolve, reject) => {
+                const baseName = originalName
+                    ? originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_")
+                    : "avatar";
+                const uniqueId = `${baseName}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+
                 const uploadStream = cloudinary.uploader.upload_stream(
-                    { use_filename: true, unique_filename: false, overwrite: false },
+                    { public_id: uniqueId, overwrite: false },
                     (error, result) => {
                         if (error) return reject(error);
                         resolve(result);
@@ -390,7 +399,7 @@ export async function userAvatarController(request, response) {
         };
 
         for (let i = 0; i < image?.length; i++) {
-            const result = await uploadFromBuffer(image[i].buffer);
+            const result = await uploadFromBuffer(image[i].buffer, image[i].originalname);
             imagesArr.push(result.secure_url);
         }
 

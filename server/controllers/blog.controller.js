@@ -1,8 +1,6 @@
 import BlogModel from '../models/blog.model.js';
-
-import { v2 as cloudinary} from 'cloudinary';
-import { error } from 'console';
-import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
+import crypto from 'crypto'; // ✅ ajouté
 
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -11,30 +9,36 @@ cloudinary.config({
     secure: true,
 })
 
-var imagesArr = [];
+// ✅ Upload depuis le buffer en mémoire (comme les autres controllers),
+// avec un public_id UNIQUE à chaque appel pour éviter que Cloudinary
+// ne refuse d'écraser un asset existant et renvoie une ancienne image.
+const uploadFromBuffer = (fileBuffer, originalName = "") => {
+    return new Promise((resolve, reject) => {
+        const baseName = originalName
+            ? originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_")
+            : "blog";
+        const uniqueId = `${baseName}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { public_id: uniqueId, overwrite: false },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+        uploadStream.end(fileBuffer);
+    });
+};
+
 export async function uploadImages(request, response) {
     try {
-        imagesArr = [];
-
-       
         const image = request.files;
-
-        // --- UPLOAD DES NOUVEAUX AVATARS ---
-        const options = {
-            use_filename: true,
-            unique_filename: false,
-            overwrite: false,
-        };
+        const imagesArr = []; // ✅ locale à la requête, plus de variable partagée au niveau module
 
         for (let i = 0; i < image?.length; i++) {
-            await cloudinary.uploader.upload(
-                image[i].path,
-                options,
-                function (error, result) {
-                    imagesArr.push(result.secure_url);
-                    fs.unlinkSync(`telechargements/${request.files[i].filename}`);
-                }
-            );
+            // ✅ await correct sur une vraie Promise, plus de callback perdu dans le vide
+            const result = await uploadFromBuffer(image[i].buffer, image[i].originalname);
+            imagesArr.push(result.secure_url);
         }
 
         return response.status(200).json({
@@ -59,8 +63,6 @@ export async function addBlog(req, res) {
     });
 
     const saved = await blog.save();
-
-    imagesArr = [];
 
     return res.status(200).json({
       message: "Blog créé",
@@ -91,7 +93,7 @@ export async function getBlogs(req, res) {
     return res.status(200).json({
       success: true,
       error: false,
-      data: blogs,   // ✅ IMPORTANT (comme tes autres pages)
+      data: blogs,
       total: total,
       page: page,
       perPage: perPage
@@ -137,7 +139,6 @@ export async function deleteBlog(request, response) {
     try {
         const blog = await BlogModel.findById(request.params.id);
 
-        // 🔥 Vérification obligatoire !
         if (!blog) {
             return response.status(404).json({
                 message: "blog introuvable",
@@ -148,7 +149,6 @@ export async function deleteBlog(request, response) {
 
         const images = blog.images || [];
 
-        // 🖼️ Supprimer les images Cloudinary
         for (let img of images) {
             const urlArr = img.split("/");
             const image = urlArr[urlArr.length - 1];
@@ -159,9 +159,6 @@ export async function deleteBlog(request, response) {
             }
         }
 
-      
-
-        // 🔥 Delete main category
         await BlogModel.findByIdAndDelete(request.params.id);
 
         return response.status(200).json({
@@ -211,17 +208,12 @@ export async function removeImageFromCloudinary(req, res) {
 
 export async function updatedBlog(request, response) {
     try {
-        const { name, parentId } = request.body;
-
-       
-
         const blog = await BlogModel.findByIdAndUpdate(
             request.params.id,
             {
                 title: request.body.title,
-                images: imagesArr.length > 0 ? imagesArr : undefined,
+                images: request.body.images, // ✅ corrigé : vient du payload du front, plus de variable globale
                 description: request.body.description,
-                
             },
             { new: true }
         );
@@ -234,7 +226,6 @@ export async function updatedBlog(request, response) {
             });
         }
 
-        imagesArr = [];
         response.status(200).json({
             error: false,
             success: true,

@@ -1,6 +1,7 @@
 import BannerV1Model from "../models/bannerV1.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import CategoryModel from "../models/category.model.js";
+import crypto from "crypto"; // ✅ à ajouter
 
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -9,13 +10,18 @@ cloudinary.config({
     secure: true,
 });
 
-let imagesArr = [];
-
-// ✅ Upload depuis le buffer en mémoire (multer memoryStorage), plus d'écriture disque
-const uploadFromBuffer = (fileBuffer) => {
+// ✅ Upload depuis le buffer en mémoire, avec un public_id UNIQUE à chaque appel
+// (résout le bug où toutes les images atterrissaient sur le même public_id "file",
+// causant un refus d'écrasement par Cloudinary et le renvoi de l'ancienne image)
+const uploadFromBuffer = (fileBuffer, originalName = "") => {
     return new Promise((resolve, reject) => {
+        const baseName = originalName
+            ? originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_")
+            : "banner";
+        const uniqueId = `${baseName}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+
         const uploadStream = cloudinary.uploader.upload_stream(
-            { use_filename: true, unique_filename: false, overwrite: false },
+            { public_id: uniqueId, overwrite: false },
             (error, result) => {
                 if (error) return reject(error);
                 resolve(result);
@@ -28,12 +34,11 @@ const uploadFromBuffer = (fileBuffer) => {
 // 🔹 UPLOAD IMAGES
 export async function uploadImages(req, res) {
     try {
-        imagesArr = [];
-
         const files = req.files;
+        const imagesArr = []; // ✅ locale à la requête, plus de variable partagée au niveau module
 
         for (let i = 0; i < files?.length; i++) {
-            const result = await uploadFromBuffer(files[i].buffer);
+            const result = await uploadFromBuffer(files[i].buffer, files[i].originalname);
             imagesArr.push(result.secure_url);
         }
 
@@ -51,8 +56,8 @@ export async function uploadImages(req, res) {
     }
 }
 
-// ... tout le reste du fichier (addBanner, getBanners, deleteBanner, updatedBanner, etc.)
-// reste identique, aucun changement nécessaire.
+// Tout le reste du fichier (addBanner, getBanners, getBanner, deleteBanner,
+// updatedBanner, removeImageFromCloudinary) reste identique, aucun changement nécessaire.
 
 // 🔹 CREATE BANNER
 export async function addBanner(req, res) {

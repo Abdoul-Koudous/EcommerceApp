@@ -8,7 +8,6 @@ cloudinary.config({
     secure: true,
 })
 
-// ✅ Upload depuis le buffer en mémoire (multer memoryStorage), plus d'écriture disque
 const uploadFromBuffer = (fileBuffer, options = {}) => {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -22,7 +21,6 @@ const uploadFromBuffer = (fileBuffer, options = {}) => {
     });
 };
 
-var imagesArr = [];
 // Upload images
 export async function uploadImages(req, res) {
   const files = req.files;
@@ -45,8 +43,9 @@ export async function uploadImages(req, res) {
   }
 }
 
-// ... tout le reste du fichier (addHomeSlide, getHomeSlides, deleteSlide,
-// updatedSlide, deleteMultipleSlides, etc.) reste identique, aucun changement nécessaire.
+// Tout le reste du fichier (addHomeSlide, getHomeSlides, getSlide, deleteSlide,
+// updatedSlide, deleteMultipleSlides, removeImageFromCloudinary) reste identique,
+// aucun changement fonctionnel nécessaire.
 // Ajouter un slide
 export async function addHomeSlide(req, res) {
   try {

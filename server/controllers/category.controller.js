@@ -1,7 +1,6 @@
 import CategoryModel from '../models/category.model.js';
-
-import { v2 as cloudinary} from 'cloudinary';
-import { error } from 'console';
+import { v2 as cloudinary } from 'cloudinary';
+import crypto from 'crypto'; // ✅ ajouté
 
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -10,11 +9,18 @@ cloudinary.config({
     secure: true,
 })
 
-// ✅ Upload depuis le buffer en mémoire (multer memoryStorage), plus d'écriture disque
-const uploadFromBuffer = (fileBuffer) => {
+// ✅ Upload depuis le buffer en mémoire, avec un public_id UNIQUE à chaque appel
+// (évite que Cloudinary ne refuse d'écraser un asset existant et ne renvoie
+// une ancienne image au lieu de la nouvelle)
+const uploadFromBuffer = (fileBuffer, originalName = "") => {
     return new Promise((resolve, reject) => {
+        const baseName = originalName
+            ? originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_")
+            : "category";
+        const uniqueId = `${baseName}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+
         const uploadStream = cloudinary.uploader.upload_stream(
-            { use_filename: true, unique_filename: false, overwrite: false },
+            { public_id: uniqueId, overwrite: false },
             (error, result) => {
                 if (error) return reject(error);
                 resolve(result);
@@ -24,15 +30,13 @@ const uploadFromBuffer = (fileBuffer) => {
     });
 };
 
-var imagesArr = [];
 export async function uploadImages(request, response) {
     try {
-        imagesArr = [];
-
         const image = request.files;
+        const imagesArr = []; // ✅ locale à la requête, plus de variable partagée au niveau module
 
         for (let i = 0; i < image?.length; i++) {
-            const result = await uploadFromBuffer(image[i].buffer);
+            const result = await uploadFromBuffer(image[i].buffer, image[i].originalname);
             imagesArr.push(result.secure_url);
         }
 
@@ -49,14 +53,11 @@ export async function uploadImages(request, response) {
     }
 }
 
-// ... tout le reste du fichier (createCategory, getCategories, deleteCategory,
-// updatedCategory, etc.) reste identique, aucun changement nécessaire.
-
 export async function createCategory(request, response) {
     try {
         let category = new CategoryModel({
             name: request.body.name,
-            images: imagesArr,
+            images: request.body.images || [], // ✅ vient du payload envoyé par le front, plus de variable globale
             parentId: request.body.parentId,
             parentCatName: request.body.parentCatName,
         });
@@ -70,8 +71,6 @@ export async function createCategory(request, response) {
         }
 
         category = await category.save();
-
-        imagesArr = [];
 
         return response.status(200).json({
             message: "La Categorie est creer",
@@ -110,8 +109,6 @@ export async function getCategories(request, response) {
             }
         });
 
-        // ✅ pagination appliquée sur les catégories racines uniquement,
-        // une fois l'arbre parent/enfants reconstruit
         const page = parseInt(request.query.page) || 1;
         const perPage = parseInt(request.query.perPage) || 10;
         const total = rootCategories.length;
@@ -135,8 +132,6 @@ export async function getCategories(request, response) {
     }
 }
 
-
-
 export async function getCategoriesCount(request, response){
     try {
         const  categoryCount = await CategoryModel.countDocuments({parentId: undefined});
@@ -157,11 +152,8 @@ export async function getCategoriesCount(request, response){
             error: true,
             success: false
         });
-        
-        
     }
 }
-
 
 export async function getSubCategoriesCount(request, response){
     try {
@@ -182,7 +174,6 @@ export async function getSubCategoriesCount(request, response){
             response.send({
                 subCategoryCount: subCatList.length,
             });
-           
         }
         
     } catch (error) {
@@ -191,8 +182,6 @@ export async function getSubCategoriesCount(request, response){
             error: true,
             success: false
         });
-        
-        
     }
 }
 
@@ -249,12 +238,10 @@ export async function removeImageFromCloudinary(request, response) {
     }
 }
 
-
 export async function deleteCategory(request, response) {
     try {
         const category = await CategoryModel.findById(request.params.id);
 
-        // 🔥 Vérification obligatoire !
         if (!category) {
             return response.status(404).json({
                 message: "Catégorie introuvable",
@@ -265,7 +252,6 @@ export async function deleteCategory(request, response) {
 
         const images = category.images || [];
 
-        // 🖼️ Supprimer les images Cloudinary
         for (let img of images) {
             const urlArr = img.split("/");
             const image = urlArr[urlArr.length - 1];
@@ -276,7 +262,6 @@ export async function deleteCategory(request, response) {
             }
         }
 
-        // 🔽 Sub Categories
         const subCategory = await CategoryModel.find({ parentId: request.params.id });
 
         for (let sub of subCategory) {
@@ -289,7 +274,6 @@ export async function deleteCategory(request, response) {
             await CategoryModel.findByIdAndDelete(sub._id);
         }
 
-        // 🔥 Delete main category
         await CategoryModel.findByIdAndDelete(request.params.id);
 
         return response.status(200).json({
@@ -307,12 +291,10 @@ export async function deleteCategory(request, response) {
     }
 }
 
-
 export async function updatedCategory(request, response) {
     try {
         const { name, parentId } = request.body;
 
-        // Si parentId existe, récupérer son nom
         let parentCatName = null;
         if(parentId){
             const parentCategory = await CategoryModel.findById(parentId);
@@ -325,7 +307,7 @@ export async function updatedCategory(request, response) {
                 name,
                 parentId: parentId || null,
                 parentCatName,
-                images: imagesArr.length > 0 ? imagesArr : undefined
+                images: request.body.images // ✅ corrigé : vient du payload du front, plus de variable globale
             },
             { new: true }
         );
@@ -338,7 +320,6 @@ export async function updatedCategory(request, response) {
             });
         }
 
-        imagesArr = [];
         response.status(200).json({
             error: false,
             success: true,
