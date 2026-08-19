@@ -25,24 +25,20 @@ const Home = () => {
     });
     // 🔹 Derniers produits
     fetchDataFromApi("/api/product/getAllProducts?sort=desc&limit=8")
-      .then((res) => {
-        const products = res.products || res.data || res;
-        // Tri par date (si API ne le fait pas) et limite
-        const sortedLatest = products
-          .sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated))
-          .slice(0, 8);
-        setLatestProducts(sortedLatest);
-      })
-      .catch((err) => console.error("Erreur derniers produits :", err))
-      .finally(() => setLoadingLatest(false));
+  .then((res) => {
+    const products = res.products || res.data || res;
+    setLatestProducts(products);
+  })
+  .catch((err) => console.error("Erreur derniers produits :", err))
+  .finally(() => setLoadingLatest(false));
 
     // 🔹 Produits populaires / featured
+        // 🔹 Produits populaires / featured
     fetchDataFromApi("/api/product/getAllFeaturedProducts")
       .then((res) => {
         const products = res.products || res.data || res;
-        // ⚡ Securité: filtrer ceux avec isFeatured=true
-        const featured = products.filter((p) => p.isFeatured);
-        setFeaturedProducts(featured);
+        const sorted = [...products].sort((a, b) => (b.sale || 0) - (a.sale || 0));
+        setFeaturedProducts(sorted.slice(0, 8));
       })
       .catch((err) => console.error("Erreur produits populaires :", err))
       .finally(() => setLoadingFeatured(false));
@@ -63,7 +59,7 @@ const Home = () => {
         <div className="container">
           <div className="cont1">
             <div className="cont1-right">
-              <PopularTabs />
+              <PopularTabs defaultCategoryName="Mode" />
             </div>
           </div>
         </div>

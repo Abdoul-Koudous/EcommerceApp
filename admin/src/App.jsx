@@ -18,6 +18,11 @@ import BannerV1List from "./pages/Banners";
 import BlogList from "./pages/blog";
 import Users from "./pages/Users/Users";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import AboutPage from "./pages/AboutPage/AboutPage";
+import ContactPage from "./pages/ContactPage/ContactPage";
+import ContactMessages from "./pages/ContactMessages/ContactMessages";
+import Orders from "./pages/Orders";
+import Settings from "./pages/Settings/Settings";
 
 function App() {
   return (
@@ -150,6 +155,60 @@ function App() {
             <ProtectedRoute>
               <AdminLayout>
                 <Users />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* === Pages du site (À propos / Contact) === */}
+        <Route
+          path="/about-page"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AboutPage />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contact-page"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <ContactPage />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contact-messages"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <ContactMessages />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <Orders />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <Settings />
               </AdminLayout>
             </ProtectedRoute>
           }

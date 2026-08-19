@@ -44,15 +44,38 @@ const Checkout = () => {
     setEditingAddress(null);
   };
 
-  const shipping = 500;
-  const taxRate = 0.18;
+  // ✅ Totaux calculés côté serveur (taxe/livraison configurables selon
+  // produit/catégorie/ville) — plus de shipping/taxRate en dur ici.
+  const [totals, setTotals] = useState({
+    subTotalAmt: 0,
+    shippingAmt: 0,
+    taxAmt: 0,
+    totalAmt: 0,
+  });
 
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0,
-  );
-  const taxes = subtotal * taxRate;
-  const total = subtotal + shipping + taxes;
+  const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
+      return;
+    }
+
+    const city = selectedAddress?.city || "";
+
+    fetchDataFromApi(
+      `/api/payment/preview-total?city=${encodeURIComponent(city)}`,
+    ).then((res) => {
+      if (!res?.error) {
+        setTotals({
+          subTotalAmt: res.subTotalAmt || 0,
+          shippingAmt: res.shippingAmt || 0,
+          taxAmt: res.taxAmt || 0,
+          totalAmt: res.totalAmt || 0,
+        });
+      }
+    });
+  }, [cartItems, selectedAddress?.city]);
 
   const loadAddresses = () => {
     if (!user?._id) return;
@@ -160,14 +183,13 @@ const Checkout = () => {
       return;
     }
 
-    const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
     const [firstname, ...rest] = (user?.name || "Client").split(" ");
     const lastname = rest.join(" ") || "N/A";
 
     FedaPay.init({
       public_key: import.meta.env.VITE_FEDAPAY_PUBLIC_KEY,
       transaction: {
-        amount: Math.round(total),
+        amount: Math.round(totals.totalAmt),
         description: `Commande - ${cartItems.length} article(s)`,
       },
       currency: { iso: "XOF" },
@@ -244,10 +266,8 @@ const Checkout = () => {
       return;
     }
 
-    const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
-
     const widgetConfig = {
-      amount: Math.round(total),
+      amount: Math.round(totals.totalAmt),
       key: import.meta.env.VITE_KKIAPAY_PUBLIC_KEY,
       sandbox: true,
       phone: (selectedAddress?.mobile || "").replace(/\D/g, ""),
@@ -422,19 +442,19 @@ const Checkout = () => {
 
           <div className="co-total-row">
             <span>Sous-total</span>
-            <span>{subtotal.toLocaleString()} FCFA</span>
+            <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
           </div>
           <div className="co-total-row">
             <span>Expédition</span>
-            <span>{shipping.toLocaleString()} FCFA</span>
+            <span>{totals.shippingAmt.toLocaleString()} FCFA</span>
           </div>
           <div className="co-total-row">
-            <span>Taxes (18%)</span>
-            <span>{taxes.toLocaleString()} FCFA</span>
+            <span>Taxes</span>
+            <span>{totals.taxAmt.toLocaleString()} FCFA</span>
           </div>
           <div className="co-total-row co-grand-total">
             <span>Total</span>
-            <span>{total.toLocaleString()} FCFA</span>
+            <span>{totals.totalAmt.toLocaleString()} FCFA</span>
           </div>
 
           <button className="co-btn-pay" onClick={handlePay}>

@@ -1,14 +1,26 @@
 @use "../../styles/breakpoints" as *;
 @use "../../styles/mixins" as *;
 
-header {
-  .top-strip {
+.site-header {
+  .site-header__sticky-wrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+  }
+
+  .site-header__spacer {
+    height: var(--header-height, 140px);
+    transition: height var(--transition-base);
+  }
+
+  .site-header__top-strip {
     background-color: var(--color-surface);
-    margin-top: 5px;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
 
-    .container {
+    .site-header__top-container {
       margin: 0 auto;
       width: 90%;
       padding: 5px 60px;
@@ -21,41 +33,41 @@ header {
         gap: 4px;
         padding: 8px 20px;
       }
+    }
 
-      .cont1 p {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--color-text);
+    .site-header__top-left p {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text);
 
-        @include respond("mobile") {
-          font-size: 12px;
-          text-align: center;
-        }
+      @include respond("mobile") {
+        font-size: 12px;
+        text-align: center;
       }
+    }
 
-      ul {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .site-header__top-right ul {
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
-        li {
-          list-style: none;
-          padding: 0 10px;
-          cursor: pointer;
-
-          .lien {
-            @include link-hover;
-            font-size: 13px;
-            text-decoration: none;
-            font-weight: 500;
-            color: var(--color-text);
-          }
-        }
+      li {
+        list-style: none;
+        padding: 0 10px;
+        cursor: pointer;
       }
+    }
+
+    .site-header__top-link {
+      @include link-hover;
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: 500;
+      color: var(--color-text);
     }
   }
 
-  .header .container {
+  .site-header__main-container {
     background-color: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
     display: flex;
@@ -68,168 +80,160 @@ header {
       flex-wrap: wrap;
       gap: 15px;
     }
+  }
 
-    .cont1 {
-      width: 30%;
+  .site-header__logo {
+    width: 30%;
 
-      @include respond("laptop") {
-        width: auto;
+    @include respond("laptop") {
+      width: auto;
+    }
+
+    img {
+      width: 140px;
+
+      @include respond("mobile") {
+        width: 100px;
       }
+    }
+  }
 
-      img {
-        width: 140px; // Adapté pour la lisibilité de vos nouveaux logos textuels
+  .site-header__search {
+    width: 40%;
 
-        @include respond("mobile") {
-          width: 100px;
-        }
+    @include respond("laptop") {
+      order: 3;
+      width: 100%;
+    }
+  }
+
+  .site-header__actions {
+    width: 30%;
+
+    @include respond("laptop") {
+      width: auto;
+    }
+
+    ul {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .site-header__icon-box {
+      list-style: none;
+      cursor: pointer;
+      padding: 0 10px;
+      position: relative;
+    }
+
+    .site-header__icon {
+      font-size: 22px;
+      color: var(--color-text);
+      transition: transform var(--transition-fast), color var(--transition-fast);
+
+      &:hover {
+        transform: scale(1.2);
+        color: var(--color-primary);
       }
     }
 
-    .cont2 {
-      width: 40%;
+    .site-header__badge {
+      position: absolute;
+      top: -6px;
+      right: 2px;
+      background-color: var(--color-primary);
+      color: var(--color-text-on-primary);
+      border-radius: 50%;
+      font-size: 11px;
+      padding: 2px 5px;
+      font-weight: bold;
+    }
 
-      @include respond("laptop") {
-        order: 3;
-        width: 100%;
+    .site-header__tooltip {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-tooltip-bg);
+      color: var(--color-text-on-primary);
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-fast), transform var(--transition-fast);
+
+      @include respond("tablet") {
+        display: none;
       }
     }
 
-    .cont3 {
-      width: 30%;
+    .site-header__icon-box:hover .site-header__tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(2px);
+    }
 
-      @include respond("laptop") {
-        width: auto;
-      }
-
-      ul {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        li {
-          list-style: none;
-          cursor: pointer;
-          padding: 0 10px;
-          position: relative;
-
-          .lien {
-            @include link-hover;
-            font-size: 13px;
-            text-decoration: none;
-            font-weight: 500;
-            color: var(--color-text);
-          }
-
-          .icon {
-            font-size: 22px;
-            color: var(--color-text);
-            transition: transform var(--transition-fast), color var(--transition-fast);
-          }
-
-          .icon:hover {
-            transform: scale(1.2);
-            color: var(--color-primary);
-          }
-
-          .count {
-            position: absolute;
-            top: -6px;
-            right: 2px;
-            background-color: var(--color-primary);
-            color: var(--color-text-on-primary);
-            border-radius: 50%;
-            font-size: 11px;
-            padding: 2px 5px;
-            font-weight: bold;
-          }
-
-          .tooltip {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--color-tooltip-bg);
-            color: var(--color-text-on-primary);
-            font-size: 11px;
-            padding: 3px 6px;
-            border-radius: var(--radius-sm);
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition-fast), transform var(--transition-fast);
-
-            @include respond("tablet") {
-              display: none;
-            }
-          }
-
-          &:hover .tooltip {
-            opacity: 1;
-            transform: translateX(-50%) translateY(2px);
-          }
-        }
-      }
-
-      .lien2 {
-        @include link-hover;
-        font-size: 13px;
-        text-decoration: none;
-        font-weight: 500;
-        color: var(--color-text);
-      }
+    .site-header__auth-link {
+      @include link-hover;
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: 500;
+      color: var(--color-text);
     }
   }
 }
 
 /* === Menu utilisateur === */
-.user-menu {
+.site-header__user-menu {
   position: relative;
   display: flex;
   align-items: center;
   cursor: pointer;
 
-  .user-info {
+  .site-header__user-info {
     display: flex;
     align-items: center;
     gap: 10px;
+  }
 
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--color-border);
-      transition: transform var(--transition-fast), border-color var(--transition-fast);
+  .site-header__user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--color-border);
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
 
-      &:hover {
-        transform: scale(1.05);
-        border-color: var(--color-primary);
-      }
-    }
-
-    .user-details {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.1;
-
-      .user-name {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--color-text);
-      }
-
-      .user-email {
-        font-size: 12px;
-        color: var(--color-text-secondary);
-
-        @include respond("mobile") {
-          display: none;
-        }
-      }
+    &:hover {
+      transform: scale(1.05);
+      border-color: var(--color-primary);
     }
   }
 
-  .dropdown-menu {
+  .site-header__user-details {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .site-header__user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .site-header__user-email {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+
+    @include respond("mobile") {
+      display: none;
+    }
+  }
+
+  .site-header__dropdown-menu {
     position: absolute;
     top: 55px;
     right: 0;
@@ -241,7 +245,7 @@ header {
     z-index: 20;
     display: flex;
     flex-direction: column;
-    animation: dropdownFade 0.25s ease forwards;
+    animation: siteHeaderDropdownFade 0.25s ease forwards;
 
     li {
       display: flex;
@@ -260,40 +264,40 @@ header {
         color: var(--color-text-on-primary);
 
         a,
-        .icon {
+        .site-header__dropdown-icon {
           color: var(--color-text-on-primary);
         }
-      }
-
-      .icon {
-        flex-shrink: 0;
-        font-size: 15px;
-        color: var(--color-primary);
-        transition: color var(--transition-fast);
-      }
-
-      a {
-        flex: 1;
-        text-decoration: none;
-        color: inherit;
-        font-weight: 500;
-        display: block;
       }
 
       &:not(:last-child) {
         border-bottom: 1px solid var(--color-border-light);
       }
     }
+
+    .site-header__dropdown-icon {
+      flex-shrink: 0;
+      font-size: 15px;
+      color: var(--color-primary);
+      transition: color var(--transition-fast);
+    }
+
+    a {
+      flex: 1;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 500;
+      display: block;
+    }
   }
 }
 
-.theme-toggle-item {
+.site-header__theme-toggle {
   display: flex;
   align-items: center;
   padding: 0 10px;
 }
 
-@keyframes dropdownFade {
+@keyframes siteHeaderDropdownFade {
   from {
     opacity: 0;
     transform: translateY(-5px);

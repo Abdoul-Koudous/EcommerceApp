@@ -11,8 +11,8 @@ const ProductSlider = ({ categoryId = null, products = null }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Si products est passé en props, on l'utilise directement
-    if (products && products.length > 0) {
+    // Si products est explicitement fourni (même vide), on l'utilise tel quel
+    if (products !== null) {
       setProductsData(products);
       setLoading(false);
       return;
@@ -37,6 +37,7 @@ const ProductSlider = ({ categoryId = null, products = null }) => {
 
     fetchProducts();
   }, [categoryId, products]);
+
   const scrollLeft = () =>
     scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
   const scrollRight = () =>

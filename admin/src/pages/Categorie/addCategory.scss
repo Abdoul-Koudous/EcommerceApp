@@ -86,6 +86,28 @@
         }
       }
 
+      // ✅ NOUVEAU : bloc label + input + note d'aide (utilisé pour le taux de taxe)
+      .ctf-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        label {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+        }
+
+        input {
+          width: 100%;
+        }
+      }
+
+      .ctf-hint {
+        font-size: 0.78rem;
+        color: var(--color-text-secondary);
+      }
+
       .ctf-images-wrapper {
         display: flex;
         gap: 1rem;

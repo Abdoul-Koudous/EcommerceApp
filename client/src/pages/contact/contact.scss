@@ -1,0 +1,194 @@
+.contact-page {
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4%, 40px);
+  }
+
+  .tag {
+    color: var(--color-primary);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+
+  .btn-primary {
+    padding: 12px 28px;
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base);
+
+    &:hover {
+      background: var(--color-primary-hover);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  /* HERO */
+  .contact-hero {
+    position: relative;
+    height: clamp(220px, 32vw, 340px);
+    background: url("/images/contact-hero.jpg") center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--color-overlay);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+      padding: 0 20px;
+
+      h1 {
+        font-size: clamp(1.6rem, 5vw, 2.5rem);
+        font-weight: 800;
+        margin: 8px 0 12px;
+      }
+
+      .subtitle {
+        opacity: 0.9;
+        font-size: clamp(0.85rem, 2.5vw, 1rem);
+        line-height: 1.6;
+      }
+    }
+  }
+
+  /* BODY */
+  .contact-body {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: clamp(24px, 4vw, 50px);
+    padding: clamp(40px, 6vw, 80px) 0;
+
+    @media (max-width: 850px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* INFO CARDS */
+  .contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    .info-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow-card);
+
+      .icon {
+        font-size: 1.3rem;
+        color: var(--color-primary);
+        margin-top: 3px;
+        flex-shrink: 0;
+      }
+
+      h4 {
+        font-weight: 700;
+        margin-bottom: 4px;
+        font-size: 0.95rem;
+        color: var(--color-text);
+      }
+
+      p {
+        color: var(--color-text-secondary);
+        font-size: 0.88rem;
+      }
+    }
+  }
+
+  /* FORM */
+  .contact-form {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: 16px;
+    padding: clamp(20px, 4vw, 36px);
+    box-shadow: var(--shadow-card);
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--color-text);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+
+      @media (max-width: 500px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--color-text);
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+      resize: vertical;
+      font-family: var(--font-main);
+
+      &::placeholder {
+        color: var(--color-text-secondary);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-primary);
+      }
+    }
+
+    .btn-primary {
+      width: 100%;
+    }
+  }
+}
+/* MAP */
+  .contact-map {
+    width: 100%;
+    height: clamp(280px, 40vw, 420px);
+    border-top: 1px solid var(--color-border-light);
+
+    iframe {
+      display: block;
+      filter: grayscale(20%) contrast(1.05);
+    }
+  }
+
+  .about-page__loading,
+.contact-page__loading {
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}

@@ -80,22 +80,19 @@ const HomeCatSlider = () => {
 
       <div className="cat-container" ref={sliderRef}>
         {loading ? (
-          <div  style={{ display: "flex", gap: "16px" }}>
+          <div style={{ display: "flex", gap: "16px" }}>
             <CategorySkeleton count={9} />
           </div>
         ) : mainCategories.length > 0 ? (
           mainCategories.map((cat) => (
             <Link
-    key={cat._id}
-    to={`/productlisting?catId=${cat._id}`}
-    className="cat-card"
-  >
-    <img
-      src={cat.images?.[0] || "/default-cat.jpg"}
-      alt={cat.name}
-    />
-    <div className="cat-name">{cat.name}</div>
-  </Link>
+              key={cat._id}
+              to={`/productlisting?catId=${cat._id}`}
+              className="cat-card"
+            >
+              <img src={cat.images?.[0] || "/default-cat.jpg"} alt={cat.name} />
+              <div className="cat-name">{cat.name}</div>
+            </Link>
           ))
         ) : (
           <p className="empty-msg">Aucune catégorie trouvée</p>

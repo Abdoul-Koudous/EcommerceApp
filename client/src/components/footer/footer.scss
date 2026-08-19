@@ -16,6 +16,7 @@
       flex-direction: column;
       align-items: center;
       gap: 5px;
+      min-width: 140px;
 
       .ft-icon {
         font-size: 2rem;
@@ -27,46 +28,27 @@
     }
   }
 
-  hr { border: 0; height: 1px; background: var(--color-text); margin: 20px 0; }
+  hr { border: 0; height: 1px; background: var(--color-border-light); margin: 20px 0; }
 
   .ft-bottom {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 30px;
     justify-content: space-between;
+    max-width: 1100px;
+    margin: 0 auto;
 
     .ft-column {
       flex: 1;
-      min-width: 200px;
+      min-width: 220px;
 
       h4 { font-size: 1.1rem; margin-bottom: 10px; }
       p, li { font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 5px; }
       ul { list-style: none; padding: 0; }
-      a { color: var(--color-text-secondary); text-decoration: none;
+      a {
+        color: var(--color-text-secondary);
+        text-decoration: none;
         &:hover { color: var(--color-primary); }
-      }
-
-      form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-
-        input[type="email"] { padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--color-primary); }
-        .ft-checkbox { display: flex; align-items: center; font-size: 0.85rem;
-          input { margin-right: 5px; }
-          label { color: var(--color-text-secondary); }
-        }
-
-        button {
-          padding: 10px;
-          background: var(--color-primary);
-          color: var(--color-text-on-primary);
-          border: none;
-          border-radius: var(--radius-sm);
-          cursor: pointer;
-          font-weight: 600;
-          &:hover { background: var(--color-primary-hover); }
-        }
       }
     }
   }
@@ -77,26 +59,31 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
 
-   .ft-socials {
-  display: flex;
-  gap: 15px;
-  .ft-social {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px; height: 35px;
-    border-radius: 50%;
-    background: var(--color-primary); // ✅ fixe et cohérent, ne s'inverse pas avec le thème
-    color: var(--color-text-on-primary);
-    font-size: 1rem;
-    transition: 0.3s;
-    &:hover {
-      background: var(--color-primary-hover); // ✅ cohérent avec le hover utilisé partout ailleurs
-      color: var(--color-text-on-primary);
+    .ft-socials {
+      display: flex;
+      gap: 15px;
+
+      .ft-social {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: var(--color-primary);
+        color: var(--color-text-on-primary);
+        font-size: 1rem;
+        transition: 0.3s;
+
+        &:hover {
+          background: var(--color-primary-hover);
+          color: var(--color-text-on-primary);
+        }
+      }
     }
-  }
-}
 
     .ft-copy { text-align: center; flex: 1; font-size: 0.9rem; color: var(--color-text-secondary); }
 

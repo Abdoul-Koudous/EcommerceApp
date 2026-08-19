@@ -17,6 +17,12 @@ import blogRouter from "./route/blog.route.js";
 import orderRouter from "./route/order.route.js";
 import paymentRouter from "./route/payment.route.js";
 import dashboardRouter from "./route/dashboard.route.js";
+import aboutPageRouter from "./route/aboutPage.route.js";
+import contactPageRouter from "./route/contactPage.route.js";
+import contactMessageRouter from "./route/contactMessage.route.js";
+import settingsRouter from "./route/settings.route.js";
+import shippingZoneRouter from "./route/shippingZone.route.js";
+
 
 dotenv.config();
 
@@ -82,6 +88,11 @@ app.use('/api/blog', blogRouter);
 app.use('/api/order', orderRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/about', aboutPageRouter);
+app.use('/api/contact-page', contactPageRouter);
+app.use('/api/contact-message', contactMessageRouter);
+app.use('/api/settings', settingsRouter);
+app.use('/api/shipping-zone', shippingZoneRouter);
 
 // ✅ 404 — route inconnue
 app.use((req, res) => {

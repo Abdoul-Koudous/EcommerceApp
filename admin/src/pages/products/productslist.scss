@@ -191,7 +191,9 @@
       scrollbar-width: thin;
       scrollbar-color: var(--color-primary) transparent;
 
-      &::-webkit-scrollbar { height: 8px; }
+      &::-webkit-scrollbar {
+        height: 8px;
+      }
       &::-webkit-scrollbar-thumb {
         background: var(--color-primary);
         border-radius: 8px;
@@ -274,13 +276,19 @@
       }
 
       .ptbl-sales {
-        min-width: 90px;
+        min-width: 110px; // ✅ un peu plus large pour laisser respirer le "(X ventes)"
 
-        span {
-          display: block;
+        .ptbl-sales-pct {
           font-weight: 600;
-          margin-bottom: 0.3rem;
           color: var(--color-text);
+          font-size: 0.9rem;
+        }
+
+        .ptbl-sales-count {
+          margin-left: 0.4rem;
+          color: var(--color-text-secondary);
+          font-size: 0.78rem;
+          font-weight: 400;
         }
 
         .progress-bar {
@@ -288,6 +296,7 @@
           background: var(--color-border-light);
           border-radius: 5px;
           overflow: hidden;
+          margin-top: 0.3rem; // ✅ remplace le margin-bottom qui était sur le span générique
 
           .progress {
             height: 100%;
@@ -315,17 +324,31 @@
 
         .ptbl-view-btn {
           color: var(--color-info);
-          &:hover { background: color-mix(in srgb, var(--color-info) 12%, transparent); }
+          &:hover {
+            background: color-mix(in srgb, var(--color-info) 12%, transparent);
+          }
         }
 
         .ptbl-edit-btn {
           color: var(--color-rating);
-          &:hover { background: color-mix(in srgb, var(--color-rating) 15%, transparent); }
+          &:hover {
+            background: color-mix(
+              in srgb,
+              var(--color-rating) 15%,
+              transparent
+            );
+          }
         }
 
         .ptbl-delete-btn {
           color: var(--color-danger);
-          &:hover { background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+          &:hover {
+            background: color-mix(
+              in srgb,
+              var(--color-danger) 12%,
+              transparent
+            );
+          }
         }
       }
 
@@ -539,12 +562,24 @@
 
         .crc-edit-btn {
           color: var(--color-rating);
-          &:hover { background: color-mix(in srgb, var(--color-rating) 15%, transparent); }
+          &:hover {
+            background: color-mix(
+              in srgb,
+              var(--color-rating) 15%,
+              transparent
+            );
+          }
         }
 
         .crc-delete-btn {
           color: var(--color-danger);
-          &:hover { background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+          &:hover {
+            background: color-mix(
+              in srgb,
+              var(--color-danger) 12%,
+              transparent
+            );
+          }
         }
       }
 

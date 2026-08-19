@@ -96,6 +96,18 @@
         flex-wrap: wrap; // ✅ passe à la ligne dès que min-width des enfants n'est plus respecté
       }
 
+      // ✅ Alignement des rangées Taxe/Livraison : le toggle (hauteur fixe,
+      // centré) et le champ optionnel à côté (label + input, plus haut)
+      // doivent partager la même ligne de base en bas, pas être centrés
+      // l'un par rapport à l'autre.
+      .apd-row:has(.apd-banner-toggle) {
+        align-items: flex-end;
+
+        .apd-banner-toggle {
+          padding-bottom: 0.5rem; // ✅ compense visuellement pour aligner le switch avec le bas des inputs voisins
+        }
+      }
+
       .apd-form-group {
         display: flex;
         flex-direction: column;

@@ -141,6 +141,12 @@ const EditProduct = ({ product, onClose }) => {
     bannerTitleName: "",
     bannerimages: [],
     isDisplayOnHomeBanner: false,
+
+    // ✅ NOUVEAU : taxe / livraison
+    hasShipping: true,
+    shippingFee: "",
+    hasTax: true,
+    taxRate: "",
   });
 
   useEffect(() => {
@@ -169,6 +175,12 @@ const EditProduct = ({ product, onClose }) => {
       extraImages: [], // vide, les existantes vont dans existingExtraImages
       bannerTitleName: product.bannerTitleName || "",
       isDisplayOnHomeBanner: product.isDisplayOnHomeBanner ?? false,
+
+      // ✅ NOUVEAU
+      hasShipping: product.hasShipping ?? true,
+      shippingFee: product.shippingFee ?? "",
+      hasTax: product.hasTax ?? true,
+      taxRate: product.taxRate ?? "",
     });
 
     setExistingExtraImages(product.images?.slice(1) || []);
@@ -330,6 +342,18 @@ const EditProduct = ({ product, onClose }) => {
       );
     if (!Number.isInteger(Number(formFields.countIntStock)))
       return openToast("error", "Le stock doit être un nombre entier");
+    if (
+      formFields.hasShipping &&
+      formFields.shippingFee !== "" &&
+      Number(formFields.shippingFee) < 0
+    )
+      return openToast("error", "Les frais de livraison ne peuvent pas être négatifs");
+    if (
+      formFields.hasTax &&
+      formFields.taxRate !== "" &&
+      (Number(formFields.taxRate) < 0 || Number(formFields.taxRate) > 1)
+    )
+      return openToast("error", "Le taux de taxe doit être compris entre 0 et 1");
 
     // 🔹 SUBMIT
 
@@ -374,6 +398,9 @@ const EditProduct = ({ product, onClose }) => {
       const { extraImages, mainImage, ...cleanFields } = formFields;
       const payload = {
         ...cleanFields,
+        shippingFee:
+          formFields.shippingFee === "" ? null : Number(formFields.shippingFee),
+        taxRate: formFields.taxRate === "" ? null : Number(formFields.taxRate),
         images: finalImages,
         bannerimages: bannerUrls,
         bannerTitleName: formFields.bannerTitleName?.trim() || formFields.name,
@@ -639,6 +666,70 @@ const EditProduct = ({ product, onClose }) => {
                   readOnly
                 />
               </div>
+            </div>
+
+            {/* Taxe & Livraison */}
+            <div className="apd-row">
+              <div className="apd-form-group apd-banner-toggle">
+                <label>Ce produit a des frais de livraison</label>
+                <div
+                  className={`apd-switch ${formFields.hasShipping ? "active" : ""}`}
+                  onClick={() =>
+                    setFormFields((prev) => ({
+                      ...prev,
+                      hasShipping: !prev.hasShipping,
+                    }))
+                  }
+                >
+                  <div className="apd-slider"></div>
+                </div>
+              </div>
+
+              {formFields.hasShipping && (
+                <div className="apd-form-group">
+                  <label>Frais de livraison (optionnel)</label>
+                  <input
+                    type="number"
+                    name="shippingFee"
+                    placeholder="Laisser vide = utilise la config par défaut"
+                    value={formFields.shippingFee}
+                    onChange={onChangeInput}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="apd-row">
+              <div className="apd-form-group apd-banner-toggle">
+                <label>Ce produit est taxable</label>
+                <div
+                  className={`apd-switch ${formFields.hasTax ? "active" : ""}`}
+                  onClick={() =>
+                    setFormFields((prev) => ({
+                      ...prev,
+                      hasTax: !prev.hasTax,
+                    }))
+                  }
+                >
+                  <div className="apd-slider"></div>
+                </div>
+              </div>
+
+              {formFields.hasTax && (
+                <div className="apd-form-group">
+                  <label>Taux de taxe (optionnel)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    name="taxRate"
+                    placeholder="Ex: 0.18 — vide = utilise la catégorie/défaut"
+                    value={formFields.taxRate}
+                    onChange={onChangeInput}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Multi-selections + Rating */}

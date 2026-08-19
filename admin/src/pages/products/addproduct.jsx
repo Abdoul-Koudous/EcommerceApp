@@ -135,6 +135,12 @@ const AddProduct = ({ onClose }) => {
     bannerTitleName: "",
     bannerimages: [],
     isDisplayOnHomeBanner: false,
+
+    // ✅ NOUVEAU : taxe / livraison
+    hasShipping: true,
+    shippingFee: "", // "" = pas d'override, hérite de la zone ville / défaut global
+    hasTax: true,
+    taxRate: "", // "" = pas d'override, hérite de la catégorie / défaut global
   });
 
   useEffect(() => {
@@ -326,6 +332,18 @@ const AddProduct = ({ onClose }) => {
     if (formFields.isDisplayOnHomeBanner && bannerFiles.length === 0) {
       return openToast("error", "Ajoute au moins une image banner");
     }
+    if (
+      formFields.hasShipping &&
+      formFields.shippingFee !== "" &&
+      Number(formFields.shippingFee) < 0
+    )
+      return openToast("error", "Les frais de livraison ne peuvent pas être négatifs");
+    if (
+      formFields.hasTax &&
+      formFields.taxRate !== "" &&
+      (Number(formFields.taxRate) < 0 || Number(formFields.taxRate) > 1)
+    )
+      return openToast("error", "Le taux de taxe doit être compris entre 0 et 1");
     // 🔹 SUBMIT
 
     try {
@@ -368,6 +386,9 @@ const AddProduct = ({ onClose }) => {
       // 🔹 PAYLOAD
       const payload = {
         ...formFields,
+        shippingFee:
+          formFields.shippingFee === "" ? null : Number(formFields.shippingFee),
+        taxRate: formFields.taxRate === "" ? null : Number(formFields.taxRate),
         images: uploadRes.images,
         bannerimages: bannerUrls,
         bannerTitleName: formFields.bannerTitleName?.trim() || formFields.name,
@@ -621,6 +642,70 @@ const AddProduct = ({ onClose }) => {
                   readOnly
                 />
               </div>
+            </div>
+
+            {/* Taxe & Livraison */}
+            <div className="apd-row">
+              <div className="apd-form-group apd-banner-toggle">
+                <label>Ce produit a des frais de livraison</label>
+                <div
+                  className={`apd-switch ${formFields.hasShipping ? "active" : ""}`}
+                  onClick={() =>
+                    setFormFields((prev) => ({
+                      ...prev,
+                      hasShipping: !prev.hasShipping,
+                    }))
+                  }
+                >
+                  <div className="apd-slider"></div>
+                </div>
+              </div>
+
+              {formFields.hasShipping && (
+                <div className="apd-form-group">
+                  <label>Frais de livraison (optionnel)</label>
+                  <input
+                    type="number"
+                    name="shippingFee"
+                    placeholder="Laisser vide = utilise la config par défaut"
+                    value={formFields.shippingFee}
+                    onChange={onChangeInput}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="apd-row">
+              <div className="apd-form-group apd-banner-toggle">
+                <label>Ce produit est taxable</label>
+                <div
+                  className={`apd-switch ${formFields.hasTax ? "active" : ""}`}
+                  onClick={() =>
+                    setFormFields((prev) => ({
+                      ...prev,
+                      hasTax: !prev.hasTax,
+                    }))
+                  }
+                >
+                  <div className="apd-slider"></div>
+                </div>
+              </div>
+
+              {formFields.hasTax && (
+                <div className="apd-form-group">
+                  <label>Taux de taxe (optionnel)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    name="taxRate"
+                    placeholder="Ex: 0.18 — vide = utilise la catégorie/défaut"
+                    value={formFields.taxRate}
+                    onChange={onChangeInput}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Multi-selections + Rating */}

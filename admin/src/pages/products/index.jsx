@@ -236,7 +236,16 @@ const Product = () => {
               </tr>
             </thead>
             <tbody>
-              {productData.map(product => (
+              {productData.map(product => {
+                // ✅ Taux d'écoulement : part du stock initial déjà vendue.
+                // "stock initial" = ventes déjà comptabilisées + ce qu'il reste
+                // en stock actuellement, pour rester toujours entre 0 et 100%.
+                const sold = product.sale || 0;
+                const remaining = product.countIntStock || 0;
+                const initialStock = sold + remaining;
+                const salePct = initialStock > 0 ? Math.round((sold / initialStock) * 100) : 0;
+
+                return (
                 <tr key={product._id}>
                   <td>
                     <input
@@ -263,16 +272,17 @@ const Product = () => {
                     <HoverRating rating={product.rating} />
                   </td>
                   <td className="ptbl-sales">
-                    <span>{product.sale}%</span>
+                    <span className="ptbl-sales-pct">{salePct}%</span>
+                    <span className="ptbl-sales-count">({sold} ventes)</span>
                     <div className="progress-bar">
                       <div
                         className="progress"
                         style={{
-                          width: `${product.sale}%`,
+                          width: `${salePct}%`,
                           background:
-                            product.sale < 40
+                            salePct < 40
                               ? "var(--color-danger)"
-                              : product.sale < 70
+                              : salePct < 70
                               ? "var(--color-rating)"
                               : "var(--color-success)",
                         }}
@@ -295,7 +305,8 @@ const Product = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
           </div>

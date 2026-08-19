@@ -5,7 +5,7 @@ import { fetchDataFromApi } from "../../pages/utils/api";
 import { ProductLoading } from "../ProductLoading";
 import { CategoryLoading } from "../CategoryLoading";
 
-const PopularTabs = () => {
+const PopularTabs = ({ defaultCategoryName = "Mode" }) => {
   const [categoriesData, setCategoriesData] = useState([]);
   const [activeTab, setActiveTab] = useState(null);
   const [popularProductsData, setPopularProductsData] = useState([]);
@@ -21,8 +21,12 @@ const PopularTabs = () => {
         const res = await fetchDataFromApi("/api/category/");
         if (!res.error && res.data) {
           setCategoriesData(res.data);
-          // Définir la première catégorie comme active par défaut
-          setActiveTab(res.data[0]?._id || null);
+
+          // Définir la catégorie par défaut (via prop),
+          // sinon retomber sur la première catégorie disponible
+          const defaultCategory =
+            res.data.find((cat) => cat.name === defaultCategoryName) || res.data[0];
+          setActiveTab(defaultCategory?._id || null);
         }
       } catch (err) {
         console.error("Erreur récupération catégories:", err);
@@ -31,9 +35,9 @@ const PopularTabs = () => {
       }
     };
     fetchCategories();
-  }, []);
+  }, [defaultCategoryName]);
 
-  // 2️⃣ Récupérer les produits selon la catégorie active
+  // 2️⃣ Récupérer les produits selon la catégorie active (triés par rating)
   useEffect(() => {
     if (!activeTab) return;
 
@@ -97,7 +101,7 @@ const PopularTabs = () => {
         {loadingProducts ? (
           <ProductLoading/>
         ) : popularProductsData.length > 0 ? (
-          <ProductSlider categoryId={activeTab} />
+          <ProductSlider products={popularProductsData} />
         ) : (
           <p>Aucun produit trouvé pour cette catégorie</p>
         )}

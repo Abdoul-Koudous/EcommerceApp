@@ -16,11 +16,16 @@ const EditCategory = ({ category, onClose, onUpdateCategory }) => {
   const [formFields, setFormFields] = useState({
     name: "",
     images: [],
+    taxRate: "", // ✅ NOUVEAU
   });
 
   useEffect(() => {
     if (category) {
-      setFormFields({ name: category.name, images: category.images || [] });
+      setFormFields({
+        name: category.name,
+        images: category.images || [],
+        taxRate: category.taxRate ?? "",
+      });
       setPreviews(category.images || []);
     }
   }, [category]);
@@ -119,8 +124,22 @@ const EditCategory = ({ category, onClose, onUpdateCategory }) => {
       return;
     }
 
+    if (
+      formFields.taxRate !== "" &&
+      (Number(formFields.taxRate) < 0 || Number(formFields.taxRate) > 1)
+    ) {
+      openToast("error", "Le taux de taxe doit être compris entre 0 et 1");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await editData(`/api/category/${category._id}`, formFields);
+      const payload = {
+        ...formFields,
+        taxRate: formFields.taxRate === "" ? null : Number(formFields.taxRate),
+      };
+
+      const res = await editData(`/api/category/${category._id}`, payload);
 
       setLoading(false);
 
@@ -168,6 +187,24 @@ const EditCategory = ({ category, onClose, onUpdateCategory }) => {
               onChange={onChangeInput}
               name="name"
             />
+
+            {/* TAXE */}
+            <div className="ctf-form-group">
+              <label>Taux de taxe (optionnel)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="1"
+                name="taxRate"
+                placeholder="Ex: 0.18 — vide = utilise le taux par défaut"
+                value={formFields.taxRate}
+                onChange={onChangeInput}
+              />
+              <span className="ctf-hint">
+                S'applique à tous les produits de cette catégorie, sauf s'ils ont leur propre taux.
+              </span>
+            </div>
 
             {/* IMAGES */}
             <div className="ctf-images-wrapper">

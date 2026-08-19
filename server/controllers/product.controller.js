@@ -118,6 +118,12 @@ export async function createProduct(request, response) {
 
       // ✅ OBLIGATOIRE pour éviter l'erreur
       category: request.body.category,
+
+      // ✅ NOUVEAU : taxe / livraison
+      hasShipping: request.body.hasShipping,
+      shippingFee: request.body.shippingFee,
+      hasTax: request.body.hasTax,
+      taxRate: request.body.taxRate,
     });
 
     product = await product.save();
@@ -140,11 +146,18 @@ export async function createProduct(request, response) {
 export async function getAllProducts(request, response) {
   try {
     const page = parseInt(request.query.page) || 1;
-    const perPage = parseInt(request.query.perPage);
-    const totalPosts = await ProductModel.countDocuments();
-    const totalPages = Math.ceil(totalPosts / perPage);
 
-    if (page > totalPages) {
+    // ✅ Accepte "perPage" (nom historique) OU "limit" (utilisé par le front sur la home)
+    const perPageParam = request.query.perPage ?? request.query.limit;
+    const perPage = perPageParam ? parseInt(perPageParam) : null;
+
+    const totalPosts = await ProductModel.countDocuments();
+    // ✅ Comportement inchangé si aucune limite n'est demandée : totalPages = 1,
+    // pas de pagination appliquée, comme avant (rétrocompatibilité pour les
+    // appels existants qui n'envoient pas perPage/limit).
+    const totalPages = perPage ? Math.ceil(totalPosts / perPage) : 1;
+
+    if (perPage && page > totalPages) {
       return response.status(404).json({
         message: "La page Introuvable",
         success: false,
@@ -152,20 +165,15 @@ export async function getAllProducts(request, response) {
       });
     }
 
-    const product = await ProductModel.find()
-      .populate("category")
-      .skip((page - 1) * perPage)
-      .limit(perPage)
-      .exec();
+    // ✅ Tri systématique par date de création (le plus récent d'abord),
+    // corrige le fait qu'aucun tri n'était appliqué auparavant.
+    let query = ProductModel.find().populate("category").sort({ createdAt: -1 });
 
-    const products = await ProductModel.find();
-
-    if (!products) {
-      response.status(500).json({
-        error: true,
-        success: false,
-      });
+    if (perPage) {
+      query = query.skip((page - 1) * perPage).limit(perPage);
     }
+
+    const products = await query.exec();
 
     return response.status(200).json({
       error: false,
@@ -847,6 +855,12 @@ export async function updateProduct(request, response) {
 
         // IMPORTANT : category doit être l'ID
         category: request.body.category,
+
+        // ✅ NOUVEAU : taxe / livraison
+        hasShipping: request.body.hasShipping,
+        shippingFee: request.body.shippingFee,
+        hasTax: request.body.hasTax,
+        taxRate: request.body.taxRate,
       },
       { new: true },
     );
@@ -907,11 +921,20 @@ export async function getProducts(req, res) {
       .limit(Number(perPage))
       .sort({ createdAt: -1 });
 
+    // ✅ Produit le plus vendu PARMI L'ENSEMBLE FILTRÉ (pas seulement la page
+    // affichée), pour que le % de vente reste cohérent et stable tant que
+    // les filtres ne changent pas, quelle que soit la page consultée.
+    const topSeller = await ProductModel.findOne(filter)
+      .sort({ sale: -1 })
+      .select("sale");
+    const maxSale = topSeller?.sale || 0;
+
     return res.status(200).json({
       success: true,
       error: false,
       products,
       total,
+      maxSale,
       page: Number(page),
       totalPages: Math.ceil(total / perPage),
     });

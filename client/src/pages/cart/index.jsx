@@ -1,23 +1,41 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./cartpage.scss";
 import CartItems from "./cartitems";
 import { UserContext } from "../../UserContext/UserContext";
+import { fetchDataFromApi } from "../utils/api";
 
 const CartPage = () => {
   const { cartItems, loadCartItems } = useContext(UserContext);
+
+  const [totals, setTotals] = useState({
+    subTotalAmt: 0,
+    shippingAmt: 0,
+    taxAmt: 0,
+    totalAmt: 0,
+  });
 
   useEffect(() => {
     loadCartItems();
   }, []);
 
-  const shipping = 500;
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
+      return;
+    }
 
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-
-  const total = subtotal + shipping;
+    // ✅ Totaux calculés côté serveur, cohérents avec CartPanel et Checkout
+    fetchDataFromApi("/api/payment/preview-total").then((res) => {
+      if (!res?.error) {
+        setTotals({
+          subTotalAmt: res.subTotalAmt || 0,
+          shippingAmt: res.shippingAmt || 0,
+          taxAmt: res.taxAmt || 0,
+          totalAmt: res.totalAmt || 0,
+        });
+      }
+    });
+  }, [cartItems]);
 
   return (
     <div className="cp-page">
@@ -40,17 +58,22 @@ const CartPage = () => {
 
             <div className="cp-summary-row">
               <span>Sous-total</span>
-              <span>{subtotal.toLocaleString()} FCFA</span>
+              <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
             </div>
 
             <div className="cp-summary-row">
               <span>Expédition</span>
-              <span>{shipping.toLocaleString()} FCFA</span>
+              <span>{totals.shippingAmt.toLocaleString()} FCFA</span>
+            </div>
+
+            <div className="cp-summary-row">
+              <span>Taxes</span>
+              <span>{totals.taxAmt.toLocaleString()} FCFA</span>
             </div>
 
             <div className="cp-summary-row cp-total">
               <span>Total à payer</span>
-              <span>{total.toLocaleString()} FCFA</span>
+              <span>{totals.totalAmt.toLocaleString()} FCFA</span>
             </div>
 
             <div className="cp-summary-buttons">

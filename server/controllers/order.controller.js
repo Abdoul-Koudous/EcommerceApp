@@ -1,5 +1,6 @@
 import { findOrders } from "../services/order.service.js";
 import OrderModel from "../models/order.model.js";
+import ProductModel from "../models/product.model.js"; // ✅ nécessaire pour incrémenter/décrémenter "sale"
 
 export const getOrderDetailsController = async (req, res) => {
   try {
@@ -87,21 +88,57 @@ export const updateOrderStatusController = async (req, res) => {
       });
     }
 
-    // delivery_address est désormais un sous-document embarqué (snapshot figé),
-    // il n'y a donc plus rien à populate dessus. Seul userId reste une vraie
-    // référence vers le compte qui a passé la commande.
+    // ✅ On récupère l'état AVANT modification pour détecter une vraie
+    // transition vers/depuis "Livrée" (et éviter de compter deux fois).
+    const existingOrder = await OrderModel.findById(id);
+    if (!existingOrder) {
+      return res.status(404).json({
+        error: true,
+        success: false,
+        message: "Commande introuvable",
+      });
+    }
+
+    const wasDelivered = existingOrder.order_status === "Livrée";
+    const willBeDelivered = order_status === "Livrée";
+
     const updated = await OrderModel.findByIdAndUpdate(
       id,
       { order_status },
       { new: true }
     ).populate("userId", "name email mobile");
 
-    if (!updated) {
-      return res.status(404).json({
-        error: true,
-        success: false,
-        message: "Commande introuvable",
-      });
+    // ✅ La commande VIENT DE PASSER à "Livrée" → on compte les ventes
+    if (!wasDelivered && willBeDelivered) {
+      const bulkOps = updated.products
+        .filter((p) => p.productId)
+        .map((p) => ({
+          updateOne: {
+            filter: { _id: p.productId },
+            update: { $inc: { sale: p.quantity || 1 } },
+          },
+        }));
+
+      if (bulkOps.length > 0) {
+        await ProductModel.bulkWrite(bulkOps);
+      }
+    }
+
+    // ✅ La commande ÉTAIT "Livrée" et ne l'est plus (ex: annulée après coup)
+    // → on retire les ventes comptabilisées pour rester cohérent.
+    if (wasDelivered && !willBeDelivered) {
+      const bulkOps = updated.products
+        .filter((p) => p.productId)
+        .map((p) => ({
+          updateOne: {
+            filter: { _id: p.productId },
+            update: { $inc: { sale: -(p.quantity || 1) } },
+          },
+        }));
+
+      if (bulkOps.length > 0) {
+        await ProductModel.bulkWrite(bulkOps);
+      }
     }
 
     return res.status(200).json({

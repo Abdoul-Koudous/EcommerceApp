@@ -6,11 +6,11 @@ import Footer from "../components/footer";
 
 const MainLayout = () => {
   return (
-    <>
+    <div className="app-shell">
       <Header/>
       <Outlet />
       <Footer/>
-    </>
+    </div>
   );
 };
 

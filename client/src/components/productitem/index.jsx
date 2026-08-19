@@ -396,11 +396,11 @@ const currentCartItem = cartItems?.find(
         </div>
 
         <div className="price-box">
-          {product.oldPrice && (
-            <span className="old-price">{product.oldPrice} FCFA</span>
-          )}
-          <span className="price">{product.price} FCFA</span>
-        </div>
+  {product.oldPrice > 0 && (
+    <span className="old-price">{product.oldPrice} FCFA</span>
+  )}
+  <span className="price">{product.price} FCFA</span>
+</div>
         {isAdded === false ? (
           <button
             className="add-to-cart"

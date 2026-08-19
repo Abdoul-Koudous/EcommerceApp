@@ -1,0 +1,9 @@
+.live-preview-frame {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+
+  &__scaler {
+    transform-origin: top left;
+  }
+}

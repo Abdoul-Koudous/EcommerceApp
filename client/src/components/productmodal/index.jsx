@@ -101,11 +101,11 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
             <h2 className="pp-title">{product.name}</h2>
 
             {/* Marque + rating */}
-            {(product.brand || product.rating) && (
-              <div className="pp-brand-rating">
-                {product.brand && <span className="pp-brand">Marque: {product.brand}</span>}
-                {product.rating != null && (
-                  <div className="pp-rating">
+            {(product.brand || product.rating > 0) && (
+  <div className="pp-brand-rating">
+    {product.brand && <span className="pp-brand">Marque: {product.brand}</span>}
+    {product.rating != null && (
+      <div className="pp-rating">
                     {[...Array(5)].map((_, i) => (
                       i < product.rating ? (
                         <FaStar key={i} className="pp-star-filled" size={16} />
@@ -121,7 +121,7 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
 
             {/* Prix et stock */}
             <div className="pp-price-stock">
-              {product.oldPrice && <span className="pp-old-price">{product.oldPrice} FCFA</span>}
+              {product.oldPrice > 0 && <span className="pp-old-price">{product.oldPrice} FCFA</span>}
               {product.price && <span className="pp-price">{product.price} FCFA</span>}
               {product.countIntStock != null && (
                 <span className={`pp-stock ${product.countIntStock > 0 ? "pp-in-stock" : "pp-out-of-stock"}`}>

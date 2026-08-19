@@ -7,6 +7,12 @@ import {
   FaShoppingCart,
   FaUsers,
   FaSignOutAlt,
+  FaFileAlt,
+  FaImages,
+  FaAd,
+  FaBlog,
+  FaTags,
+  FaCog,
 } from "react-icons/fa";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import "./adminsidebar.scss";
@@ -24,25 +30,9 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
 
   const links = [
     { to: "/", label: "Dashboard", icon: <FaTachometerAlt /> },
-    {
-      label: "Slides",
-      icon: <FaShoppingCart />,
-      subLinks: [
-        { to: "/slides/lists", label: "Liste des slides" },
-        { to: "/slides/add", label: "Ajouter des slides" },
-        { to: "/slides/create", label: "Création de slides" },
-      ],
-    },
-    {
-      label: "Banniers",
-      icon: <FaShoppingCart />,
-      subLinks: [{ to: "/banners/lists", label: "Liste des bannieres" }],
-    },
-    {
-      label: "Blogs",
-      icon: <FaShoppingCart />,
-      subLinks: [{ to: "/blogs/lists", label: "Liste des blogs" }],
-    },
+    { to: "/slides/lists", label: "Slides", icon: <FaImages /> },
+    { to: "/banners/lists", label: "Banniers", icon: <FaAd /> },
+    { to: "/blogs/lists", label: "Blogs", icon: <FaBlog /> },
     {
       label: "Produits",
       icon: <FaBoxOpen />,
@@ -55,22 +45,24 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
     },
     {
       label: "Catégories",
-      icon: <FaBoxOpen />,
+      icon: <FaTags />,
       subLinks: [
         { to: "/categories/lists", label: "Liste des catégories" },
         { to: "/subCategories/lists", label: "Liste des sous catégories" },
       ],
     },
+    { to: "/orders", label: "Commandes", icon: <FaShoppingCart /> },
     {
-      label: "Commandes",
-      icon: <FaShoppingCart />,
+      label: "Pages du site",
+      icon: <FaFileAlt />,
       subLinks: [
-        { to: "/orders", label: "Toutes les commandes" },
-        { to: "/orders/pending", label: "En attente" },
-        { to: "/orders/delivered", label: "Livrées" },
+        { to: "/about-page", label: "À propos de nous" },
+        { to: "/contact-page", label: "Nous contacter" },
+        { to: "/contact-messages", label: "Messages reçus" },
       ],
     },
     { to: "/users", label: "Utilisateurs", icon: <FaUsers /> },
+    { to: "/settings", label: "Paramètres", icon: <FaCog /> },
   ];
 
   return (

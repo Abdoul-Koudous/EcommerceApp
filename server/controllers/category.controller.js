@@ -60,6 +60,9 @@ export async function createCategory(request, response) {
             images: request.body.images || [], // ✅ vient du payload envoyé par le front, plus de variable globale
             parentId: request.body.parentId,
             parentCatName: request.body.parentCatName,
+
+            // ✅ NOUVEAU : taux de taxe par défaut de la catégorie
+            taxRate: request.body.taxRate,
         });
 
         if(!category){
@@ -307,7 +310,10 @@ export async function updatedCategory(request, response) {
                 name,
                 parentId: parentId || null,
                 parentCatName,
-                images: request.body.images // ✅ corrigé : vient du payload du front, plus de variable globale
+                images: request.body.images, // ✅ corrigé : vient du payload du front, plus de variable globale
+
+                // ✅ NOUVEAU : taux de taxe par défaut de la catégorie
+                taxRate: request.body.taxRate,
             },
             { new: true }
         );

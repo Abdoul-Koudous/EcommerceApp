@@ -236,26 +236,30 @@ const ProductDetails = () => {
               <h2 className="product-title">{product.name}</h2>
 
               {/* BRAND + RATING */}
-              <div className="brand-rating">
-                <span className="brand">Brand: {product.brand}</span>
+              {(product.brand || product.rating > 0) && (
+  <div className="brand-rating">
+    {product.brand && <span className="brand">Brand: {product.brand}</span>}
 
-                <div className="rating">
-                  {[...Array(5)].map((_, i) => (
-                    i < product.rating ? (
-                      <FaStar key={i} className="star-filled" size={16} />
-                    ) : (
-                      <FaRegStar key={i} className="star-empty" size={16} />
-                    )
-                  ))}
-                  <span className="reviews">({reviewsCount} avis)</span>
-                </div>
-              </div>
+    {product.rating > 0 && (
+      <div className="rating">
+        {[...Array(5)].map((_, i) => (
+          i < product.rating ? (
+            <FaStar key={i} className="star-filled" size={16} />
+          ) : (
+            <FaRegStar key={i} className="star-empty" size={16} />
+          )
+        ))}
+        <span className="reviews">({reviewsCount} avis)</span>
+      </div>
+    )}
+  </div>
+)}
 
               {/* PRICE */}
               <div className="price-stock">
-                {product.oldPrice && (
-                  <span className="old-price">{product.oldPrice} FCFA</span>
-                )}
+                {product.oldPrice > 0 && (
+  <span className="old-price">{product.oldPrice} FCFA</span>
+)}
                 <span className="price">{product.price} FCFA</span>
 
                 <span

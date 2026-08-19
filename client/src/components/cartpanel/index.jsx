@@ -1,21 +1,37 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import "./cartPanel.scss";
-import { deleteData } from "../../pages/utils/api";
+import { deleteData, fetchDataFromApi } from "../../pages/utils/api";
 import { useNavigate, Link } from "react-router-dom";
-import { useContext } from "react";
 import { UserContext } from "../../UserContext/UserContext";
 
-
-const CartPanel = ({
-  isOpen,
-  onClose,
-  openToast,
-}) => {
-  const shipping = 500; // Prix d'expédition fixe
-  const taxRate = 0.18; // Exemple 18% de taxes
+const CartPanel = ({ isOpen, onClose, openToast }) => {
   const navigate = useNavigate();
   const { cartItems, loadCartItems } = useContext(UserContext);
+
+  // ✅ Totaux calculés côté serveur (taxe/livraison configurables),
+  // plus de valeurs en dur ici.
+  const [totals, setTotals] = useState({
+    subTotalAmt: 0,
+    shippingAmt: 0,
+    taxAmt: 0,
+    totalAmt: 0,
+  });
+
+  useEffect(() => {
+    if (!isOpen || cartItems.length === 0) return;
+
+    fetchDataFromApi("/api/payment/preview-total").then((res) => {
+      if (!res?.error) {
+        setTotals({
+          subTotalAmt: res.subTotalAmt || 0,
+          shippingAmt: res.shippingAmt || 0,
+          taxAmt: res.taxAmt || 0,
+          totalAmt: res.totalAmt || 0,
+        });
+      }
+    });
+  }, [isOpen, cartItems]);
 
   const handleRemoveItem = (id) => {
     if (!id) return;
@@ -35,13 +51,6 @@ const CartPanel = ({
       });
   };
 
-  const totalProducts = cartItems.reduce(
-    (acc, item) => acc + item.quantity * item.price,
-    0,
-  );
-
-  const taxes = totalProducts * taxRate;
-  const totalTTC = totalProducts + shipping + taxes;
   const goToCartPage = () => {
     console.log("CLICK OK");
     navigate("/cart");
@@ -107,42 +116,38 @@ const CartPanel = ({
       <div className="cart-footer">
         <div className="footer-row">
           <span>{cartItems.length} produits</span>
-          <span>{totalProducts.toLocaleString()} FCFA</span>
+          <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
         </div>
         <div className="footer-row">
           <span>Expédition</span>
-          <span>{shipping.toLocaleString()} FCFA</span>
+          <span>{totals.shippingAmt.toLocaleString()} FCFA</span>
         </div>
         <div className="footer-row">
           <span>Total (hors taxes)</span>
-          <span>{totalProducts.toLocaleString()} FCFA</span>
-        </div>
-        <div className="footer-row">
-          <span>Total (TTC)</span>
-          <span>{totalTTC.toLocaleString()} FCFA</span>
+          <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
         </div>
         <div className="footer-row">
           <span>Taxes</span>
-          <span>{taxes.toLocaleString()} FCFA</span>
+          <span>{totals.taxAmt.toLocaleString()} FCFA</span>
+        </div>
+        <div className="footer-row">
+          <span>Total (TTC)</span>
+          <span>{totals.totalAmt.toLocaleString()} FCFA</span>
         </div>
 
         <div className="footer-buttons">
-          <Link
-  className="view-cart-btn"
-  to="/cart"
-  onClick={onClose}
->
-  Voir le panier
-</Link>
+          <Link className="view-cart-btn" to="/cart" onClick={onClose}>
+            Voir le panier
+          </Link>
           <button
-  className="checkout-btn"
-  onClick={() => {
-    navigate("/checkout");
-    onClose();
-  }}
->
-  Passer à la caisse
-</button>
+            className="checkout-btn"
+            onClick={() => {
+              navigate("/checkout");
+              onClose();
+            }}
+          >
+            Passer à la caisse
+          </button>
         </div>
       </div>
     </div>

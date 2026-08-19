@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { FaShippingFast, FaUndoAlt, FaGift, FaHeadset, FaFacebookF, FaInstagram, FaTwitter, FaLinkedinIn } from "react-icons/fa";
 import "./footer.scss";
 
@@ -43,33 +44,19 @@ const Footer = () => {
         <div className="ft-column">
           <h4>Produits</h4>
           <ul>
-            <li><a href="#">Nouveaux produits</a></li>
-            <li><a href="#">Boutique</a></li>
-            <li><a href="#">Promotions</a></li>
-            <li><a href="#">Meilleures ventes</a></li>
+            <li><Link to="/productlisting">Nouveaux produits</Link></li>
+            <li><Link to="/productlisting">Boutique</Link></li>
+            <li><Link to="/productlisting">Promotions</Link></li>
+            <li><Link to="/productlisting">Meilleures ventes</Link></li>
           </ul>
         </div>
 
         <div className="ft-column">
           <h4>Notre compagnie</h4>
           <ul>
-            <li><a href="#">À propos de nous</a></li>
-            <li><a href="#">Politique de confidentialité</a></li>
-            <li><a href="#">Conditions d'utilisation</a></li>
+            <li><Link to="/about">À propos de nous</Link></li>
+            <li><Link to="/contact">Nous contacter</Link></li>
           </ul>
-        </div>
-
-        <div className="ft-column">
-          <h4>Abonnez-vous</h4>
-          <p>Recevez nos dernières offres</p>
-          <form>
-            <input type="email" placeholder="Votre email" />
-            <div className="ft-checkbox">
-              <input type="checkbox" id="ft-agree" />
-              <label htmlFor="ft-agree">J'accepte les conditions</label>
-            </div>
-            <button type="submit">S'abonner</button>
-          </form>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import CartProductModel from "../models/cartproduct.model.js";
 import ProductModel from "../models/product.model.js";
 import AddressModel from "../models/address.model.js";
 import kkiapayClient from "../config/kkiapay.js";
+import { calculateOrderTotals } from "../services/pricing.service.js";
 
 // 📉 Décrémente le stock des produits commandés (utilisé par les trois méthodes de paiement)
 const decrementStock = async (products) => {
@@ -101,13 +102,9 @@ export const verifyPaymentController = async (req, res) => {
       quantity: item.quantity,
     }));
 
-    const subTotalAmt = cartItems.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    const shippingAmt = 500;
-    const taxAmt = subTotalAmt * 0.18;
-    const totalAmt = subTotalAmt + shippingAmt + taxAmt;
+    // ✅ Calcul centralisé (taxe/livraison configurables), plus de valeurs en dur
+    const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
+      await calculateOrderTotals(cartItems, delivery_address.city);
 
     const orderId = `CMD-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
 
@@ -204,13 +201,9 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       quantity: item.quantity,
     }));
 
-    const subTotalAmt = cartItems.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    const shippingAmt = 500;
-    const taxAmt = subTotalAmt * 0.18;
-    const totalAmt = subTotalAmt + shippingAmt + taxAmt;
+    // ✅ Calcul centralisé (taxe/livraison configurables), plus de valeurs en dur
+    const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
+      await calculateOrderTotals(cartItems, delivery_address.city);
 
     const orderId = `CMD-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
 
@@ -293,13 +286,9 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       quantity: item.quantity,
     }));
 
-    const subTotalAmt = cartItems.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    const shippingAmt = 500;
-    const taxAmt = subTotalAmt * 0.18;
-    const totalAmt = subTotalAmt + shippingAmt + taxAmt;
+    // ✅ Calcul centralisé (taxe/livraison configurables), plus de valeurs en dur
+    const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
+      await calculateOrderTotals(cartItems, delivery_address.city);
 
     const orderId = `CMD-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
 
@@ -335,6 +324,45 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       error: true,
       success: false,
       message: "Erreur lors de la création de la commande",
+      data: error.message,
+    });
+  }
+};
+
+export const getOrderPreviewController = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { city } = req.query;
+
+    const cartItems = await CartProductModel.find({ userId });
+
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(200).json({
+        error: false,
+        success: true,
+        subTotalAmt: 0,
+        shippingAmt: 0,
+        taxAmt: 0,
+        totalAmt: 0,
+        currency: "FCFA",
+      });
+    }
+
+    // ✅ Même fonction que celle utilisée à la création réelle de la
+    // commande — garantit que ce que le client voit avant de payer
+    // correspond exactement à ce qui sera facturé.
+    const totals = await calculateOrderTotals(cartItems, city);
+
+    return res.status(200).json({
+      error: false,
+      success: true,
+      ...totals,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: true,
+      success: false,
+      message: "Erreur lors du calcul du total",
       data: error.message,
     });
   }

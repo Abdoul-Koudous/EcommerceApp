@@ -31,17 +31,21 @@ import GuestOnlyRoute from "./components/GuestOnlyRoute/GuestOnlyRoute"; // ✅ 
 import AddressPage from "./pages/myaccount/AddressPage";
 import AccountLayout from "./pages/myaccount/accountlayout";
 import SearchPage from "./components/searchs";
+import About from "./pages/about";
+import Contact from "./pages/contact";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<MainLayout />}>
-          
           {/* === FRONT CLIENT === */}
           <Route path="/" element={<Home />} />
           <Route path="/productlisting" element={<ProductListing />} />
           <Route path="/product/:id" element={<ProductDetails />} />
+
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
 
           {/* ✅ accessibles uniquement si NON connecté */}
           <Route
@@ -74,7 +78,7 @@ function App() {
             path="/account"
             element={
               <ProtectedRoute>
-                <AccountLayout/>
+                <AccountLayout />
               </ProtectedRoute>
             }
           >
@@ -82,11 +86,10 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="wishlist" element={<WishlistPage />} />
-            <Route path="address" element={<AddressPage/>} />
+            <Route path="address" element={<AddressPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="logout" element={<LogoutPage />} />
           </Route>
-
         </Route>
       </Routes>
     </BrowserRouter>
