@@ -190,3 +190,9 @@
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
+
+.aop-product-variant {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  display: block;
+}

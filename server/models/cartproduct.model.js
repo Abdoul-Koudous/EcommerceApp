@@ -16,11 +16,23 @@ const cartProductSchema = new mongoose.Schema(
     ramOptions: [String],
     weightOptions: [String],
 
-    // OPTIONS CHOISIES (panier)
+    // OPTIONS CHOISIES (panier) — ⚠️ INCHANGÉ : rétrocompatibilité avec
+    // l'ancien système figé
     size: String,
     color: String,
     ram: String,
     weight: String,
+
+    // ✅ NOUVEAU : sélection générique pour le système de variantes V2
+    // Ex: { "Couleur": "Rouge", "Taille": "M" }
+    selectedVariants: {
+      type: Map,
+      of: String,
+      default: {},
+    },
+
+    // ✅ Snapshot du SKU de la combinaison choisie au moment de l'ajout
+    selectedCombinationSku: { type: String, default: "" },
 
     quantity: { type: Number, required: true },
     subTotal: { type: Number, required: true },

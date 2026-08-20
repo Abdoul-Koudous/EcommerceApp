@@ -18,6 +18,18 @@ const formatAddress = (address) => {
   return parts.length ? parts.join(", ") : "—";
 };
 
+// ✅ NOUVEAU
+const formatSelectedVariants = (selectedVariants) => {
+  if (!selectedVariants) return "";
+  const obj =
+    selectedVariants instanceof Map
+      ? Object.fromEntries(selectedVariants)
+      : selectedVariants;
+  return Object.entries(obj)
+    .map(([key, val]) => `${key}: ${val}`)
+    .join(" · ");
+};
+
 const OrdersTabPage = () => {
   const [openOrder, setOpenOrder] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -313,24 +325,35 @@ const OrdersTabPage = () => {
                             <span>Prix</span>
                             <span>Subtotal</span>
                           </div>
-                          {order.products.map((item, idx) => (
-                            <div className="otb-products-grid-row" key={item._id || item.productId || idx}>
-                              <span title={item.productId}>{item.productId}</span>
-                              <span>{item.productTitle}</span>
-                              <span>
-                                <img
-                                  src={item.image}
-                                  alt={item.productTitle}
-                                  className="otb-product-image"
-                                />
-                              </span>
-                              <span>{item.quantity}</span>
-                              <span>{(item.price || 0).toLocaleString()} FCFA</span>
-                              <span>
-                                {((item.price || 0) * (item.quantity || 0)).toLocaleString()} FCFA
-                              </span>
-                            </div>
-                          ))}
+                          {order.products.map((item, idx) => {
+                            // ✅ NOUVEAU
+                            const variantLabel = formatSelectedVariants(item.selectedVariants);
+
+                            return (
+                              <div className="otb-products-grid-row" key={item._id || item.productId || idx}>
+                                <span title={item.productId}>{item.productId}</span>
+                                <span>
+                                  {item.productTitle}
+                                  {/* ✅ NOUVEAU */}
+                                  {variantLabel && (
+                                    <small className="otb-product-variant">{variantLabel}</small>
+                                  )}
+                                </span>
+                                <span>
+                                  <img
+                                    src={item.image}
+                                    alt={item.productTitle}
+                                    className="otb-product-image"
+                                  />
+                                </span>
+                                <span>{item.quantity}</span>
+                                <span>{(item.price || 0).toLocaleString()} FCFA</span>
+                                <span>
+                                  {((item.price || 0) * (item.quantity || 0)).toLocaleString()} FCFA
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

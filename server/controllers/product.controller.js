@@ -119,11 +119,17 @@ export async function createProduct(request, response) {
       // ✅ OBLIGATOIRE pour éviter l'erreur
       category: request.body.category,
 
-      // ✅ NOUVEAU : taxe / livraison
+      // ✅ taxe / livraison
       hasShipping: request.body.hasShipping,
       shippingFee: request.body.shippingFee,
       hasTax: request.body.hasTax,
       taxRate: request.body.taxRate,
+
+      // ✅ NOUVEAU : variantes (auto ou manuel, jamais forcé — cf. schéma)
+      hasVariants: request.body.hasVariants || false,
+      useVariantStock: request.body.useVariantStock || false,
+      variants: request.body.variants || [],
+      variantCombinations: request.body.variantCombinations || [],
     });
 
     product = await product.save();
@@ -196,7 +202,6 @@ export async function getAllProductsByCatId(request, response) {
     const page = parseInt(request.query.page) || 1;
     const perPage = parseInt(request.query.perPage) || 20;
 
-    // 1. Calculer le nombre total de produits de cette catégorie
     const totalPosts = await ProductModel.countDocuments({
       catId: request.params.id,
     });
@@ -218,11 +223,10 @@ export async function getAllProductsByCatId(request, response) {
       });
     }
 
-    // 2. Récupérer les produits filtrés
     const products = await ProductModel.find({
       catId: request.params.id,
     })
-      .populate("category") // uniquement si category est ref: "Categorie"
+      .populate("category")
       .skip((page - 1) * perPage)
       .limit(perPage);
 
@@ -257,7 +261,6 @@ export async function getAllProductsByCatName(request, response) {
       });
     }
 
-    // 1. Calculer le nombre de produits de cette catégorie
     const totalPosts = await ProductModel.countDocuments({ catName });
 
     if (totalPosts === 0) {
@@ -278,9 +281,8 @@ export async function getAllProductsByCatName(request, response) {
       });
     }
 
-    // 2. Récupérer les produits filtrés par catName
     const products = await ProductModel.find({ catName })
-      .populate("category") // si ref: "Categorie"
+      .populate("category")
       .skip((page - 1) * perPage)
       .limit(perPage);
 
@@ -305,7 +307,6 @@ export async function getAllProductsBySubCatId(request, response) {
     const page = parseInt(request.query.page) || 1;
     const perPage = parseInt(request.query.perPage) || 20;
 
-    // 1. Calculer le nombre total de produits de cette catégorie
     const totalPosts = await ProductModel.countDocuments({
       subCatId: request.params.id,
     });
@@ -327,11 +328,10 @@ export async function getAllProductsBySubCatId(request, response) {
       });
     }
 
-    // 2. Récupérer les produits filtrés
     const products = await ProductModel.find({
       subCatId: request.params.id,
     })
-      .populate("category") // uniquement si category est ref: "Categorie"
+      .populate("category")
       .skip((page - 1) * perPage)
       .limit(perPage);
 
@@ -366,7 +366,6 @@ export async function getAllProductsBySubCatName(request, response) {
       });
     }
 
-    // 1. Calculer le nombre de produits de cette catégorie
     const totalPosts = await ProductModel.countDocuments({ subCat });
 
     if (totalPosts === 0) {
@@ -387,9 +386,8 @@ export async function getAllProductsBySubCatName(request, response) {
       });
     }
 
-    // 2. Récupérer les produits filtrés par catName
     const products = await ProductModel.find({ subCat })
-      .populate("category") // si ref: "Categorie"
+      .populate("category")
       .skip((page - 1) * perPage)
       .limit(perPage);
 
@@ -414,7 +412,6 @@ export async function getAllProductsByThirdLavelCatId(request, response) {
     const page = parseInt(request.query.page) || 1;
     const perPage = parseInt(request.query.perPage) || 20;
 
-    // 1. Calculer le nombre total de produits de cette catégorie
     const totalPosts = await ProductModel.countDocuments({
       thirdsubCatId: request.params.id,
     });
@@ -436,11 +433,10 @@ export async function getAllProductsByThirdLavelCatId(request, response) {
       });
     }
 
-    // 2. Récupérer les produits filtrés
     const products = await ProductModel.find({
       thirdsubCatId: request.params.id,
     })
-      .populate("category") // uniquement si category est ref: "Categorie"
+      .populate("category")
       .skip((page - 1) * perPage)
       .limit(perPage);
 
@@ -475,7 +471,6 @@ export async function getAllProductsByThirdLavelCatName(request, response) {
       });
     }
 
-    // 1. Calculer le nombre de produits de cette catégorie
     const totalPosts = await ProductModel.countDocuments({ thirdsubCat });
 
     if (totalPosts === 0) {
@@ -496,9 +491,8 @@ export async function getAllProductsByThirdLavelCatName(request, response) {
       });
     }
 
-    // 2. Récupérer les produits filtrés par catName
     const products = await ProductModel.find({ thirdsubCat })
-      .populate("category") // si ref: "Categorie"
+      .populate("category")
       .skip((page - 1) * perPage)
       .limit(perPage);
 
@@ -523,17 +517,14 @@ export async function getAllProductsByPrice(request, response) {
     const { catId, subCatId, thirdsubCatId, minPrice, maxPrice } =
       request.query;
 
-    // Construire dynamiquement le filtre Mongo
     let filter = {};
 
     if (catId) filter.catId = catId;
     if (subCatId) filter.subCatId = subCatId;
     if (thirdsubCatId) filter.thirdsubCatId = thirdsubCatId;
 
-    // Récupérer les produits par catégorie
     const products = await ProductModel.find(filter).populate("category");
 
-    // Filtrer par prix
     const filteredProducts = products.filter((product) => {
       if (minPrice && product.price < parseInt(minPrice)) return false;
       if (maxPrice && product.price > parseInt(maxPrice)) return false;
@@ -570,14 +561,12 @@ export async function getAllProductsByRating(request, response) {
       });
     }
 
-    // Construire le filtre
     let filter = { rating: parseFloat(rating) };
 
     if (catId) filter.catId = catId;
     if (subCatId) filter.subCatId = subCatId;
     if (thirdsubCatId) filter.thirdsubCatId = thirdsubCatId;
 
-    // Compter les produits correspondants
     const totalPosts = await ProductModel.countDocuments(filter);
 
     if (totalPosts === 0) {
@@ -597,7 +586,6 @@ export async function getAllProductsByRating(request, response) {
       });
     }
 
-    // Récupérer les produits
     const products = await ProductModel.find(filter)
       .populate("category")
       .skip((page - 1) * perPage)
@@ -827,6 +815,24 @@ export async function removeImageFromCloudinary(req, res) {
 
 export async function updateProduct(request, response) {
   try {
+    // ✅ NOUVEAU : si le vendeur utilise le stock par combinaison, on
+    // recalcule countIntStock à partir de la somme des stocks actifs,
+    // plutôt que de faire confiance à la valeur envoyée par le front.
+    // Ça garde countIntStock toujours synchronisé, que la mise à jour
+    // vienne d'un achat (payment.controller.js) ou d'une modification
+    // manuelle du vendeur ici.
+    let finalCountIntStock = request.body.countIntStock;
+
+    if (
+      request.body.hasVariants &&
+      request.body.useVariantStock &&
+      Array.isArray(request.body.variantCombinations)
+    ) {
+      finalCountIntStock = request.body.variantCombinations
+        .filter((combo) => combo.isActive)
+        .reduce((sum, combo) => sum + Math.max(0, Number(combo.stock) || 0), 0);
+    }
+
     const product = await ProductModel.findByIdAndUpdate(
       request.params.id,
       {
@@ -845,7 +851,7 @@ export async function updateProduct(request, response) {
         subCat: request.body.subCat,
         thirdsubCat: request.body.thirdsubCat,
         thirdSubCatId: request.body.thirdSubCatId ?? undefined,
-        countIntStock: request.body.countIntStock,
+        countIntStock: finalCountIntStock, // ✅ MODIFIÉ : recalculé si besoin
         rating: request.body.rating,
         isFeatured: request.body.isFeatured,
         discount: request.body.discount,
@@ -856,11 +862,17 @@ export async function updateProduct(request, response) {
         // IMPORTANT : category doit être l'ID
         category: request.body.category,
 
-        // ✅ NOUVEAU : taxe / livraison
+        // ✅ taxe / livraison
         hasShipping: request.body.hasShipping,
         shippingFee: request.body.shippingFee,
         hasTax: request.body.hasTax,
         taxRate: request.body.taxRate,
+
+        // ✅ variantes
+        hasVariants: request.body.hasVariants,
+        useVariantStock: request.body.useVariantStock,
+        variants: request.body.variants,
+        variantCombinations: request.body.variantCombinations,
       },
       { new: true },
     );
@@ -900,12 +912,10 @@ export async function getProducts(req, res) {
 
     const filter = {};
 
-    // 🎯 filtres totalement indépendants
     if (catName) filter.catName = catName;
     if (subCat) filter.subCat = subCat;
     if (thirdsubCat) filter.thirdsubCat = thirdsubCat;
 
-    // 🔍 recherche texte
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -921,9 +931,6 @@ export async function getProducts(req, res) {
       .limit(Number(perPage))
       .sort({ createdAt: -1 });
 
-    // ✅ Produit le plus vendu PARMI L'ENSEMBLE FILTRÉ (pas seulement la page
-    // affichée), pour que le % de vente reste cohérent et stable tant que
-    // les filtres ne changent pas, quelle que soit la page consultée.
     const topSeller = await ProductModel.findOne(filter)
       .sort({ sale: -1 })
       .select("sale");
@@ -1526,7 +1533,6 @@ export async function filters(request, response) {
     ];
   }
 
-  // ✅ Filtre utilisé pour la LISTE de produits : inclut la note si sélectionnée
   const filterForProducts = { ...filter };
   if (rating && !isNaN(Number(rating))) {
     filterForProducts.rating = Number(rating);
@@ -1555,9 +1561,6 @@ export async function filters(request, response) {
 
     const total = await ProductModel.countDocuments(filterForProducts);
 
-    // ✅ Comptage par étoile : basé sur `filter` (SANS le rating) pour que
-    // toutes les options 1-5 étoiles restent affichées avec leur vrai total,
-    // même quand une note est déjà sélectionnée.
     const ratingAgg = await ProductModel.aggregate([
       { $match: filter },
       { $group: { _id: "$rating", count: { $sum: 1 } } },
@@ -1741,6 +1744,131 @@ export async function searchSuggestions(request, response) {
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// ✅ NOUVEAU : Génération automatique des combinaisons de variantes
+// ────────────────────────────────────────────────────────────
+//
+// Reçoit un tableau "variants" (ex: [{name:"Couleur", values:["Rouge","Noir"]},
+// {name:"Taille", values:["S","M"]}]) et calcule le produit cartésien de
+// toutes les valeurs pour proposer TOUTES les combinaisons possibles.
+//
+// ⚠️ Ce endpoint ne SAUVEGARDE rien en base — il se contente de calculer
+// et renvoyer les combinaisons au front, pour que le vendeur puisse les
+// visualiser, en retirer certaines, ajuster stock/prix, avant de les
+// envoyer lui-même via updateProduct (auto OU manuel, jamais forcé).
+export async function generateVariantCombinations(request, response) {
+  try {
+    const { variants } = request.body;
+
+    if (!Array.isArray(variants) || variants.length === 0) {
+      return response.status(400).json({
+        message: "Le tableau 'variants' est requis et ne doit pas être vide",
+        error: true,
+        success: false,
+      });
+    }
+
+    for (const v of variants) {
+      if (!v.name || !Array.isArray(v.values) || v.values.length === 0) {
+        return response.status(400).json({
+          message: `La variante "${v.name || "?"}" doit avoir un nom et au moins une valeur`,
+          error: true,
+          success: false,
+        });
+      }
+    }
+
+    // Produit cartésien : combine chaque valeur de chaque variante entre elles.
+    let combinations = [{}];
+
+    for (const variant of variants) {
+      const next = [];
+      for (const existingCombo of combinations) {
+        for (const value of variant.values) {
+          next.push({ ...existingCombo, [variant.name]: value });
+        }
+      }
+      combinations = next;
+    }
+
+    const variantCombinations = combinations.map((combination) => ({
+      combination,
+      stock: 0,
+      price: null, // null = hérite du prix du produit
+      sku: "",
+      isActive: true,
+    }));
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      count: variantCombinations.length,
+      variantCombinations,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function getNewArrivals(request, response) {
+  try {
+    const days = parseInt(request.query.days) || 7;
+    const limit = parseInt(request.query.limit) || 8;
+
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const products = await ProductModel.find({ createdAt: { $gte: since } })
+      .populate("category")
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function getLowStockProducts(request, response) {
+  try {
+    const threshold = parseInt(request.query.threshold) || 3;
+    const limit = parseInt(request.query.limit) || 8;
+
+    // ✅ $gt: 0 exclut les ruptures totales — on veut "bientôt épuisé",
+    // pas "déjà épuisé" (qui n'est de toute façon plus achetable)
+    const products = await ProductModel.find({
+      countIntStock: { $gt: 0, $lt: threshold },
+    })
+      .populate("category")
+      .sort({ countIntStock: 1 })
+      .limit(limit);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message,
       error: true,
       success: false,
     });

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   FaShoppingCart,
   FaStar,
@@ -17,6 +17,29 @@ import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import { deleteData, editData, postData } from "../../pages/utils/api";
 import CircularProgress from "../CircularProgress/CircularProgress";
+
+// ✅ NOUVEAU : retrouve la combinaison de variantes exacte dans le produit,
+// à partir d'une sélection donnée.
+const resolveVariantCombination = (product, selectedVariants) => {
+  if (
+    !product?.hasVariants ||
+    !selectedVariants ||
+    Object.keys(selectedVariants).length === 0
+  ) {
+    return null;
+  }
+  return (
+    product.variantCombinations?.find((combo) => {
+      const comboObj = combo.combination || {};
+      return (
+        Object.keys(selectedVariants).length === Object.keys(comboObj).length &&
+        Object.entries(selectedVariants).every(
+          ([key, val]) => comboObj[key] === val,
+        )
+      );
+    }) || null
+  );
+};
 
 const ProductItem = ({ product }) => {
   const [hovered, setHovered] = useState(false);
@@ -42,9 +65,8 @@ const ProductItem = ({ product }) => {
       : desc;
   };
 
-  // 🔹 Images provenant uniquement de la base
   const images = product.images || [];
-  const hasMultipleImages = images.length > 1; // ✅ true seulement s'il y a au moins 2 images
+  const hasMultipleImages = images.length > 1;
 
   const truncateName = (name, maxWords = 3) => {
     if (!name) return "";
@@ -59,7 +81,7 @@ const ProductItem = ({ product }) => {
     const now = new Date();
     const createdDate = new Date(date);
     const diffDays = (now - createdDate) / (1000 * 60 * 60 * 24);
-    return diffDays <= 7; // produit nouveau si <= 7 jours
+    return diffDays <= 7;
   };
 
   const addToCart = (productId, userId, quantity, options = {}) => {
@@ -81,7 +103,7 @@ const ProductItem = ({ product }) => {
       countInStock: product.countIntStock,
       brand: product.brand,
 
-      // OPTIONS CHOISIES
+      // OPTIONS CHOISIES (ancien système)
       size: options.size,
       color: options.color,
       ram: options.ram,
@@ -92,6 +114,9 @@ const ProductItem = ({ product }) => {
       colorOptions: product.colors || [],
       ramOptions: product.productRam || [],
       weightOptions: product.productWeight || [],
+
+      // ✅ NOUVEAU
+      selectedVariants: options.selectedVariants || {},
     };
     setCartLoading(true);
 
@@ -120,6 +145,24 @@ const currentCartItem = cartItems?.find(
   (item) => (item.productId?._id || item.productId) === product._id,
 );
 
+  // ✅ NOUVEAU : sélection de variantes déjà enregistrée sur l'item du panier
+  const currentSelectedVariants = useMemo(() => {
+    if (!currentCartItem?.selectedVariants) return {};
+    return currentCartItem.selectedVariants instanceof Map
+      ? Object.fromEntries(currentCartItem.selectedVariants)
+      : currentCartItem.selectedVariants;
+  }, [currentCartItem]);
+
+  // ✅ NOUVEAU : stock max utilisable pour les boutons +/- de la carte,
+  // basé sur la combinaison déjà choisie dans le panier (si applicable)
+  const maxQtyForCard = useMemo(() => {
+    if (product.hasVariants && product.useVariantStock) {
+      const combo = resolveVariantCombination(product, currentSelectedVariants);
+      return combo ? combo.stock : 0;
+    }
+    return product.countIntStock || 0;
+  }, [product, currentSelectedVariants]);
+
   useEffect(() => {
     if (currentCartItem) {
       setQuantity(currentCartItem.quantity);
@@ -142,7 +185,6 @@ const currentCartItem = cartItems?.find(
 
     setLoading(true);
 
-    // CAS 1 : diminution simple
     if (quantity > 1) {
       const newQty = quantity - 1;
 
@@ -156,12 +198,12 @@ const currentCartItem = cartItems?.find(
           if (res?.success) {
             loadCartItems();
           } else {
-            setQuantity(oldQty); // rollback
+            setQuantity(oldQty);
             openToast("error", "Erreur mise à jour");
           }
         })
         .catch(() => {
-          setQuantity(oldQty); // rollback
+          setQuantity(oldQty);
           openToast("error", "Erreur serveur");
         })
         .finally(() => {
@@ -171,7 +213,6 @@ const currentCartItem = cartItems?.find(
       return;
     }
 
-    // CAS 2 : suppression si qty = 1
     deleteData(`/api/cart/delete-cart-item/${currentCartItem._id}`)
       .then((res) => {
         if (res?.success) {
@@ -198,7 +239,10 @@ const currentCartItem = cartItems?.find(
       return;
     }
 
-    if (quantity >= product.countIntStock) {
+    // ✅ MODIFIÉ : utilise le stock de la combinaison sélectionnée si
+    // le produit a des variantes avec stock détaillé, sinon le stock
+    // global comme avant.
+    if (quantity >= maxQtyForCard) {
       openToast("error", "Stock insuffisant");
       return;
     }
@@ -218,12 +262,12 @@ const currentCartItem = cartItems?.find(
           openToast("success", res?.message || "Quantité mise à jour");
           loadCartItems();
         } else {
-          setQuantity(oldQty); // rollback
+          setQuantity(oldQty);
           openToast("error", "Erreur mise à jour");
         }
       })
       .catch(() => {
-        setQuantity(oldQty); // rollback
+        setQuantity(oldQty);
         openToast("error", "Erreur serveur");
       })
       .finally(() => {
@@ -231,11 +275,15 @@ const currentCartItem = cartItems?.find(
       });
   };
 
+  // ✅ MODIFIÉ : un produit avec le nouveau système de variantes a
+  // toujours des "options" à choisir, même si l'ancien système est vide.
   const hasOptions =
-    product.size?.length > 0 ||
-    product.colors?.length > 0 ||
-    product.productRam?.length > 0 ||
-    product.productWeight?.length > 0;
+    product.hasVariants && product.variants?.length > 0
+      ? true
+      : product.size?.length > 0 ||
+        product.colors?.length > 0 ||
+        product.productRam?.length > 0 ||
+        product.productWeight?.length > 0;
 
   const handleAddClick = () => {
     if (hasOptions) {
@@ -256,13 +304,11 @@ const currentCartItem = cartItems?.find(
 
     setFavoriteLoading(true);
 
-    //  SUPPRESSION (si déjà en favoris)
     if (isFavorite) {
       deleteData(`/api/mylist/remove/${product._id}`)
         .then((res) => {
           if (res?.success) {
             setIsFavorite(false);
-            // 🔥 UPDATE CONTEXT
             loadMyListItems();
             openToast("success", res?.message || "Retiré des favoris");
           } else {
@@ -279,7 +325,6 @@ const currentCartItem = cartItems?.find(
       return;
     }
 
-    //  AJOUT
     const data = {
       productId: product._id,
       productTitle: product.name,
@@ -295,7 +340,6 @@ const currentCartItem = cartItems?.find(
       .then((res) => {
         if (res?.success) {
           setIsFavorite(true);
-          // 🔥 UPDATE CONTEXT
           loadMyListItems();
           openToast("success", res?.message || "Ajouté aux favoris ❤️");
         } else {

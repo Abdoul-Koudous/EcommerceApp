@@ -369,3 +369,16 @@
     opacity: 0;
   }
 }
+
+.apd-field-hint {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.apd-form input:disabled {
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}

@@ -11,6 +11,8 @@ import BannerBoxv2 from "../../components/bannerboxv2/index.jsx";
 import "./home.scss";
 import { fetchDataFromApi } from "../utils/api.js";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
+import ProductBlockGrid from "../../components/productblockgrid";
+import ProductBlockSlider from "../../components/productblockslider";
 
 
 const Home = () => {
@@ -33,7 +35,6 @@ const Home = () => {
   .finally(() => setLoadingLatest(false));
 
     // 🔹 Produits populaires / featured
-        // 🔹 Produits populaires / featured
     fetchDataFromApi("/api/product/getAllFeaturedProducts")
       .then((res) => {
         const products = res.products || res.data || res;
@@ -87,7 +88,7 @@ const Home = () => {
               <p>Recevez vos produits gratuitement sur vos premiers achats</p>
             </div>
             <div className="free3">
-              <p>A partir de 20 000 FCFA</p>
+              <p>A partir de 20 000 FCFA</p>
             </div>
           </div>
           <AdsBannerSlider categoryNames={["L'informatique", "Téléphones et tablettes", "Mode"]} limit={4} />
@@ -122,6 +123,50 @@ const Home = () => {
             <p>Aucun produit populaire trouvé</p>
           )}
           <AdsBannerSlider categoryName="L'informatique" limit={2} />
+        </div>
+      </section>
+
+      {/* Nouveautés de la semaine — grille fixe, "Voir plus" vers la boutique */}
+      <section className="section3">
+        <div className="container">
+          <ProductBlockGrid
+            title="Nouveautés de la semaine"
+            subtitle="Fraîchement ajoutés à la boutique"
+            fetchUrl="/api/product/newArrivals?days=7&limit=24"
+            voirPlusLink="/productlisting"
+          />
+        </div>
+      </section>
+
+      {/* Stock limité — grille fixe, "Voir plus" vers la boutique */}
+      <section className="section3">
+        <div className="container">
+          <ProductBlockGrid
+            title="Stock limité"
+            subtitle="Ils partent vite, ne tardez pas"
+            fetchUrl="/api/product/lowStock?threshold=3&limit=24"
+            voirPlusLink="/productlisting"
+          />
+        </div>
+      </section>
+
+      {/* Blocs par catégorie — slider, "Voir plus" dérivé automatiquement
+          du catId réel des produits (pas besoin de le coder en dur ici) */}
+      <section className="section3">
+        <div className="container">
+          <ProductBlockSlider
+            title="Mode"
+            fetchUrl="/api/product/getAllProductsByCatName?catName=Mode&perPage=8"
+          />
+        </div>
+      </section>
+
+      <section className="section3">
+        <div className="container">
+          <ProductBlockSlider
+            title="Electronique"
+            fetchUrl="/api/product/getAllProductsByCatName?catName=Electronique&perPage=8"
+          />
         </div>
       </section>
 

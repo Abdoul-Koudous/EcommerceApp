@@ -18,33 +18,35 @@ const orderSchema = new mongoose.Schema(
         image: { type: String },
         price: { type: Number },
         quantity: { type: Number },
+
+        // ✅ NOUVEAU : snapshot de la variante choisie au moment de la
+        // commande (ex: { "Couleur": "Rouge", "Taille": "M" }), figé
+        // même si le produit change après.
+        selectedVariants: {
+          type: Map,
+          of: String,
+          default: {},
+        },
+        selectedCombinationSku: { type: String, default: "" },
       },
     ],
     paymentId: {
       type: String,
       default: "",
     },
-    // Statut du paiement uniquement : la personne a-t-elle payé ?
     payment_status: {
       type: String,
       enum: ["Payée", "À payer à la livraison", "Échec"],
       default: "À payer à la livraison",
     },
-    // Statut logistique de la commande : où en est-elle physiquement ?
     order_status: {
       type: String,
       enum: ["Reçue", "En préparation", "Expédiée", "Livrée", "Annulée"],
       default: "Reçue",
     },
-    // 📸 Snapshot figé de l'adresse de livraison au moment de la commande.
-    // On NE référence plus une Address par ObjectId : on copie son contenu.
-    // Ainsi, si l'utilisateur modifie ou supprime sa fiche adresse plus tard,
-    // l'historique de commande reste intact et fidèle à ce qui a réellement
-    // été utilisé pour la livraison. Le destinataire peut être différent du
-    // titulaire du compte (ex: cadeau, livraison bureau, etc.).
     delivery_address: {
-      addressId: { type: mongoose.Schema.ObjectId, ref: "Address" }, // traçabilité uniquement
-      name: { type: String, required: true }, // nom du DESTINATAIRE
+      addressId: { type: mongoose.Schema.ObjectId, ref: "Address" },
+      name: { type: String, required: true },
       mobile: { type: String, required: true },
       address_line1: { type: String, required: true },
       landmark: { type: String, default: "" },

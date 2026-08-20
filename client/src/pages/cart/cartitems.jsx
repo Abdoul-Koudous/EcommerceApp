@@ -4,6 +4,30 @@ import { UserContext } from "../../UserContext/UserContext";
 import { deleteData, editData } from "../../pages/utils/api";
 import "./cartitems.scss";
 
+// ✅ NOUVEAU : retrouve la combinaison de variantes exacte dans le
+// produit vivant (liveProduct), à partir de la sélection stockée sur
+// l'item du panier.
+const resolveVariantCombination = (product, selectedVariants) => {
+  if (
+    !product?.hasVariants ||
+    !selectedVariants ||
+    Object.keys(selectedVariants).length === 0
+  ) {
+    return null;
+  }
+  return (
+    product.variantCombinations?.find((combo) => {
+      const comboObj = combo.combination || {};
+      return (
+        Object.keys(selectedVariants).length === Object.keys(comboObj).length &&
+        Object.entries(selectedVariants).every(
+          ([key, val]) => comboObj[key] === val,
+        )
+      );
+    }) || null
+  );
+};
+
 const CartItems = () => {
   const { cartItems, loadCartItems } = useContext(UserContext);
 
@@ -55,14 +79,37 @@ const CartItems = () => {
           const liveProduct = item.productId;
           const isProductDeleted = !liveProduct;
 
+          // ✅ NOUVEAU : normalise selectedVariants (Map Mongoose ou objet
+          // simple selon la sérialisation) en objet JS classique.
+          const itemSelectedVariants = item.selectedVariants
+            ? item.selectedVariants instanceof Map
+              ? Object.fromEntries(item.selectedVariants)
+              : item.selectedVariants
+            : {};
+
+          const hasNewVariants =
+            !isProductDeleted &&
+            liveProduct.hasVariants &&
+            Object.keys(itemSelectedVariants).length > 0;
+
+          const matchedCombo = hasNewVariants
+            ? resolveVariantCombination(liveProduct, itemSelectedVariants)
+            : null;
+
+          // ✅ CORRIGÉ : le stock affiché tient compte de la combinaison
+          // précise choisie, pas seulement du stock global du produit.
           const realStock = isProductDeleted
             ? 0
-            : liveProduct.countIntStock ?? item.countInStock ?? 0;
+            : liveProduct.hasVariants && liveProduct.useVariantStock
+              ? (matchedCombo?.stock ?? 0)
+              : (liveProduct.countIntStock ?? item.countInStock ?? 0);
 
           const maxQty = Math.max(realStock, 0);
           const isOutOfStock = maxQty === 0;
           const isQuantityTooHigh = !isOutOfStock && item.quantity > maxQty;
 
+          // Ancien système (affiché seulement si le produit n'utilise pas
+          // le nouveau système de variantes)
           const availableSizes =
             liveProduct?.size?.length > 0 ? liveProduct.size : item.sizeOptions || [];
           const availableColors =
@@ -102,7 +149,27 @@ const CartItems = () => {
                   </p>
                 )}
 
-                {!isProductDeleted && (
+                {/* ✅ NOUVEAU : affichage de la variante choisie (lecture
+                    seule — pour changer de variante, le client repasse
+                    par la fiche produit) */}
+                {!isProductDeleted && liveProduct.hasVariants && (
+                  <div className="cp-item-attributes">
+                    {Object.entries(itemSelectedVariants).map(([key, val]) => (
+                      <p key={key} className="cp-variant-line">
+                        <strong>{key} :</strong> {val}
+                      </p>
+                    ))}
+                    {matchedCombo && !matchedCombo.isActive && (
+                      <p className="cp-stock-warning">
+                        Cette variante n'est plus disponible.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Ancien système, affiché seulement si le produit n'a
+                    pas de variantes du nouveau système */}
+                {!isProductDeleted && !liveProduct.hasVariants && (
                   <div className="cp-item-attributes">
                     {availableSizes.length > 0 && (
                       <div className="cp-attr">

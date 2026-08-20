@@ -1,4 +1,4 @@
-import "../config/fedapay.js"; // initialise FedaPay (clé + environnement)
+import "../config/fedapay.js";
 import { Transaction } from "fedapay";
 import crypto from "crypto";
 import OrderModel from "../models/order.model.js";
@@ -8,25 +8,109 @@ import AddressModel from "../models/address.model.js";
 import kkiapayClient from "../config/kkiapay.js";
 import { calculateOrderTotals } from "../services/pricing.service.js";
 
-// 📉 Décrémente le stock des produits commandés (utilisé par les trois méthodes de paiement)
+// 📉 Décrémente le stock des produits commandés (utilisé par les trois
+// méthodes de paiement).
+//
+// ✅ NOUVEAU : si un item a une combinaison de variantes sélectionnée
+// (produit avec hasVariants + useVariantStock), on décrémente AUSSI le
+// stock spécifique de cette combinaison, en plus du stock global du
+// produit — cohérent avec la vérification faite côté panier.
+// 📉 Décrémente le stock des produits commandés (utilisé par les trois
+// méthodes de paiement).
+//
+// ✅ Si un item a une combinaison de variantes sélectionnée (produit avec
+// hasVariants + useVariantStock), on décrémente le stock de CETTE
+// combinaison précise, puis on RECALCULE countIntStock comme la somme
+// des stocks de toutes les combinaisons actives — countIntStock devient
+// ainsi un total toujours synchronisé, jamais désynchronisé manuellement.
 const decrementStock = async (products) => {
-  const bulkOps = products.map((item) => ({
-    updateOne: {
-      filter: { _id: item.productId },
-      update: { $inc: { countIntStock: -item.quantity } },
-    },
-  }));
+  // 1. Produits SANS variantes à stock détaillé : décrément direct classique
+  const simpleBulkOps = [];
 
-  if (bulkOps.length > 0) {
-    await ProductModel.bulkWrite(bulkOps);
+  for (const item of products) {
+    const selectedVariants =
+      item.selectedVariants instanceof Map
+        ? Object.fromEntries(item.selectedVariants)
+        : item.selectedVariants || {};
+
+    const hasSelectedVariants =
+      selectedVariants && Object.keys(selectedVariants).length > 0;
+
+    if (!hasSelectedVariants) {
+      // Produit simple ou ancien système : comportement inchangé
+      simpleBulkOps.push({
+        updateOne: {
+          filter: { _id: item.productId },
+          update: { $inc: { countIntStock: -item.quantity } },
+        },
+      });
+      continue;
+    }
+
+    // 2. Produit avec variante sélectionnée : on décrémente la combinaison
+    // précise, puis on recalcule countIntStock à partir de la somme des
+    // combinaisons actives.
+    const product = await ProductModel.findById(item.productId);
+    if (!product || !product.hasVariants || !product.useVariantStock) {
+      // Sécurité : si le produit a changé de configuration entre-temps,
+      // on retombe sur le décrément global classique plutôt que de
+      // ne rien faire.
+      simpleBulkOps.push({
+        updateOne: {
+          filter: { _id: item.productId },
+          update: { $inc: { countIntStock: -item.quantity } },
+        },
+      });
+      continue;
+    }
+
+    const comboIndex = product.variantCombinations.findIndex((combo) => {
+      const comboObj = Object.fromEntries(combo.combination);
+      return (
+        Object.keys(selectedVariants).length === Object.keys(comboObj).length &&
+        Object.entries(selectedVariants).every(
+          ([key, val]) => comboObj[key] === val,
+        )
+      );
+    });
+
+    if (comboIndex === -1) {
+      console.warn(
+        `Combinaison introuvable pour décrément stock — produit ${item.productId}`,
+      );
+      continue;
+    }
+
+    // Décrémente la combinaison précise
+    await ProductModel.updateOne(
+      { _id: item.productId },
+      {
+        $inc: {
+          [`variantCombinations.${comboIndex}.stock`]: -item.quantity,
+        },
+      },
+    );
+
+    // ✅ Recalcule countIntStock = somme des stocks des combinaisons
+    // actives, à partir de l'état FRAIS du produit (après décrément)
+    const refreshedProduct = await ProductModel.findById(item.productId);
+    const recalculatedStock = refreshedProduct.variantCombinations
+      .filter((combo) => combo.isActive)
+      .reduce((sum, combo) => sum + Math.max(0, combo.stock), 0);
+
+    await ProductModel.updateOne(
+      { _id: item.productId },
+      { $set: { countIntStock: recalculatedStock } },
+    );
+  }
+
+  if (simpleBulkOps.length > 0) {
+    await ProductModel.bulkWrite(simpleBulkOps);
   }
 };
 
 // 📸 Résout une adresse du carnet de l'utilisateur et renvoie un snapshot
 // prêt à être stocké tel quel dans order.delivery_address.
-// Vérifie au passage que l'adresse appartient bien à ce userId (sécurité :
-// on ne veut pas qu'un utilisateur puisse livrer avec l'adresse d'un autre
-// simplement en devinant/passant son ObjectId).
 const resolveDeliverySnapshot = async (userId, addressId) => {
   const addressDoc = await AddressModel.findOne({ _id: addressId, userId });
 
@@ -48,6 +132,18 @@ const resolveDeliverySnapshot = async (userId, addressId) => {
   };
 };
 
+// ✅ NOUVEAU : helper partagé pour transformer un item de panier en ligne
+// de commande, en incluant la variante sélectionnée.
+const mapCartItemToOrderProduct = (item) => ({
+  productId: item.productId,
+  productTitle: item.productTitle,
+  image: item.image,
+  price: item.price,
+  quantity: item.quantity,
+  selectedVariants: item.selectedVariants || {},
+  selectedCombinationSku: item.selectedCombinationSku || "",
+});
+
 export const verifyPaymentController = async (req, res) => {
   try {
     const userId = req.userId;
@@ -61,7 +157,6 @@ export const verifyPaymentController = async (req, res) => {
       });
     }
 
-    // 🔒 Vérification côté serveur (ne jamais faire confiance au frontend)
     const transaction = await Transaction.retrieve(transactionId);
 
     if (transaction.status !== "approved") {
@@ -72,7 +167,6 @@ export const verifyPaymentController = async (req, res) => {
       });
     }
 
-    // 📸 Résolution + snapshot de l'adresse de livraison choisie
     const delivery_address = await resolveDeliverySnapshot(userId, addressId);
 
     if (!delivery_address) {
@@ -83,7 +177,6 @@ export const verifyPaymentController = async (req, res) => {
       });
     }
 
-    // Récupérer le panier réel de l'utilisateur
     const cartItems = await CartProductModel.find({ userId });
 
     if (!cartItems || cartItems.length === 0) {
@@ -94,15 +187,9 @@ export const verifyPaymentController = async (req, res) => {
       });
     }
 
-    const products = cartItems.map((item) => ({
-      productId: item.productId,
-      productTitle: item.productTitle,
-      image: item.image,
-      price: item.price,
-      quantity: item.quantity,
-    }));
+    // ✅ MODIFIÉ : inclut selectedVariants / selectedCombinationSku
+    const products = cartItems.map(mapCartItemToOrderProduct);
 
-    // ✅ Calcul centralisé (taxe/livraison configurables), plus de valeurs en dur
     const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
       await calculateOrderTotals(cartItems, delivery_address.city);
 
@@ -124,10 +211,8 @@ export const verifyPaymentController = async (req, res) => {
 
     const savedOrder = await order.save();
 
-    // 📉 Décrémenter le stock des produits commandés
     await decrementStock(products);
 
-    // Vider le panier après commande réussie
     await CartProductModel.deleteMany({ userId });
 
     return res.status(200).json({
@@ -146,8 +231,6 @@ export const verifyPaymentController = async (req, res) => {
   }
 };
 
-// Vérification du paiement kkiapay
-
 export const verifyKkiapayPaymentController = async (req, res) => {
   try {
     const userId = req.userId;
@@ -161,7 +244,6 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       });
     }
 
-    // 🔒 Vérification côté serveur via KkiaPay
     const transaction = await kkiapayClient.verify(transactionId);
 
     if (transaction.status !== "SUCCESS") {
@@ -172,7 +254,6 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       });
     }
 
-    // 📸 Résolution + snapshot de l'adresse de livraison choisie
     const delivery_address = await resolveDeliverySnapshot(userId, addressId);
 
     if (!delivery_address) {
@@ -193,15 +274,9 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       });
     }
 
-    const products = cartItems.map((item) => ({
-      productId: item.productId,
-      productTitle: item.productTitle,
-      image: item.image,
-      price: item.price,
-      quantity: item.quantity,
-    }));
+    // ✅ MODIFIÉ
+    const products = cartItems.map(mapCartItemToOrderProduct);
 
-    // ✅ Calcul centralisé (taxe/livraison configurables), plus de valeurs en dur
     const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
       await calculateOrderTotals(cartItems, delivery_address.city);
 
@@ -223,7 +298,6 @@ export const verifyKkiapayPaymentController = async (req, res) => {
 
     const savedOrder = await order.save();
 
-    // 📉 Décrémenter le stock des produits commandés
     await decrementStock(products);
 
     await CartProductModel.deleteMany({ userId });
@@ -257,7 +331,6 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       });
     }
 
-    // 📸 Résolution + snapshot de l'adresse de livraison choisie
     const delivery_address = await resolveDeliverySnapshot(userId, addressId);
 
     if (!delivery_address) {
@@ -278,15 +351,9 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       });
     }
 
-    const products = cartItems.map((item) => ({
-      productId: item.productId,
-      productTitle: item.productTitle,
-      image: item.image,
-      price: item.price,
-      quantity: item.quantity,
-    }));
+    // ✅ MODIFIÉ
+    const products = cartItems.map(mapCartItemToOrderProduct);
 
-    // ✅ Calcul centralisé (taxe/livraison configurables), plus de valeurs en dur
     const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
       await calculateOrderTotals(cartItems, delivery_address.city);
 
@@ -308,7 +375,6 @@ export const createCashOnDeliveryOrder = async (req, res) => {
 
     const savedOrder = await order.save();
 
-    // 📉 Décrémenter le stock (commande ferme, même si paiement différé)
     await decrementStock(products);
 
     await CartProductModel.deleteMany({ userId });
@@ -348,9 +414,6 @@ export const getOrderPreviewController = async (req, res) => {
       });
     }
 
-    // ✅ Même fonction que celle utilisée à la création réelle de la
-    // commande — garantit que ce que le client voit avant de payer
-    // correspond exactement à ce qui sera facturé.
     const totals = await calculateOrderTotals(cartItems, city);
 
     return res.status(200).json({

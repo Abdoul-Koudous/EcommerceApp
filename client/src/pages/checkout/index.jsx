@@ -9,6 +9,18 @@ import { editData, fetchDataFromApi, postData } from "../utils/api";
 import AddressPanel from "../myaccount/addresspanel";
 import { ToastContext } from "../../context/ToastContext";
 
+// ✅ NOUVEAU
+const formatSelectedVariants = (selectedVariants) => {
+  if (!selectedVariants) return "";
+  const obj =
+    selectedVariants instanceof Map
+      ? Object.fromEntries(selectedVariants)
+      : selectedVariants;
+  return Object.entries(obj)
+    .map(([key, val]) => `${key}: ${val}`)
+    .join(" · ");
+};
+
 const Checkout = () => {
   const { user, cartItems, loadCartItems } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
@@ -44,8 +56,6 @@ const Checkout = () => {
     setEditingAddress(null);
   };
 
-  // ✅ Totaux calculés côté serveur (taxe/livraison configurables selon
-  // produit/catégorie/ville) — plus de shipping/taxRate en dur ici.
   const [totals, setTotals] = useState({
     subTotalAmt: 0,
     shippingAmt: 0,
@@ -416,27 +426,38 @@ const Checkout = () => {
             {cartItems.length === 0 ? (
               <p className="co-empty-order">Votre panier est vide.</p>
             ) : (
-              cartItems.map((item) => (
-                <div className="co-order-item" key={item._id}>
-                  <img
-                    src={item.image || "/placeholder.png"}
-                    alt={item.productTitle}
-                  />
-                  <div className="co-item-info">
-                    <span className="co-item-name">
-                      {item.productTitle.length > 30
-                        ? item.productTitle.substring(0, 30) + "..."
-                        : item.productTitle}
-                    </span>
-                    <span className="co-item-quantity">
-                      Quantité: {item.quantity}
+              cartItems.map((item) => {
+                // ✅ NOUVEAU
+                const variantLabel = formatSelectedVariants(
+                  item.selectedVariants,
+                );
+
+                return (
+                  <div className="co-order-item" key={item._id}>
+                    <img
+                      src={item.image || "/placeholder.png"}
+                      alt={item.productTitle}
+                    />
+                    <div className="co-item-info">
+                      <span className="co-item-name">
+                        {item.productTitle.length > 30
+                          ? item.productTitle.substring(0, 30) + "..."
+                          : item.productTitle}
+                      </span>
+                      {/* ✅ NOUVEAU */}
+                      {variantLabel && (
+                        <span className="co-item-variant">{variantLabel}</span>
+                      )}
+                      <span className="co-item-quantity">
+                        Quantité: {item.quantity}
+                      </span>
+                    </div>
+                    <span className="co-item-price">
+                      {(item.price * item.quantity).toLocaleString()} FCFA
                     </span>
                   </div>
-                  <span className="co-item-price">
-                    {(item.price * item.quantity).toLocaleString()} FCFA
-                  </span>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

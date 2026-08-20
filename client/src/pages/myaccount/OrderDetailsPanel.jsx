@@ -3,6 +3,18 @@ import { FaTimes } from "react-icons/fa";
 import { orderStatusInfo, paymentStatusInfo } from "../utils/orderStatus";
 import "./OrderDetailsPanel.scss";
 
+// ✅ NOUVEAU
+const formatSelectedVariants = (selectedVariants) => {
+  if (!selectedVariants) return "";
+  const obj =
+    selectedVariants instanceof Map
+      ? Object.fromEntries(selectedVariants)
+      : selectedVariants;
+  return Object.entries(obj)
+    .map(([key, val]) => `${key}: ${val}`)
+    .join(" · ");
+};
+
 const OrderDetailsPanel = ({ order, userName, userEmail, userMobile, onClose }) => {
   if (!order) return null;
 
@@ -76,18 +88,27 @@ const OrderDetailsPanel = ({ order, userName, userEmail, userMobile, onClose }) 
         <div className="panel-section">
           <h4>Articles ({order.products.length})</h4>
           <div className="panel-products">
-            {order.products.map((item, idx) => (
-              <div className="panel-product-row" key={`${order._id}-${item.productId}-${idx}`}>
-                <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
-                <div className="panel-product-info">
-                  <span className="panel-product-title">{item.productTitle}</span>
-                  <span className="panel-product-qty">Qté : {item.quantity}</span>
+            {order.products.map((item, idx) => {
+              // ✅ NOUVEAU
+              const variantLabel = formatSelectedVariants(item.selectedVariants);
+
+              return (
+                <div className="panel-product-row" key={`${order._id}-${item.productId}-${idx}`}>
+                  <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
+                  <div className="panel-product-info">
+                    <span className="panel-product-title">{item.productTitle}</span>
+                    {/* ✅ NOUVEAU */}
+                    {variantLabel && (
+                      <span className="panel-product-variant">{variantLabel}</span>
+                    )}
+                    <span className="panel-product-qty">Qté : {item.quantity}</span>
+                  </div>
+                  <span className="panel-product-price">
+                    {(item.price * item.quantity).toLocaleString()} FCFA
+                  </span>
                 </div>
-                <span className="panel-product-price">
-                  {(item.price * item.quantity).toLocaleString()} FCFA
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

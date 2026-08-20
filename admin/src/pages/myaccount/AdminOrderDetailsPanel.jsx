@@ -20,6 +20,18 @@ const formatAddress = (addr) => {
   );
 };
 
+// ✅ NOUVEAU
+const formatSelectedVariants = (selectedVariants) => {
+  if (!selectedVariants) return "";
+  const obj =
+    selectedVariants instanceof Map
+      ? Object.fromEntries(selectedVariants)
+      : selectedVariants;
+  return Object.entries(obj)
+    .map(([key, val]) => `${key}: ${val}`)
+    .join(" · ");
+};
+
 const AdminOrderDetailsPanel = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -88,18 +100,27 @@ const AdminOrderDetailsPanel = ({ order, onClose }) => {
         <div className="aop-section">
           <h4>Articles ({order.products?.length || 0})</h4>
           <div className="aop-products">
-            {(order.products || []).map((item, idx) => (
-              <div className="aop-product-row" key={`${order._id}-${item.productId}-${idx}`}>
-                <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
-                <div className="aop-product-info">
-                  <span className="aop-product-title">{item.productTitle}</span>
-                  <span className="aop-product-qty">Qté : {item.quantity}</span>
+            {(order.products || []).map((item, idx) => {
+              // ✅ NOUVEAU
+              const variantLabel = formatSelectedVariants(item.selectedVariants);
+
+              return (
+                <div className="aop-product-row" key={`${order._id}-${item.productId}-${idx}`}>
+                  <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
+                  <div className="aop-product-info">
+                    <span className="aop-product-title">{item.productTitle}</span>
+                    {/* ✅ NOUVEAU */}
+                    {variantLabel && (
+                      <span className="aop-product-variant">{variantLabel}</span>
+                    )}
+                    <span className="aop-product-qty">Qté : {item.quantity}</span>
+                  </div>
+                  <span className="aop-product-price">
+                    {((item.price || 0) * (item.quantity || 0)).toLocaleString()} FCFA
+                  </span>
                 </div>
-                <span className="aop-product-price">
-                  {((item.price || 0) * (item.quantity || 0)).toLocaleString()} FCFA
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

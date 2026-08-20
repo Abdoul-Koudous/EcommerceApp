@@ -1,10 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./cartpage.scss";
 import CartItems from "./cartitems";
 import { UserContext } from "../../UserContext/UserContext";
 import { fetchDataFromApi } from "../utils/api";
 
 const CartPage = () => {
+  const navigate = useNavigate(); // ✅ NOUVEAU : nécessaire pour la redirection
   const { cartItems, loadCartItems } = useContext(UserContext);
 
   const [totals, setTotals] = useState({
@@ -24,7 +26,6 @@ const CartPage = () => {
       return;
     }
 
-    // ✅ Totaux calculés côté serveur, cohérents avec CartPanel et Checkout
     fetchDataFromApi("/api/payment/preview-total").then((res) => {
       if (!res?.error) {
         setTotals({
@@ -36,6 +37,13 @@ const CartPage = () => {
       }
     });
   }, [cartItems]);
+
+  // ✅ NOUVEAU : le bouton n'avait aucun onClick avant, donc ne faisait
+  // strictement rien au clic.
+  const handleGoToCheckout = () => {
+    if (cartItems.length === 0) return;
+    navigate("/checkout");
+  };
 
   return (
     <div className="cp-page">
@@ -80,7 +88,13 @@ const CartPage = () => {
               <button className="cp-continue-btn" onClick={() => window.history.back()}>
                 Continuer mes achats
               </button>
-              <button className="cp-checkout-btn">Passer à la caisse</button>
+              <button
+                className="cp-checkout-btn"
+                onClick={handleGoToCheckout}
+                disabled={cartItems.length === 0}
+              >
+                Passer à la caisse
+              </button>
             </div>
           </div>
         </div>

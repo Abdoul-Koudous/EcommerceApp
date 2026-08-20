@@ -1,0 +1,59 @@
+.pbg-block {
+  margin: 2rem 0;
+
+  .pbg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .pbg-voir-plus {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--color-primary);
+      text-decoration: none;
+      white-space: nowrap;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .pbg-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+
+    // Modifié uniquement pour le scroll horizontal
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding-bottom: 0.5rem;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) transparent;
+
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-primary);
+      border-radius: 8px;
+    }
+  }
+}

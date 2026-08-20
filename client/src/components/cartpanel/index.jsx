@@ -5,12 +5,23 @@ import { deleteData, fetchDataFromApi } from "../../pages/utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../../UserContext/UserContext";
 
+// ✅ NOUVEAU : formate la sélection de variantes pour affichage
+// (ex: { Couleur: "Rouge", Taille: "M" } → "Couleur: Rouge · Taille: M")
+const formatSelectedVariants = (selectedVariants) => {
+  if (!selectedVariants) return "";
+  const obj =
+    selectedVariants instanceof Map
+      ? Object.fromEntries(selectedVariants)
+      : selectedVariants;
+  return Object.entries(obj)
+    .map(([key, val]) => `${key}: ${val}`)
+    .join(" · ");
+};
+
 const CartPanel = ({ isOpen, onClose, openToast }) => {
   const navigate = useNavigate();
   const { cartItems, loadCartItems } = useContext(UserContext);
 
-  // ✅ Totaux calculés côté serveur (taxe/livraison configurables),
-  // plus de valeurs en dur ici.
   const [totals, setTotals] = useState({
     subTotalAmt: 0,
     shippingAmt: 0,
@@ -84,31 +95,40 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
             </button>
           </div>
         ) : (
-          cartItems.map((item) => (
-            <div className="cart-item" key={item._id}>
-              <div className="item-left">
-                <img src={item.image || "/placeholder.png"} alt={item.name} />
+          cartItems.map((item) => {
+            // ✅ NOUVEAU
+            const variantLabel = formatSelectedVariants(item.selectedVariants);
+
+            return (
+              <div className="cart-item" key={item._id}>
+                <div className="item-left">
+                  <img src={item.image || "/placeholder.png"} alt={item.name} />
+                </div>
+                <div className="item-center">
+                  <h4>
+                    {item.productTitle.length > 25
+                      ? item.productTitle.substring(0, 25) + "..."
+                      : item.productTitle}
+                  </h4>
+                  {/* ✅ NOUVEAU : affiche la variante choisie si présente */}
+                  {variantLabel && (
+                    <p className="item-variant">{variantLabel}</p>
+                  )}
+                  <p>Quantité: {item.quantity}</p>
+                  <p>Prix unitaire: {item.price.toLocaleString()} FCFA</p>
+                  <p>
+                    Total: {(item.price * item.quantity).toLocaleString()} FCFA
+                  </p>
+                </div>
+                <div className="item-right">
+                  <FaTrash
+                    className="remove-icon"
+                    onClick={() => handleRemoveItem(item._id)}
+                  />
+                </div>
               </div>
-              <div className="item-center">
-                <h4>
-                  {item.productTitle.length > 25
-                    ? item.productTitle.substring(0, 25) + "..."
-                    : item.productTitle}
-                </h4>
-                <p>Quantité: {item.quantity}</p>
-                <p>Prix unitaire: {item.price.toLocaleString()} FCFA</p>
-                <p>
-                  Total: {(item.price * item.quantity).toLocaleString()} FCFA
-                </p>
-              </div>
-              <div className="item-right">
-                <FaTrash
-                  className="remove-icon"
-                  onClick={() => handleRemoveItem(item._id)}
-                />
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

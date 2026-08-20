@@ -13,6 +13,7 @@ import { fetchDataFromApi, postData, uploadImages } from "../utils/api";
 import HoverRating from "../../components/HoverRating/HoverRating";
 import { ToastContext } from "../../context/ToastContext";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
+import VariantsManager from "../../components/VariantsManager/VariantsManager"; // ✅ NOUVEAU
 
 // Dropdown multi-sélection
 const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
@@ -136,11 +137,17 @@ const AddProduct = ({ onClose }) => {
     bannerimages: [],
     isDisplayOnHomeBanner: false,
 
-    // ✅ NOUVEAU : taxe / livraison
+    // ✅ taxe / livraison
     hasShipping: true,
     shippingFee: "", // "" = pas d'override, hérite de la zone ville / défaut global
     hasTax: true,
     taxRate: "", // "" = pas d'override, hérite de la catégorie / défaut global
+
+    // ✅ NOUVEAU : variantes
+    hasVariants: false,
+    useVariantStock: false,
+    variants: [],
+    variantCombinations: [],
   });
 
   useEffect(() => {
@@ -337,13 +344,19 @@ const AddProduct = ({ onClose }) => {
       formFields.shippingFee !== "" &&
       Number(formFields.shippingFee) < 0
     )
-      return openToast("error", "Les frais de livraison ne peuvent pas être négatifs");
+      return openToast(
+        "error",
+        "Les frais de livraison ne peuvent pas être négatifs",
+      );
     if (
       formFields.hasTax &&
       formFields.taxRate !== "" &&
       (Number(formFields.taxRate) < 0 || Number(formFields.taxRate) > 1)
     )
-      return openToast("error", "Le taux de taxe doit être compris entre 0 et 1");
+      return openToast(
+        "error",
+        "Le taux de taxe doit être compris entre 0 et 1",
+      );
     // 🔹 SUBMIT
 
     try {
@@ -614,12 +627,29 @@ const AddProduct = ({ onClose }) => {
               </div>
 
               <div className="apd-form-group">
-                <label> En Stock</label>
+                <label>
+                  En Stock
+                  {formFields.hasVariants && formFields.useVariantStock && (
+                    <span className="apd-field-hint">
+                      {" "}
+                      (calculé automatiquement à partir des variantes)
+                    </span>
+                  )}
+                </label>
                 <input
                   type="number"
                   name="countIntStock"
-                  value={formFields.countIntStock}
+                  value={
+                    formFields.hasVariants && formFields.useVariantStock
+                      ? formFields.variantCombinations
+                          .filter((c) => c.isActive)
+                          .reduce((sum, c) => sum + (Number(c.stock) || 0), 0)
+                      : formFields.countIntStock
+                  }
                   onChange={onChangeInput}
+                  disabled={
+                    formFields.hasVariants && formFields.useVariantStock
+                  }
                 />
               </div>
 
@@ -708,44 +738,96 @@ const AddProduct = ({ onClose }) => {
               )}
             </div>
 
+            {/* ✅ NOUVEAU : Variantes (couleur, taille, RAM personnalisées...) */}
+            {/* ✅ Variantes (couleur, taille, RAM personnalisées...) */}
+            <VariantsManager
+              hasVariants={formFields.hasVariants}
+              onToggleHasVariants={(val) => {
+                setFormFields((prev) => ({
+                  ...prev,
+                  hasVariants: val,
+                  // ✅ Si on active le nouveau système, on vide les anciens
+                  // champs RAM/Taille/Poids pour éviter d'envoyer des
+                  // données fantômes en plus des nouvelles variantes.
+                  ...(val && {
+                    productRam: [],
+                    size: [],
+                    productWeight: [],
+                  }),
+                }));
+                // On vide aussi les states locaux qui pilotent les
+                // dropdowns (sinon ils resteraient affichés si le
+                // vendeur redésactive hasVariants juste après).
+                if (val) {
+                  setProductRam([]);
+                  setProductSize([]);
+                  setProductWeight([]);
+                }
+              }}
+              useVariantStock={formFields.useVariantStock}
+              onToggleUseVariantStock={(val) =>
+                setFormFields((prev) => ({ ...prev, useVariantStock: val }))
+              }
+              variants={formFields.variants}
+              onChangeVariants={(vals) =>
+                setFormFields((prev) => ({ ...prev, variants: vals }))
+              }
+              variantCombinations={formFields.variantCombinations}
+              onChangeCombinations={(vals) =>
+                setFormFields((prev) => ({
+                  ...prev,
+                  variantCombinations: vals,
+                }))
+              }
+            />
+
             {/* Multi-selections + Rating */}
-            <div className="apd-row">
-              <div className="apd-form-group">
-                <DropdownMultiSelect
-                  label="La RAM"
-                  options={ramOptions}
-                  selectedValues={productRam}
-                  onChange={(vals) => {
-                    setProductRam(vals);
-                    setFormFields((prev) => ({ ...prev, productRam: vals }));
-                  }}
-                />
-              </div>
+            {/* Multi-selections + Rating — masqué si le nouveau système de
+                variantes est actif, pour éviter la confusion entre les deux
+                systèmes (rétrocompatibilité : reste utilisable si hasVariants
+                est désactivé) */}
+            {!formFields.hasVariants && (
+              <div className="apd-row">
+                <div className="apd-form-group">
+                  <DropdownMultiSelect
+                    label="La RAM"
+                    options={ramOptions}
+                    selectedValues={productRam}
+                    onChange={(vals) => {
+                      setProductRam(vals);
+                      setFormFields((prev) => ({ ...prev, productRam: vals }));
+                    }}
+                  />
+                </div>
 
-              <div className="apd-form-group">
-                <DropdownMultiSelect
-                  label="Taille"
-                  options={sizeOptions}
-                  selectedValues={productSize}
-                  onChange={(vals) => {
-                    setProductSize(vals);
-                    setFormFields((prev) => ({ ...prev, size: vals }));
-                  }}
-                />
-              </div>
+                <div className="apd-form-group">
+                  <DropdownMultiSelect
+                    label="Taille"
+                    options={sizeOptions}
+                    selectedValues={productSize}
+                    onChange={(vals) => {
+                      setProductSize(vals);
+                      setFormFields((prev) => ({ ...prev, size: vals }));
+                    }}
+                  />
+                </div>
 
-              <div className="apd-form-group">
-                <DropdownMultiSelect
-                  label="Poids"
-                  options={weightOptions}
-                  selectedValues={productWeight}
-                  onChange={(vals) => {
-                    setProductWeight(vals);
-                    setFormFields((prev) => ({ ...prev, productWeight: vals }));
-                  }}
-                />
+                <div className="apd-form-group">
+                  <DropdownMultiSelect
+                    label="Poids"
+                    options={weightOptions}
+                    selectedValues={productWeight}
+                    onChange={(vals) => {
+                      setProductWeight(vals);
+                      setFormFields((prev) => ({
+                        ...prev,
+                        productWeight: vals,
+                      }));
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Images */}
             {/* Image principale */}

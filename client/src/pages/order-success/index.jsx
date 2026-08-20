@@ -3,6 +3,18 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { FaCheckCircle, FaBoxOpen, FaHome } from "react-icons/fa";
 import "./ordersuccess.scss";
 
+// ✅ NOUVEAU
+const formatSelectedVariants = (selectedVariants) => {
+  if (!selectedVariants) return "";
+  const obj =
+    selectedVariants instanceof Map
+      ? Object.fromEntries(selectedVariants)
+      : selectedVariants;
+  return Object.entries(obj)
+    .map(([key, val]) => `${key}: ${val}`)
+    .join(" · ");
+};
+
 const OrderSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,18 +65,27 @@ const OrderSuccess = () => {
 
         <div className="os-products">
           <h3>Articles commandés</h3>
-          {order.products?.map((item, i) => (
-            <div className="os-product-line" key={i}>
-              <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
-              <div className="os-product-line-info">
-                <span className="os-product-name">{item.productTitle}</span>
-                <span className="os-product-qty">Quantité : {item.quantity}</span>
+          {order.products?.map((item, i) => {
+            // ✅ NOUVEAU
+            const variantLabel = formatSelectedVariants(item.selectedVariants);
+
+            return (
+              <div className="os-product-line" key={i}>
+                <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
+                <div className="os-product-line-info">
+                  <span className="os-product-name">{item.productTitle}</span>
+                  {/* ✅ NOUVEAU */}
+                  {variantLabel && (
+                    <span className="os-product-variant">{variantLabel}</span>
+                  )}
+                  <span className="os-product-qty">Quantité : {item.quantity}</span>
+                </div>
+                <span className="os-product-price">
+                  {(item.price * item.quantity).toLocaleString()} FCFA
+                </span>
               </div>
-              <span className="os-product-price">
-                {(item.price * item.quantity).toLocaleString()} FCFA
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {order.payment_status?.includes("livraison") && (
