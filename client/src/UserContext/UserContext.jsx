@@ -13,6 +13,7 @@ export const UserProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [products, setProducts] = useState([]);
   const [myListItems, setMyListItems] = useState([]);
+  const [compareItems, setCompareItems] = useState([]);
   const [loading, setLoading] = useState(true); // ✅ distingue "session pas encore vérifiée" de "pas connecté"
 
   const { openToast } = useContext(ToastContext);
@@ -167,13 +168,33 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // =========================
+  // COMPARE / COMPARATEUR
+  // =========================
+  const loadCompareItems = async () => {
+    try {
+      const res = await fetchDataFromApi("/api/compare");
+
+      console.log("⚖️ COMPARE RESPONSE:", res);
+
+      if (res?.success) {
+        console.log("✅ COMPARE ITEMS:", res.data);
+        setCompareItems(res.data);
+      } else {
+        console.log("❌ COMPARE FAILED");
+      }
+    } catch (err) {
+      console.error("❌ COMPARE ERROR:", err);
+    }
+  };
+
   useEffect(() => {
     loadUser();
   }, []);
 
   // ✅ Le panier se charge TOUJOURS (connecté ou non), une fois que
   // loadUser a fini de vérifier la session (loading devient false).
-  // Les favoris restent réservés aux comptes connectés.
+  // Les favoris et le comparateur restent réservés aux comptes connectés.
   useEffect(() => {
     if (loading) return; // attend que loadUser ait fini son premier check
 
@@ -181,6 +202,7 @@ export const UserProvider = ({ children }) => {
 
     if (user?._id) {
       loadMyListItems();
+      loadCompareItems();
     }
   }, [user, loading]);
 
@@ -200,6 +222,8 @@ export const UserProvider = ({ children }) => {
         loadCartItems,
         myListItems,
         loadMyListItems,
+        compareItems,
+        loadCompareItems,
 
         products,
         setProducts,

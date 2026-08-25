@@ -8,6 +8,7 @@ import {
   getAllOrdersAdminController,
   updateOrderStatusController,
   trackOrderController,
+  getOrderByIdController,
 } from "../controllers/order.controller.js";
 
 const orderRouter = Router();
@@ -26,5 +27,9 @@ orderRouter.put("/update-status/:id", auth, adminAuth, updateOrderStatusControll
 // Voir note sécurité : n'importe qui connaissant le numéro de commande
 // peut consulter son statut et son adresse de livraison.
 orderRouter.get("/track/:orderId", trackOrderController);
+
+// ✅ AJOUT : détail d'une commande précise, réservé au propriétaire
+// (contrairement à /track/:orderId qui est public)
+orderRouter.get("/detail/:orderId", auth, getOrderByIdController);
 
 export default orderRouter;

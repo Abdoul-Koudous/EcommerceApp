@@ -61,6 +61,16 @@ const userSchema = new mongoose.Schema({
     otpExpires: {
         type: Date
     },
+    otpAttempts: {                          // ✅ ajouté — anti brute-force sur l'OTP
+        type: Number,
+        default: 0
+    },
+    resetPasswordToken: {                   // ✅ ajouté — hash du token émis après OTP validé
+        type: String
+    },
+    resetPasswordTokenExpires: {            // ✅ ajouté — expiration du token de reset
+        type: Date
+    },
     role: {
         type: String,
         enum: ['ADMIN', "UTILISATEUR"],

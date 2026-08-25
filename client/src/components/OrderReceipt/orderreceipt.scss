@@ -1,0 +1,174 @@
+.or-receipt {
+  text-align: left;
+}
+
+.or-products {
+  .or-product-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--color-border-light);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    img {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+    }
+
+    .or-product-line-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+
+      .or-product-name {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: var(--color-text);
+      }
+
+      .or-product-variant {
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+      }
+
+      .or-product-qty {
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+      }
+    }
+
+    .or-product-price {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--color-text);
+      flex-shrink: 0;
+    }
+  }
+}
+
+.or-totals {
+  background: var(--color-surface-alt-2);
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+
+  .or-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    color: var(--color-text);
+
+    &.or-grand-total {
+      border-top: 1px solid var(--color-border-light);
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+
+      span:last-child {
+        color: var(--color-primary);
+      }
+    }
+  }
+}
+
+.or-cod-notice {
+  background: var(--color-surface-alt-2);
+  border-left: 4px solid var(--color-rating);
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.or-meta {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+
+  .or-meta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--color-border-light);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    span {
+      color: var(--color-text-secondary);
+      font-size: 0.8rem;
+    }
+
+    strong {
+      color: var(--color-text);
+      font-weight: 500;
+    }
+
+    &.or-address-row strong {
+      line-height: 1.5;
+    }
+  }
+}
+
+// ✅ AJOUT — bouton de téléchargement + comportement à l'impression
+
+.or-download-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.or-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+
+  &:hover { background: var(--color-primary-hover); }
+}
+
+@media print {
+  // Cache tout ce qui n'est pas le reçu lui-même (header, sidebar compte, bouton back, bouton télécharger)
+  body * { visibility: hidden; }
+
+  .or-receipt, .or-receipt * { visibility: visible; }
+
+  .or-receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .or-download-bar { display: none; }
+
+  // ✅ AJOUT — réduit les marges de la page et empêche le contenu de couper
+  // au milieu d'une section (ex: bloc adresse tronqué entre 2 pages)
+  @page {
+    margin: 10mm;
+  }
+
+  .or-meta,
+  .or-totals,
+  .or-cod-notice {
+    page-break-inside: avoid;
+  }
+}

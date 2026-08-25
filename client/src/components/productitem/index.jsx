@@ -45,8 +45,15 @@ const ProductItem = ({ product }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const navigate = useNavigate();
-  const { user, cartItems, loadCartItems, loadMyListItems, myListItems } =
-    useContext(UserContext);
+  const {
+    user,
+    cartItems,
+    loadCartItems,
+    loadMyListItems,
+    myListItems,
+    compareItems,
+    loadCompareItems,
+  } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
   const [catData, setCatData] = useState([]);
   const [quantity, setQuantity] = useState(1);
@@ -54,8 +61,9 @@ const ProductItem = ({ product }) => {
   const [loading, setLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [favoriteId, setFavoriteId] = useState(null);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isCompared, setIsCompared] = useState(false);
+  const [compareLoading, setCompareLoading] = useState(false);
 
   const truncateDescription = (desc, maxLength = 100) => {
     if (!desc) return "";
@@ -83,8 +91,7 @@ const ProductItem = ({ product }) => {
     return diffDays <= 7;
   };
 
-  // ✅ MODIFIÉ : plus de blocage sur userId undefined — un visiteur non
-  // connecté peut ajouter au panier (guestSessionId prend le relais).
+  // Un visiteur non connecté peut ajouter au panier (guestSessionId prend le relais).
   const addToCart = (productId, userId, quantity, options = {}) => {
     const data = {
       productTitle: product.name,
@@ -110,7 +117,6 @@ const ProductItem = ({ product }) => {
       weightOptions: product.productWeight || [],
 
       selectedVariants: options.selectedVariants || {},
-      // ✅ NOUVEAU
       guestSessionId: userId ? undefined : getSessionId(),
     };
     setCartLoading(true);
@@ -121,7 +127,6 @@ const ProductItem = ({ product }) => {
           openToast("success", res?.message || "Produit ajouté au panier");
           setIsAdded(true);
           loadCartItems();
-          // ✅ NOUVEAU
           trackEvent("ADD_TO_CART", {
             productId: product._id,
             amount: product.price * quantity,
@@ -141,9 +146,9 @@ const ProductItem = ({ product }) => {
       });
   };
 
-const currentCartItem = cartItems?.find(
-  (item) => (item.productId?._id || item.productId) === product._id,
-);
+  const currentCartItem = cartItems?.find(
+    (item) => (item.productId?._id || item.productId) === product._id,
+  );
 
   const currentSelectedVariants = useMemo(() => {
     if (!currentCartItem?.selectedVariants) return {};
@@ -190,7 +195,6 @@ const currentCartItem = cartItems?.find(
       editData("/api/cart/update-qty", {
         _id: currentCartItem._id,
         qty: newQty,
-        // ✅ NOUVEAU
         guestSessionId: user?._id ? undefined : getSessionId(),
       })
         .then((res) => {
@@ -212,7 +216,6 @@ const currentCartItem = cartItems?.find(
       return;
     }
 
-    // ✅ NOUVEAU : DELETE n'a pas de body, guestSessionId passe en query
     const deleteUrl = user?._id
       ? `/api/cart/delete-cart-item/${currentCartItem._id}`
       : `/api/cart/delete-cart-item/${currentCartItem._id}?guestSessionId=${getSessionId()}`;
@@ -235,6 +238,7 @@ const currentCartItem = cartItems?.find(
         setLoading(false);
       });
   };
+
   const addQty = () => {
     if (loading) return;
 
@@ -257,7 +261,6 @@ const currentCartItem = cartItems?.find(
     editData("/api/cart/update-qty", {
       _id: currentCartItem._id,
       qty: newQty,
-      // ✅ NOUVEAU
       guestSessionId: user?._id ? undefined : getSessionId(),
     })
       .then((res) => {
@@ -286,10 +289,9 @@ const currentCartItem = cartItems?.find(
         product.productRam?.length > 0 ||
         product.productWeight?.length > 0;
 
-  // ✅ MODIFIÉ : plus besoin d'être connecté pour ajouter au panier
   const handleAddClick = () => {
     if (hasOptions) {
-      openToast("error", "Veuillez choisir les options");
+      openToast("info", "Veuillez choisir vos options avant l'ajout au panier");
       setShowPopup(true);
     } else {
       addToCart(product._id, user?._id, quantity);
@@ -331,13 +333,15 @@ const currentCartItem = cartItems?.find(
       productId: product._id,
       productTitle: product.name,
       image: product.images?.[0] || "",
-      rating: product.rating,
+      rating: product.rating || "0",
       price: product.price,
-      oldPrice: product.oldPrice,
-      brand: product.brand,
-      discount: product.discount,
+      oldPrice: product.oldPrice || 0,
+      brand: product.brand || "Sans marque",
+      discount: product.discount || 0,
     };
 
+    // ✅ CORRIGÉ : c'était postData("/api/compare/add", ...) — copié-collé
+    // de handleAddToCompare qui envoyait les favoris dans le comparateur.
     postData("/api/mylist/add", data)
       .then((res) => {
         if (res?.success) {
@@ -356,11 +360,76 @@ const currentCartItem = cartItems?.find(
       });
   };
 
+  const handleAddToCompare = () => {
+    if (!user?._id) {
+      openToast("error", "Veuillez vous connecter");
+      return;
+    }
+
+    if (compareLoading) return;
+
+    setCompareLoading(true);
+
+    if (isCompared) {
+      deleteData(`/api/compare/remove/${product._id}`)
+        .then((res) => {
+          if (res?.success) {
+            setIsCompared(false);
+            loadCompareItems();
+            openToast("success", res?.message || "Retiré du comparateur");
+          } else {
+            openToast("error", res?.message || "Erreur suppression");
+          }
+        })
+        .catch(() => {
+          openToast("error", "Erreur serveur");
+        })
+        .finally(() => {
+          setCompareLoading(false);
+        });
+
+      return;
+    }
+
+    const data = {
+      productId: product._id,
+      productTitle: product.name,
+      image: product.images?.[0] || "",
+      rating: product.rating,
+      price: product.price,
+      oldPrice: product.oldPrice,
+      brand: product.brand,
+      discount: product.discount,
+    };
+
+    postData("/api/compare/add", data)
+      .then((res) => {
+        if (res?.success) {
+          setIsCompared(true);
+          loadCompareItems();
+          openToast("success", res?.message || "Ajouté au comparateur");
+        } else {
+          openToast("error", res?.message || "Erreur ajout");
+        }
+      })
+      .catch(() => {
+        openToast("error", "Erreur serveur");
+      })
+      .finally(() => {
+        setCompareLoading(false);
+      });
+  };
+
   useEffect(() => {
     const exists = myListItems?.some((item) => item.productId === product._id);
-
     setIsFavorite(exists);
   }, [myListItems, product._id]);
+
+  useEffect(() => {
+    const exists = compareItems?.some((item) => item.productId === product._id);
+    setIsCompared(exists);
+  }, [compareItems, product._id]);
+
   return (
     <>
       <div
@@ -398,8 +467,12 @@ const currentCartItem = cartItems?.find(
 
           <div className={`icon-overlay ${hovered ? "show" : ""}`}>
             <button
-              className="icon compare"
-              onClick={(e) => e.stopPropagation()}
+              className={`icon compare ${isCompared ? "active" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCompare();
+              }}
+              disabled={compareLoading}
             >
               <FaExchangeAlt />
             </button>
@@ -412,9 +485,9 @@ const currentCartItem = cartItems?.find(
             >
               <FaEye />
             </button>
-            <button className="icon zoom" onClick={(e) => e.stopPropagation()}>
+            {/* <button className="icon zoom" onClick={(e) => e.stopPropagation()}>
               <FaSearch />
-            </button>
+            </button> */}
             <button
               className={`icon favorite ${isFavorite ? "active" : ""}`}
               onClick={(e) => {
@@ -442,11 +515,11 @@ const currentCartItem = cartItems?.find(
         </div>
 
         <div className="price-box">
-  {product.oldPrice > 0 && (
-    <span className="old-price">{product.oldPrice} FCFA</span>
-  )}
-  <span className="price">{product.price} FCFA</span>
-</div>
+          {product.oldPrice > 0 && (
+            <span className="old-price">{product.oldPrice} FCFA</span>
+          )}
+          <span className="price">{product.price} FCFA</span>
+        </div>
         {isAdded === false ? (
           <button
             className="add-to-cart"

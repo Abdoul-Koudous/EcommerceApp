@@ -32,14 +32,14 @@
   }
 
   .orders-table {
-    min-width: 780px; // ✅ force le scroll horizontal dès que .orders-wrapper devient plus étroit que ça
+    min-width: 810px; // ✅ +30px pour laisser de la place au second bouton dans la dernière colonne
     display: block;
   }
 
   .table-header,
   .order-row {
     display: grid;
-    grid-template-columns: 170px 130px 130px 120px 170px 50px;
+    grid-template-columns: 170px 130px 130px 120px 170px 80px; // ✅ dernière colonne 50px → 80px pour accueillir les 2 boutons
     padding: 1rem;
     align-items: center;
     white-space: nowrap;
@@ -83,7 +83,16 @@
       &.failed { color: var(--color-danger);  background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
     }
 
-    .btn-view-order {
+    // ✅ AJOUT — wrapper des 2 boutons d'action (œil + reçu), occupe la dernière colonne
+    .order-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 10px;
+    }
+
+    .btn-view-order,
+    .btn-view-receipt {
       background: none;
       border: none;
       cursor: pointer;
@@ -92,6 +101,10 @@
       padding: 0.3rem;
       border-radius: 6px;
       transition: var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none; // ✅ nécessaire car .btn-view-receipt est un <Link> (balise <a>), pas un <button>
 
       &:hover { background: var(--color-primary-soft); }
     }

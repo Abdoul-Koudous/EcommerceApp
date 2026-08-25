@@ -87,3 +87,39 @@ export const sendReplyEmail = async ({ to, subject, text, attachments = [] }) =>
     html,
   });
 };
+
+// 📁 utils/mail.js — buildOrderReceiptHtml remplacé par une version courte
+
+const buildOrderReceiptHtml = (order) => {
+  const receiptUrl = `${process.env.CLIENT_URL}/account/orders/${order.orderId}`;
+
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <h2 style="color:#222;margin-bottom:4px;">Merci pour votre commande !</h2>
+      <p style="font-size:14px;color:#555;">
+        Votre commande <strong>${order.orderId}</strong> d'un montant de
+        <strong>${(order.totalAmt || 0).toLocaleString()} FCFA</strong> a bien été enregistrée.
+      </p>
+      <p style="text-align:center;margin:28px 0;">
+        <a href="${receiptUrl}" target="_blank"
+           style="background:#820b0b;color:#fff;padding:12px 24px;border-radius:6px;
+                  text-decoration:none;font-weight:600;display:inline-block;">
+          Voir mon reçu complet
+        </a>
+      </p>
+      <hr style="margin-top:24px;border:none;border-top:1px solid #eee;" />
+      <p style="font-size:12px;color:#999;">Cette confirmation vous a été envoyée depuis YebouShop.</p>
+    </div>
+  `;
+};
+
+export const sendOrderReceiptEmail = async (order, userEmail) => {
+  const html = buildOrderReceiptHtml(order);
+
+  return transporter.sendMail({
+    from: `"YebouShop" <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    subject: `Confirmation de votre commande ${order.orderId}`,
+    html,
+  });
+};

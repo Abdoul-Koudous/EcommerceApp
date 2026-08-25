@@ -26,6 +26,7 @@ import campaignRouter from "./route/campaign.route.js";
 import shortLinkRouter from "./route/shortLink.route.js";
 import socialContentRouter from "./route/socialContent.route.js";
 import helpFaqRouter from "./route/helpFaq.route.js";
+import compareRouter from "./route/compare.route.js"; 
 
 
 
@@ -103,6 +104,7 @@ app.use("/api/campaign", campaignRouter);
 app.use("/go", shortLinkRouter); // ex: yebou-shop.com/go/sld-aout-montre-wa
 app.use('/api/social-content', socialContentRouter);
 app.use('/api/help-faq', helpFaqRouter);
+app.use('/api/compare', compareRouter);
 
 // ✅ 404 — route inconnue
 app.use((req, res) => {

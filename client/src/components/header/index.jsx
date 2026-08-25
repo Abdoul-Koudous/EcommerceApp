@@ -26,8 +26,9 @@ const Header = () => {
   const stickyRef = useRef(null);
 
   const { theme } = useContext(ThemeContext);
-  const { user, setUser, cartItems, categories, myListItems } =
-    useContext(UserContext);
+  // dans la déstructuration du contexte, ajoute compareItems
+const { user, setUser, cartItems, categories, myListItems, compareItems } =
+  useContext(UserContext);
   const { openToast } = useContext(ToastContext);
 
   const isLoggedIn = !!user?._id;
@@ -199,11 +200,15 @@ const Header = () => {
                   </span>
                   <span className="site-header__tooltip">Souhaits</span>
                 </li>
-                <li className="site-header__icon-box">
-                  <FaBalanceScale className="site-header__icon" />
-                  <span className="site-header__badge">2</span>
-                  <span className="site-header__tooltip">Comparer</span>
-                </li>
+               
+<li
+  className="site-header__icon-box"
+  onClick={() => navigate("/account/compare")}
+>
+  <FaBalanceScale className="site-header__icon" />
+  <span className="site-header__badge">{compareItems.length}</span>
+  <span className="site-header__tooltip">Comparer</span>
+</li>
                 <li className="site-header__icon-box" onClick={toggleCart}>
                   <FaShoppingCart className="site-header__icon" />
                   <span className="site-header__badge">{cartItems.length}</span>

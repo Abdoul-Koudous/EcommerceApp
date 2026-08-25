@@ -41,99 +41,6 @@
   }
 }
 
-.os-info-box {
-  background: var(--color-surface-alt-2);
-  border-radius: 10px;
-  padding: 1.2rem;
-  text-align: left;
-
-  .os-info-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    font-size: 0.95rem;
-    color: var(--color-text);
-
-    &.os-total {
-      border-top: 1px solid var(--color-border-light);
-      margin-top: 0.5rem;
-      padding-top: 0.75rem;
-      font-size: 1.1rem;
-
-      strong {
-        color: var(--color-primary);
-      }
-    }
-
-    .os-status-badge {
-      background: var(--color-surface-alt-2); // ✅ neutre, cohérent avec le reste de la boîte
-      color: var(--color-rating); // ✅ ambre/doré déjà dans la palette, stable entre les deux thèmes
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600; // léger renfort pour compenser l'absence de fond contrastant
-    }
-  }
-}
-
-.os-products {
-  text-align: left;
-
-  .os-product-line {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid var(--color-border-light);
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    img {
-      width: 48px;
-      height: 48px;
-      object-fit: cover;
-      border-radius: var(--radius-sm);
-    }
-
-    .os-product-line-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-
-      .os-product-name {
-        font-weight: 500;
-        font-size: 0.9rem;
-        color: var(--color-text);
-      }
-
-      .os-product-qty {
-        font-size: 0.8rem;
-        color: var(--color-text-secondary);
-      }
-    }
-
-    .os-product-price {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--color-text);
-      flex-shrink: 0;
-    }
-  }
-}
-
-.os-cod-notice {
-  background: var(--color-surface-alt-2); // ✅ remplace le jaune très clair non tokenisé
-  border-left: 4px solid var(--color-rating); // ✅ garde l'accent visuel "attention" avec un token existant
-  padding: 0.9rem 1rem;
-  border-radius: var(--radius-sm);
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: var(--color-text); // ✅ lisible dans les deux thèmes, au lieu d'un brun fixe illisible en dark
-  text-align: left;
-}
 .os-next-steps {
   text-align: left;
 
@@ -187,10 +94,4 @@
   .os-action-buttons {
     flex-direction: column;
   }
-}
-
-.os-product-variant {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  display: block;
 }

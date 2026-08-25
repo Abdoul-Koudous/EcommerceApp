@@ -5,9 +5,11 @@ import OrderModel from "../models/order.model.js";
 import CartProductModel from "../models/cartproduct.model.js";
 import ProductModel from "../models/product.model.js";
 import AddressModel from "../models/address.model.js";
+import UserModel from "../models/user.model.js";
 import kkiapayClient from "../config/kkiapay.js";
 import { calculateOrderTotals } from "../services/pricing.service.js";
-import { decrementStock } from "../services/stock.service.js"; // ✅ MODIFIÉ : importé, plus défini localement — partagé avec order.controller.js (restoreStock/decrementStock symétriques)
+import { decrementStock } from "../services/stock.service.js";
+import { sendOrderReceiptEmail } from "../utils/mailer.js";
 
 // 📸 Résout une adresse du carnet de l'utilisateur et renvoie un snapshot
 // prêt à être stocké tel quel dans order.delivery_address.
@@ -43,6 +45,20 @@ const mapCartItemToOrderProduct = (item) => ({
   selectedVariants: item.selectedVariants || {},
   selectedCombinationSku: item.selectedCombinationSku || "",
 });
+
+// ✅ AJOUT — envoi du reçu par email en arrière-plan, non-bloquant.
+// N'importe quelle erreur (user introuvable, SMTP down, etc.) est
+// avalée par le .catch() pour ne jamais faire échouer la réponse HTTP
+// principale : la commande est déjà sauvegardée, c'est ce qui compte.
+const dispatchOrderReceiptEmail = (userId, savedOrder) => {
+  UserModel.findById(userId)
+    .then((user) => {
+      if (user?.email) {
+        return sendOrderReceiptEmail(savedOrder, user.email);
+      }
+    })
+    .catch((err) => console.error("Échec envoi email reçu:", err.message));
+};
 
 export const verifyPaymentController = async (req, res) => {
   try {
@@ -109,6 +125,8 @@ export const verifyPaymentController = async (req, res) => {
     });
 
     const savedOrder = await order.save();
+
+    dispatchOrderReceiptEmail(userId, savedOrder);
 
     await decrementStock(products);
 
@@ -196,6 +214,8 @@ export const verifyKkiapayPaymentController = async (req, res) => {
 
     const savedOrder = await order.save();
 
+    dispatchOrderReceiptEmail(userId, savedOrder);
+
     await decrementStock(products);
 
     await CartProductModel.deleteMany({ userId });
@@ -271,6 +291,8 @@ export const createCashOnDeliveryOrder = async (req, res) => {
     });
 
     const savedOrder = await order.save();
+
+    dispatchOrderReceiptEmail(userId, savedOrder);
 
     // 📉 Décrémenter le stock (commande ferme, même si paiement différé) —
     // ⚠️ le stock est bien retiré immédiatement à la commande, PAS à la

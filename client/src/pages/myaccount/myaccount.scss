@@ -280,3 +280,48 @@
     }
   }
 }
+
+@media print {
+  body * { visibility: hidden; }
+
+  .or-receipt, .or-receipt * { visibility: visible; }
+
+  .or-receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .or-download-bar { display: none; }
+
+  @page {
+    margin: 10mm;
+  }
+
+  .or-meta,
+  .or-totals,
+  .or-cod-notice {
+    page-break-inside: avoid;
+  }
+
+  // ✅ REMPLACE le bloc html/body/#root générique — cible précisément
+  // le layout de compte qui garde sa hauteur (flex + min-height: 75vh)
+  // même quand son contenu est invisible
+  .al-layout {
+    display: block !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .al-sidebar {
+    display: none !important;
+  }
+
+  .al-content,
+  .al-tab-content {
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+}

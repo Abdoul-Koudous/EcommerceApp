@@ -1,9 +1,9 @@
-:root {
-  --accent: #e63946;
-  --accent-600: #c62b38;
-  --muted: #666;
-  --bg: linear-gradient(135deg, #e63946, #ff758f);
-}
+/* ============================================================
+   VERIFY OTP — aligné sur le design system global
+   (plus de tokens locaux --accent/--muted/--bg : on utilise
+   les variables globales, donc le dark mode fonctionne
+   automatiquement via [data-theme="dark"])
+   ============================================================ */
 
 /* 🔔 Popup OTP envoyé */
 .otp-popup {
@@ -11,15 +11,16 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #fff;
-  color: #2b9348;
-  border: 2px solid #2b9348;
+  background: var(--color-surface);
+  color: var(--color-success);
+  border: 2px solid var(--color-success);
   padding: 0.8rem 1.2rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-dropdown);
+  font-family: var(--font-main);
   font-weight: 500;
   animation: fadeInOut 3s ease forwards;
   z-index: 9999;
@@ -40,34 +41,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-//   background: var(--bg);
+  background: var(--color-bg);
   padding: 1rem;
 }
 
 .verify-box {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card-hover);
   padding: 2.5rem;
   width: 100%;
   max-width: 400px;
   text-align: center;
   position: relative;
+  font-family: var(--font-main);
 }
 
 .verify-box h2 {
   margin-bottom: 0.5rem;
-  color: var(--accent);
+  color: var(--color-primary);
 }
 
 .verify-box p {
-  color: var(--muted);
+  color: var(--color-text-secondary);
   margin-bottom: 1.5rem;
   font-size: 0.95rem;
 }
 
 .user-email {
-  color: var(--accent);
+  color: var(--color-primary);
   font-weight: bold;
 }
 
@@ -89,45 +91,54 @@
   height: 55px;
   text-align: center;
   font-size: 1.5rem;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  transition: border-color 0.2s ease, transform 0.1s ease;
+  font-family: var(--font-main);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .otp-inputs input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-primary);
   outline: none;
   transform: scale(1.05);
 }
 
 .verify-btn {
-  background: var(--accent);
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
   padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 1rem;
+  font-family: var(--font-main);
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background var(--transition-base);
   width: 100%;
 }
 
 .verify-btn:hover {
-  background: var(--accent-600);
+  background: var(--color-primary-hover);
 }
 
 .resend-text {
   margin-top: 1rem;
-  color: var(--muted);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
 .resend-text a {
-  color: var(--accent);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
 }
 
 .resend-text a:hover {
   text-decoration: underline;
+}
+
+.resend-cooldown {
+  color: var(--color-text-secondary);
+  font-weight: 600;
 }

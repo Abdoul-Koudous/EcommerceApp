@@ -248,3 +248,41 @@ export const trackOrderController = async (req, res) => {
     });
   }
 };
+
+// 📁 controllers/order.controller.js — AJOUT
+
+// ✅ NOUVEAU : récupère UNE commande précise, réservé au propriétaire de la
+// commande (vérifie userId === req.userId, contrairement à trackOrderController
+// qui est public et ne fait aucune vérification de propriété).
+export const getOrderByIdController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await OrderModel.findOne({
+      orderId: orderId.trim(),
+      userId: req.userId,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        error: true,
+        success: false,
+        message: "Commande introuvable",
+      });
+    }
+
+    return res.status(200).json({
+      error: false,
+      success: true,
+      message: "Commande récupérée avec succès",
+      data: order,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: true,
+      success: false,
+      message: "Erreur lors de la récupération de la commande",
+      data: error.message,
+    });
+  }
+};

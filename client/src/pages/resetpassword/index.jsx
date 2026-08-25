@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect,useRef } from "react";
 import { FaLock, FaKey, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./resetpassword.scss";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,23 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // ✅ garde : sans resetToken (donc sans OTP validé avant), impossible d'arriver ici
+  const hasChecked = useRef(false);
+
+useEffect(() => {
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
+    const resetToken = localStorage.getItem("resetToken");
+    const email = localStorage.getItem("userEmail");
+
+    if (!resetToken || !email) {
+      openToast("error", "Session expirée, veuillez recommencer la procédure.");
+      navigate("/login", { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormFields((prev) => ({ ...prev, [name]: value }));
@@ -29,12 +46,17 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const res = await postData("/api/users/reset-password", formFields);
-      console.log(res);
+      const resetToken = localStorage.getItem("resetToken");
+
+      const res = await postData("/api/users/reset-password", {
+        ...formFields,
+        resetToken, // ✅ requis par le backend désormais
+      });
 
       if (res?.success) {
         openToast("success", res.message);
         localStorage.removeItem("userEmail");
+        localStorage.removeItem("resetToken"); // ✅ à usage unique côté client aussi
         setTimeout(() => navigate("/login"), 800);
       } else {
         openToast("error", res.message || "Erreur lors de la réinitialisation");

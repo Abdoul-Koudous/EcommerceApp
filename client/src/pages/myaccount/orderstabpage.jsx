@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import { FaEye } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { FaEye, FaReceipt } from "react-icons/fa";
 import { UserContext } from "../../UserContext/UserContext";
 import { fetchDataFromApi } from "../utils/api";
 import { orderStatusInfo, paymentStatusInfo } from "../utils/orderStatus";
@@ -77,13 +78,23 @@ const OrdersTabPage = () => {
                   <span className={`payment-status ${paymentStatus.className}`}>
                     {paymentStatus.label}
                   </span>
-                  <button
-                    className="btn-view-order"
-                    onClick={() => setSelectedOrder(order)}
-                    title="Voir le détail"
-                  >
-                    <FaEye />
-                  </button>
+
+                  <span className="order-actions">
+                    <button
+                      className="btn-view-order"
+                      onClick={() => setSelectedOrder(order)}
+                      title="Voir le détail"
+                    >
+                      <FaEye />
+                    </button>
+                    <Link
+                      to={`/account/orders/${order.orderId}`}
+                      className="btn-view-receipt"
+                      title="Voir le reçu"
+                    >
+                      <FaReceipt />
+                    </Link>
+                  </span>
                 </div>
               );
             })}

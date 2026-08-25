@@ -1,19 +1,34 @@
-import { Link, useParams } from "react-router-dom";
-import { useContext, useEffect, useState, useMemo } from "react";
+import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState, useMemo, useRef } from "react";
 
 import "./productdetail.scss";
-import { FaHeart, FaCartPlus, FaBalanceScale, FaStar, FaRegStar } from "react-icons/fa";
+import {
+  FaHeart,
+  FaCartPlus,
+  FaBalanceScale,
+  FaStar,
+  FaRegStar,
+} from "react-icons/fa";
 import ProductZoom from "../../components/productzoom";
 import ProductSlider from "../../components/productslider";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import Reviews from "./reviews";
 import { UserContext } from "../../UserContext/UserContext";
-import { postData, editData, fetchDataFromApi } from "../utils/api";
+import { postData, editData, fetchDataFromApi, deleteData } from "../utils/api";
 import { ToastContext } from "../../context/ToastContext";
 import { captureUtmFromUrl, trackEvent, getSessionId } from "../utils/tracking";
 
+const DESC_PREVIEW_LENGTH = 220;
+
+// ✅ NOUVEAU : décalage à appliquer lors du scroll pour compenser un
+// éventuel header sticky/fixed. Ajuste cette valeur à la hauteur réelle
+// de ton header (en px). Mets 0 si tu n'as pas de header sticky.
+const SCROLL_OFFSET = 80;
+
 const ProductDetails = () => {
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +49,24 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedRating, setSelectedRating] = useState(0);
 
-  const { user, cartItems, loadCartItems } = useContext(UserContext);
+  const [isCompared, setIsCompared] = useState(false);
+  const [compareLoading, setCompareLoading] = useState(false);
+
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  // ✅ référence vers le bloc des onglets pour le scroll "Voir plus"
+  const tabsRef = useRef(null);
+
+  const {
+    user,
+    cartItems,
+    loadCartItems,
+    compareItems,
+    loadCompareItems,
+    myListItems,
+    loadMyListItems,
+  } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
 
   const currentCartItem = cartItems?.find(
@@ -83,8 +115,8 @@ const ProductDetails = () => {
   }, [product, matchedCombination]);
 
   const handleAddToCart = () => {
-    // ✅ MODIFIÉ : le panier est accessible sans connexion — plus de
-    // blocage ici. La connexion n'est demandée qu'au moment du checkout.
+    // ✅ le panier est accessible sans connexion — plus de blocage ici.
+    // La connexion n'est demandée qu'au moment du checkout.
 
     // ✅ NOUVEAU SYSTÈME : le produit a des types de variantes définis
     if (product.hasVariants && product.variants?.length > 0) {
@@ -161,7 +193,7 @@ const ProductDetails = () => {
       weightOptions: product.productWeight || [],
 
       selectedVariants: product.hasVariants ? selectedVariants : {},
-      // ✅ NOUVEAU : identifie le panier invité si pas connecté
+      // ✅ identifie le panier invité si pas connecté
       guestSessionId: user?._id ? undefined : getSessionId(),
     };
 
@@ -170,7 +202,7 @@ const ProductDetails = () => {
       if (res?.success) {
         openToast("success", "Produit ajouté");
         loadCartItems();
-        // ✅ NOUVEAU
+        // ✅ tracking
         trackEvent("ADD_TO_CART", {
           productId: product._id,
           amount: effectivePrice * quantity,
@@ -200,7 +232,10 @@ const ProductDetails = () => {
     }
 
     if (effectiveStock <= 0) {
-      openToast("error", "Ce produit (ou cette variante) est en rupture de stock");
+      openToast(
+        "error",
+        "Ce produit (ou cette variante) est en rupture de stock",
+      );
       return;
     }
 
@@ -215,7 +250,7 @@ const ProductDetails = () => {
       weight: selectedWeight,
 
       selectedVariants: product.hasVariants ? selectedVariants : undefined,
-      // ✅ NOUVEAU
+      // ✅
       guestSessionId: user?._id ? undefined : getSessionId(),
     }).then((res) => {
       setLoadingCart(false);
@@ -235,6 +270,122 @@ const ProductDetails = () => {
 
   const handleDecrement = () => {
     setQuantity((q) => Math.max(1, q - 1));
+  };
+
+  const handleAddToCompare = () => {
+    if (!user?._id) {
+      openToast("error", "Veuillez vous connecter");
+      return;
+    }
+
+    if (compareLoading) return;
+
+    setCompareLoading(true);
+
+    if (isCompared) {
+      deleteData(`/api/compare/remove/${product._id}`)
+        .then((res) => {
+          if (res?.success) {
+            setIsCompared(false);
+            loadCompareItems();
+            openToast("success", res?.message || "Retiré du comparateur");
+          } else {
+            openToast("error", res?.message || "Erreur suppression");
+          }
+        })
+        .catch(() => {
+          openToast("error", "Erreur serveur");
+        })
+        .finally(() => {
+          setCompareLoading(false);
+        });
+
+      return;
+    }
+
+    postData("/api/compare/add", {
+      productId: product._id,
+      productTitle: product.name,
+      image: product.images?.[0] || "",
+      rating: product.rating || "0",
+      price: effectivePrice,
+      oldPrice: product.oldPrice || 0,
+      brand: product.brand || "Sans marque",
+      discount: product.discount || 0,
+    })
+      .then((res) => {
+        if (res?.success) {
+          setIsCompared(true);
+          loadCompareItems();
+          openToast("success", res?.message || "Ajouté au comparateur");
+        } else {
+          openToast("error", res?.message || "Erreur ajout");
+        }
+      })
+      .catch(() => {
+        openToast("error", "Erreur serveur");
+      })
+      .finally(() => {
+        setCompareLoading(false);
+      });
+  };
+
+  const handleAddToMyList = () => {
+    if (!user?._id) {
+      openToast("error", "Veuillez vous connecter");
+      return;
+    }
+
+    if (favoriteLoading) return;
+
+    setFavoriteLoading(true);
+
+    if (isFavorite) {
+      deleteData(`/api/mylist/remove/${product._id}`)
+        .then((res) => {
+          if (res?.success) {
+            setIsFavorite(false);
+            loadMyListItems();
+            openToast("success", res?.message || "Retiré des favoris");
+          } else {
+            openToast("error", res?.message || "Erreur suppression");
+          }
+        })
+        .catch(() => {
+          openToast("error", "Erreur serveur");
+        })
+        .finally(() => {
+          setFavoriteLoading(false);
+        });
+
+      return;
+    }
+
+    postData("/api/mylist/add", {
+      productId: product._id,
+      productTitle: product.name,
+      image: product.images?.[0] || "",
+      rating: product.rating || "0",
+      price: effectivePrice,
+      oldPrice: product.oldPrice || 0,
+      brand: product.brand || "Sans marque",
+      discount: product.discount || 0,
+    })
+      .then((res) => {
+        if (res?.success) {
+          setIsFavorite(true);
+          loadMyListItems();
+          openToast("success", res?.message || "Ajouté aux favoris ❤️");
+        } else {
+          openToast("error", res?.message || "Erreur ajout");
+        }
+      })
+      .catch(() => {
+        openToast("error", "Erreur serveur");
+      })
+      .finally(() => {
+        setFavoriteLoading(false);
+      });
   };
 
   // FETCH PRODUIT
@@ -321,9 +472,61 @@ const ProductDetails = () => {
     }
   }, [product, currentCartItem]);
 
+  // ✅ synchronise l'état "déjà comparé" avec le comparateur global
+  useEffect(() => {
+    if (!product) return;
+    const exists = compareItems?.some((item) => item.productId === product._id);
+    setIsCompared(exists);
+  }, [compareItems, product]);
+
+  // ✅ synchronise l'état "déjà en favoris" avec la wishlist globale
+  useEffect(() => {
+    if (!product) return;
+    const exists = myListItems?.some((item) => item.productId === product._id);
+    setIsFavorite(exists);
+  }, [myListItems, product]);
+
+  // ✅ CORRIGÉ : scroll précis vers le bloc des onglets, avec un offset
+  // pour compenser un éventuel header sticky/fixed. Auparavant on utilisait
+  // scrollIntoView brut, ce qui pouvait aligner le haut du bloc SOUS un
+  // header sticky et donner l'impression que le scroll allait "trop loin".
+  const scrollToDescription = () => {
+    if (!tabsRef.current) return;
+    const top =
+      tabsRef.current.getBoundingClientRect().top +
+      window.pageYOffset -
+      SCROLL_OFFSET;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
+  // ✅ si on arrive depuis le popup avec #description, on bascule sur
+  // l'onglet Description et on scroll dessus une fois le produit chargé
+  useEffect(() => {
+    if (!loading && product && location.hash === "#description") {
+      setActiveTab(0);
+      // ✅ délai légèrement augmenté pour laisser le DOM se stabiliser
+      // avant de calculer la position de scroll
+      setTimeout(() => {
+        scrollToDescription();
+        // ✅ NOUVEAU : on retire le hash de l'URL une fois le scroll fait.
+        // Sans ça, le hash "#description" reste dans l'URL et pourrait
+        // re-déclencher le scroll plus tard (retour navigateur, re-render
+        // du composant, etc.) alors que l'utilisateur n'a pas re-cliqué
+        // sur "Voir plus".
+        navigate(location.pathname, { replace: true });
+      }, 150);
+    }
+  }, [loading, product, location.hash, location.pathname, navigate]);
+
   const handleSelectVariant = (variantName, value) => {
     setSelectedVariants((prev) => ({ ...prev, [variantName]: value }));
     setQuantity(1);
+  };
+
+  // ✅ scroll vers l'onglet Description (bouton "Voir plus")
+  const handleSeeMoreDescription = () => {
+    setActiveTab(0);
+    scrollToDescription();
   };
 
   return (
@@ -369,29 +572,31 @@ const ProductDetails = () => {
 
               {/* BRAND + RATING */}
               {(product.brand || product.rating > 0) && (
-  <div className="brand-rating">
-    {product.brand && <span className="brand">Brand: {product.brand}</span>}
+                <div className="brand-rating">
+                  {product.brand && (
+                    <span className="brand">Brand: {product.brand}</span>
+                  )}
 
-    {product.rating > 0 && (
-      <div className="rating">
-        {[...Array(5)].map((_, i) => (
-          i < product.rating ? (
-            <FaStar key={i} className="star-filled" size={16} />
-          ) : (
-            <FaRegStar key={i} className="star-empty" size={16} />
-          )
-        ))}
-        <span className="reviews">({reviewsCount} avis)</span>
-      </div>
-    )}
-  </div>
-)}
+                  {product.rating > 0 && (
+                    <div className="rating">
+                      {[...Array(5)].map((_, i) =>
+                        i < product.rating ? (
+                          <FaStar key={i} className="star-filled" size={16} />
+                        ) : (
+                          <FaRegStar key={i} className="star-empty" size={16} />
+                        ),
+                      )}
+                      <span className="reviews">({reviewsCount} avis)</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* PRICE */}
               <div className="price-stock">
                 {product.oldPrice > 0 && (
-  <span className="old-price">{product.oldPrice} FCFA</span>
-)}
+                  <span className="old-price">{product.oldPrice} FCFA</span>
+                )}
                 <span className="price">{effectivePrice} FCFA</span>
 
                 <span
@@ -403,9 +608,24 @@ const ProductDetails = () => {
                 </span>
               </div>
 
-              {/* DESCRIPTION */}
+              {/* ✅ DESCRIPTION tronquée avec "Voir plus" → scroll onglet Description */}
               {product.description && (
-                <p className="desc">{product.description}</p>
+                <p className="desc">
+                  {product.description.length > DESC_PREVIEW_LENGTH
+                    ? product.description
+                        .slice(0, DESC_PREVIEW_LENGTH)
+                        .trimEnd() + "…"
+                    : product.description}
+                  {product.description.length > DESC_PREVIEW_LENGTH && (
+                    <button
+                      type="button"
+                      className="desc-see-more"
+                      onClick={handleSeeMoreDescription}
+                    >
+                      Voir plus
+                    </button>
+                  )}
+                </p>
               )}
 
               {/* ✅ sélecteurs de variantes génériques */}
@@ -536,12 +756,20 @@ const ProductDetails = () => {
               </div>
               {/* ACTIONS */}
               <div className="extra-actions">
-                <button className="wishlist">
-                  <FaHeart /> Favoris
+                <button
+                  className={`wishlist ${isFavorite ? "active" : ""}`}
+                  onClick={handleAddToMyList}
+                  disabled={favoriteLoading}
+                >
+                  <FaHeart /> {isFavorite ? "Favori" : "Favoris"}
                 </button>
 
-                <button className="compare">
-                  <FaBalanceScale /> Comparer
+                <button
+                  className={`compare ${isCompared ? "active" : ""}`}
+                  onClick={handleAddToCompare}
+                  disabled={compareLoading}
+                >
+                  <FaBalanceScale /> {isCompared ? "Comparé" : "Comparer"}
                 </button>
               </div>
             </div>
@@ -551,7 +779,7 @@ const ProductDetails = () => {
 
       {/* TABS */}
       {!loading && product && (
-        <div className="product-tabs">
+        <div className="product-tabs" ref={tabsRef}>
           <div className="tabs-header">
             {[
               "Description",
@@ -618,9 +846,7 @@ const ProductDetails = () => {
                       <th>Stock</th>
                       <td
                         className={
-                          effectiveStock > 0
-                            ? "in-stock"
-                            : "out-of-stock"
+                          effectiveStock > 0 ? "in-stock" : "out-of-stock"
                         }
                       >
                         {effectiveStock > 0
@@ -661,12 +887,13 @@ const ProductDetails = () => {
                       </tr>
                     )}
 
-                    {!product.hasVariants && product.productWeight?.length > 0 && (
-                      <tr>
-                        <th>Poids</th>
-                        <td>{product.productWeight.join(", ")}</td>
-                      </tr>
-                    )}
+                    {!product.hasVariants &&
+                      product.productWeight?.length > 0 && (
+                        <tr>
+                          <th>Poids</th>
+                          <td>{product.productWeight.join(", ")}</td>
+                        </tr>
+                      )}
 
                     <tr>
                       <th>Date création</th>

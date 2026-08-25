@@ -37,6 +37,8 @@ import Blog from "./pages/blog";
 import BlogDetails from "./pages/blog/details";
 import TrackOrder from "./pages/trackorder";
 import HelpCenter from "./pages/helpcenter";
+import ComparePage from "./pages/myaccount/comparepage";
+import OrderDetail from "./pages/myaccount/orders/OrderDetail";
 
 function App() {
   return (
@@ -75,7 +77,7 @@ function App() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/verify" element={<Verify />} />
-          <Route path="/forgotpassword" element={<ForgotPassword />} />
+          {/* <Route path="/forgotpassword" element={<ForgotPassword />} /> */}
           <Route path="/resetpassword" element={<ResetPassword />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order/success" element={<OrderSuccess />} />
@@ -93,7 +95,9 @@ function App() {
             <Route index element={<Navigate to="profile" />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="orders" element={<OrdersPage />} />
+            <Route path="orders/:orderId" element={<OrderDetail/>} /> {/* ✅ AJOUT */}
             <Route path="wishlist" element={<WishlistPage />} />
+            <Route path="compare" element={<ComparePage />} />
             <Route path="address" element={<AddressPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="logout" element={<LogoutPage />} />

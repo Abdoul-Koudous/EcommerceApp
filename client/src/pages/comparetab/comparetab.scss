@@ -1,0 +1,119 @@
+.compare-page {
+  p {
+    color: var(--color-text-secondary);
+    margin-bottom: 1.5rem;
+  }
+}
+
+.empty-compare {
+  text-align: center;
+  padding: 3rem 1rem;
+
+  &-img {
+    max-width: 180px;
+    margin-bottom: 1rem;
+  }
+}
+
+.empty-text {
+  color: var(--color-text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.continue-shopping-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-primary-hover);
+  }
+}
+
+.compare-tab {
+  &__table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-surface);
+
+    th, td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--color-border-light);
+      text-align: center;
+      vertical-align: top;
+    }
+
+    th {
+      min-width: 200px;
+    }
+  }
+
+  &__row-label {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-align: left !important;
+    background: var(--color-surface-alt);
+  }
+
+  &__product-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+
+    img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+    }
+
+    a {
+      color: var(--color-text);
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  &__remove {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    background: var(--color-danger);
+    color: #fff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 0.7rem;
+
+    &.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+  &__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+
+    .star { color: var(--color-border); }
+    .star.active { color: var(--color-rating); }
+  }
+}

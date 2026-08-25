@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import {
   FaStar,
   FaRegStar,
@@ -9,9 +10,16 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import ProductZoom from "../productzoom";
+import { UserContext } from "../../UserContext/UserContext";
+import { ToastContext } from "../../context/ToastContext";
+import { postData, deleteData } from "../../pages/utils/api";
 import "./productpopup.scss";
 
+const DESC_PREVIEW_LENGTH = 220;
+
 const ProductPopup = ({ product, onClose, addToCart, user }) => {
+  const navigate = useNavigate();
+
   const [quantity, setQuantity] = useState(1);
 
   // Ancien système (conservé pour rétrocompatibilité)
@@ -20,10 +28,30 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
   const [selectedRam, setSelectedRam] = useState(null);
   const [selectedWeight, setSelectedWeight] = useState(null);
 
-  // ✅ NOUVEAU : sélection générique pour le système de variantes V2
+  // Sélection générique pour le système de variantes V2
   const [selectedVariants, setSelectedVariants] = useState({});
 
-  // ✅ NOUVEAU : présélectionne la première valeur de chaque type de variante
+  // Favoris + comparateur, autonomes dans le popup
+  const { compareItems, loadCompareItems, myListItems, loadMyListItems } =
+    useContext(UserContext);
+  const { openToast } = useContext(ToastContext);
+
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isCompared, setIsCompared] = useState(false);
+  const [compareLoading, setCompareLoading] = useState(false);
+
+  useEffect(() => {
+    const exists = myListItems?.some((item) => item.productId === product._id);
+    setIsFavorite(exists);
+  }, [myListItems, product._id]);
+
+  useEffect(() => {
+    const exists = compareItems?.some((item) => item.productId === product._id);
+    setIsCompared(exists);
+  }, [compareItems, product._id]);
+
+  // Présélectionne la première valeur de chaque type de variante
   useEffect(() => {
     if (!product?.hasVariants || !product?.variants?.length) return;
 
@@ -38,7 +66,7 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
     });
   }, [product]);
 
-  // ✅ NOUVEAU : retrouve la combinaison exacte correspondant à la sélection
+  // Retrouve la combinaison exacte correspondant à la sélection
   const matchedCombination = useMemo(() => {
     if (!product?.hasVariants || !product?.variants?.length) return undefined;
 
@@ -81,8 +109,7 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
 
   const isOutOfStock = effectiveStock <= 0;
 
-  // ✅ bloque le scroll de la page tant que le popup est ouvert,
-  // et le restaure proprement à la fermeture (même si le composant est démonté brutalement)
+  // Bloque le scroll de la page tant que le popup est ouvert
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -96,50 +123,146 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
     setQuantity(1);
   };
 
-  const handleAddToCart = () => {
-    if (isOutOfStock) {
-      alert("Ce produit est en rupture de stock");
+  // Favoris (même logique que ProductItemView / ProductDetails)
+  const handleToggleFavorite = () => {
+    if (!user?._id) {
+      openToast("error", "Veuillez vous connecter");
+      return;
+    }
+    if (favoriteLoading) return;
+    setFavoriteLoading(true);
+
+    if (isFavorite) {
+      deleteData(`/api/mylist/remove/${product._id}`)
+        .then((res) => {
+          if (res?.success) {
+            setIsFavorite(false);
+            loadMyListItems();
+            openToast("success", res?.message || "Retiré des favoris");
+          } else {
+            openToast("error", res?.message || "Erreur suppression");
+          }
+        })
+        .catch(() => openToast("error", "Erreur serveur"))
+        .finally(() => setFavoriteLoading(false));
       return;
     }
 
-    // ✅ NOUVEAU SYSTÈME
+    postData("/api/mylist/add", {
+      productId: product._id,
+      productTitle: product.name,
+      image: product.images?.[0] || "",
+      rating: product.rating || "0",
+      price: effectivePrice,
+      oldPrice: product.oldPrice || 0,
+      brand: product.brand || "Sans marque",
+      discount: product.discount || 0,
+    })
+      .then((res) => {
+        if (res?.success) {
+          setIsFavorite(true);
+          loadMyListItems();
+          openToast("success", res?.message || "Ajouté aux favoris ❤️");
+        } else {
+          openToast("error", res?.message || "Erreur ajout");
+        }
+      })
+      .catch(() => openToast("error", "Erreur serveur"))
+      .finally(() => setFavoriteLoading(false));
+  };
+
+  // Comparateur (même logique que ProductItemView / ProductDetails)
+  const handleToggleCompare = () => {
+    if (!user?._id) {
+      openToast("error", "Veuillez vous connecter");
+      return;
+    }
+    if (compareLoading) return;
+    setCompareLoading(true);
+
+    if (isCompared) {
+      deleteData(`/api/compare/remove/${product._id}`)
+        .then((res) => {
+          if (res?.success) {
+            setIsCompared(false);
+            loadCompareItems();
+            openToast("success", res?.message || "Retiré du comparateur");
+          } else {
+            openToast("error", res?.message || "Erreur suppression");
+          }
+        })
+        .catch(() => openToast("error", "Erreur serveur"))
+        .finally(() => setCompareLoading(false));
+      return;
+    }
+
+    postData("/api/compare/add", {
+      productId: product._id,
+      productTitle: product.name,
+      image: product.images?.[0] || "",
+      rating: product.rating || "0",
+      price: effectivePrice,
+      oldPrice: product.oldPrice || 0,
+      brand: product.brand || "Sans marque",
+      discount: product.discount || 0,
+    })
+      .then((res) => {
+        if (res?.success) {
+          setIsCompared(true);
+          loadCompareItems();
+          openToast("success", res?.message || "Ajouté au comparateur");
+        } else {
+          openToast("error", res?.message || "Erreur ajout");
+        }
+      })
+      .catch(() => openToast("error", "Erreur serveur"))
+      .finally(() => setCompareLoading(false));
+  };
+
+  const handleAddToCart = () => {
+    if (isOutOfStock) {
+      openToast("error", "Ce produit est en rupture de stock");
+      return;
+    }
+
+    // Nouveau système (variantes V2)
     if (product.hasVariants && product.variants?.length > 0) {
       const missingType = product.variants.find(
         (v) => !selectedVariants[v.name],
       );
       if (missingType) {
-        alert(`Veuillez choisir : ${missingType.name}`);
+        openToast("error", `Veuillez choisir : ${missingType.name}`);
         return;
       }
 
       if (!matchedCombination) {
-        alert("Cette combinaison n'est pas disponible");
+        openToast("error", "Cette combinaison n'est pas disponible");
         return;
       }
 
       if (!matchedCombination.isActive) {
-        alert("Cette combinaison n'est plus disponible");
+        openToast("error", "Cette combinaison n'est plus disponible");
         return;
       }
     } else {
-      // ⚠️ ANCIEN SYSTÈME : comportement inchangé
+      // Ancien système : comportement inchangé
       if (product.size?.length > 0 && !selectedSize) {
-        alert("Choisissez une taille");
+        openToast("error", "Choisissez une taille");
         return;
       }
 
       if (product.colors?.length > 0 && !selectedColor) {
-        alert("Choisissez une couleur");
+        openToast("error", "Choisissez une couleur");
         return;
       }
 
       if (product.productRam?.length > 0 && !selectedRam) {
-        alert("Choisissez une RAM");
+        openToast("error", "Choisissez une RAM");
         return;
       }
 
       if (product.productWeight?.length > 0 && !selectedWeight) {
-        alert("Choisissez un poids");
+        openToast("error", "Choisissez un poids");
         return;
       }
     }
@@ -149,7 +272,6 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
       color: selectedColor,
       ram: selectedRam,
       weight: selectedWeight,
-      // ✅ NOUVEAU
       selectedVariants: product.hasVariants ? selectedVariants : {},
     });
 
@@ -162,6 +284,14 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
   };
   const handleDecrement = () =>
     setQuantity(quantity > 1 ? quantity - 1 : 1);
+
+  // ✅ ferme le popup et redirige vers la fiche produit, ancrée
+  // directement sur la section Description. C'est ProductDetails qui
+  // gère ensuite le scroll précis via son propre useEffect sur le hash.
+  const handleSeeMoreDescription = () => {
+    onClose();
+    navigate(`/product/${product._id}#description`);
+  };
 
   return createPortal(
     <div className="pp-overlay" onClick={onClose}>
@@ -182,10 +312,10 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
 
             {/* Marque + rating */}
             {(product.brand || product.rating > 0) && (
-  <div className="pp-brand-rating">
-    {product.brand && <span className="pp-brand">Marque: {product.brand}</span>}
-    {product.rating != null && (
-      <div className="pp-rating">
+              <div className="pp-brand-rating">
+                {product.brand && <span className="pp-brand">Marque: {product.brand}</span>}
+                {product.rating != null && (
+                  <div className="pp-rating">
                     {[...Array(5)].map((_, i) => (
                       i < product.rating ? (
                         <FaStar key={i} className="pp-star-filled" size={16} />
@@ -210,10 +340,25 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
               </span>
             </div>
 
-            {/* Description */}
-            {product.description && <p className="pp-desc">{product.description}</p>}
+            {/* ✅ DESCRIPTION tronquée avec "Voir plus" → redirige vers la fiche produit */}
+            {product.description && (
+              <p className="pp-desc">
+                {product.description.length > DESC_PREVIEW_LENGTH
+                  ? product.description.slice(0, DESC_PREVIEW_LENGTH).trimEnd() + "…"
+                  : product.description}
+                {product.description.length > DESC_PREVIEW_LENGTH && (
+                  <button
+                    type="button"
+                    className="pp-desc-see-more"
+                    onClick={handleSeeMoreDescription}
+                  >
+                    Voir plus
+                  </button>
+                )}
+              </p>
+            )}
 
-            {/* ✅ NOUVEAU : sélecteurs de variantes génériques */}
+            {/* Sélecteurs de variantes génériques */}
             {product.hasVariants && product.variants?.length > 0 && (
               <div className="pp-characteristics">
                 {product.variants.map((variant) => (
@@ -303,9 +448,9 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
                 )}
 
                 <div className="pp-selected-characteristics">
-                  { [selectedSize, selectedColor, selectedRam, selectedWeight]
-                      .filter(Boolean)
-                      .join(" | ") }
+                  {[selectedSize, selectedColor, selectedRam, selectedWeight]
+                    .filter(Boolean)
+                    .join(" | ")}
                 </div>
               </div>
             )}
@@ -323,14 +468,22 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
               </button>
             </div>
 
-            {/* Actions */}
+            {/* Actions favoris/comparer fonctionnelles */}
             <div className="pp-extra-actions">
-              <button className="pp-wishlist">
-                <FaHeart /> Favoris
+              <button
+                className={`pp-wishlist ${isFavorite ? "pp-active" : ""}`}
+                onClick={handleToggleFavorite}
+                disabled={favoriteLoading}
+              >
+                <FaHeart /> {isFavorite ? "Favori" : "Favoris"}
               </button>
 
-              <button className="pp-compare">
-                <FaBalanceScale /> Comparer
+              <button
+                className={`pp-compare ${isCompared ? "pp-active" : ""}`}
+                onClick={handleToggleCompare}
+                disabled={compareLoading}
+              >
+                <FaBalanceScale /> {isCompared ? "Comparé" : "Comparer"}
               </button>
             </div>
           </div>

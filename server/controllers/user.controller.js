@@ -576,6 +576,9 @@ export async function forgotPasswordController(request, response) {
 
         user.otp = verifyCode;
         user.otpExpires = Date.now() + 600000; // 10 minutes
+        user.otpAttempts = 0; // ✅ reset des tentatives à chaque nouvelle demande
+        user.resetPasswordToken = null; // ✅ invalide tout ancien token de reset en cours
+        user.resetPasswordTokenExpires = null;
         await user.save();
 
         // Envoyer email
@@ -631,10 +634,19 @@ export async function verifyForgotPasswordOtp(request, response) {
             });
         }
 
-        // Vérifier si le code correspond
-        if (otp !== user.otp) {
+        // ✅ aucune demande de reset en cours
+        if (!user.otp || !user.otpExpires) {
             return response.status(400).json({
-                message: "OTP invalide",
+                message: "Aucune demande de réinitialisation en cours",
+                error: true,
+                success: false
+            });
+        }
+
+        // ✅ anti brute-force
+        if (user.otpAttempts >= 5) {
+            return response.status(429).json({
+                message: "Trop de tentatives, demandez un nouveau code",
                 error: true,
                 success: false
             });
@@ -649,13 +661,162 @@ export async function verifyForgotPasswordOtp(request, response) {
             });
         }
 
-        // Invalider le code
+        // Vérifier si le code correspond
+        if (otp !== user.otp) {
+            user.otpAttempts += 1; // ✅ compte l'échec
+            await user.save();
+            return response.status(400).json({
+                message: "OTP invalide",
+                error: true,
+                success: false
+            });
+        }
+
+        // ✅ OTP consommé, ne peut plus être réutilisé
         user.otp = null;
         user.otpExpires = null;
+        user.otpAttempts = 0;
+
+        // ✅ génère un token de reset temporaire et à usage unique
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const salt = await bcryptjs.genSalt(10);
+        user.resetPasswordToken = await bcryptjs.hash(resetToken, salt);
+        user.resetPasswordTokenExpires = Date.now() + 600000; // 10 minutes
+
         await user.save();
 
         return response.status(200).json({
             message: "OTP vérifié avec succès",
+            error: false,
+            success: true,
+            resetToken // ✅ envoyé une seule fois, requis par /reset-password
+        });
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+
+// 📌 Renvoi de l'OTP — inscription (vérification d'email)
+export async function resendOtpController(request, response) {
+    try {
+        const { email } = request.body;
+
+        if (!email) {
+            return response.status(400).json({
+                message: "L'email est obligatoire",
+                error: true,
+                success: false
+            });
+        }
+
+        const user = await UserModel.findOne({ email });
+
+        if (!user) {
+            return response.status(400).json({
+                message: "Utilisateur non trouvé",
+                error: true,
+                success: false
+            });
+        }
+
+        if (user.verify_email === true) {
+            return response.status(400).json({
+                message: "Cet email est déjà vérifié",
+                error: true,
+                success: false
+            });
+        }
+
+        const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        user.otp = verifyCode;
+        user.otpExpires = Date.now() + 600000; // 10 minutes
+        await user.save();
+
+        const emailSent = await sendEmailFun(
+            email,
+            "Vérification de votre email sur YebouShop",
+            "",
+            VerificationEmail(user.name, verifyCode)
+        );
+
+        if (!emailSent) {
+            return response.status(500).json({
+                message: "Impossible d'envoyer l'email",
+                error: true,
+                success: false
+            });
+        }
+
+        return response.json({
+            message: "Un nouveau code a été envoyé à votre email",
+            error: false,
+            success: true
+        });
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+
+// 📌 Renvoi de l'OTP — mot de passe oublié
+export async function resendForgotPasswordOtpController(request, response) {
+    try {
+        const { email } = request.body;
+
+        if (!email) {
+            return response.status(400).json({
+                message: "L'email est obligatoire",
+                error: true,
+                success: false
+            });
+        }
+
+        const user = await UserModel.findOne({ email });
+
+        if (!user) {
+            return response.status(400).json({
+                message: "Email introuvable",
+                error: true,
+                success: false
+            });
+        }
+
+        const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        user.otp = verifyCode;
+        user.otpExpires = Date.now() + 600000; // 10 minutes
+        user.otpAttempts = 0; // ✅ reset des tentatives à chaque nouveau code
+        user.resetPasswordToken = null; // ✅ invalide tout ancien token de reset en cours
+        user.resetPasswordTokenExpires = null;
+        await user.save();
+
+        const emailSent = await sendEmailFun(
+            email,
+            "Réinitialisation de mot de passe - Yeboushop",
+            "",
+            VerificationEmail(user.name, verifyCode)
+        );
+
+        if (!emailSent) {
+            return response.status(500).json({
+                message: "Impossible d'envoyer l'email",
+                error: true,
+                success: false
+            });
+        }
+
+        return response.json({
+            message: "Un nouveau code a été envoyé à votre email",
             error: false,
             success: true
         });
@@ -671,11 +832,11 @@ export async function verifyForgotPasswordOtp(request, response) {
 
 export async function resetpassword(request, response) {
   try {
-    const { email, newPassword, confirmPassword } = request.body;
+    const { email, resetToken, newPassword, confirmPassword } = request.body;
 
-    if (!email || !newPassword || !confirmPassword) {
+    if (!email || !resetToken || !newPassword || !confirmPassword) {
       return response.status(400).json({
-        message: "email, newPassword et confirmPassword sont obligatoires",
+        message: "email, resetToken, newPassword et confirmPassword sont obligatoires",
         error: true,
         success: false,
       });
@@ -690,7 +851,32 @@ export async function resetpassword(request, response) {
       });
     }
 
-    // Vérifier que les nouveaux mots de passe correspondent
+    // ✅ bloque tout accès direct sans OTP validé au préalable
+    if (!user.resetPasswordToken || !user.resetPasswordTokenExpires) {
+      return response.status(400).json({
+        message: "Aucune demande valide, veuillez recommencer la procédure",
+        error: true,
+        success: false,
+      });
+    }
+
+    if (Date.now() > user.resetPasswordTokenExpires) {
+      return response.status(400).json({
+        message: "Le lien de réinitialisation a expiré",
+        error: true,
+        success: false,
+      });
+    }
+
+    const isTokenValid = await bcryptjs.compare(resetToken, user.resetPasswordToken);
+    if (!isTokenValid) {
+      return response.status(400).json({
+        message: "Token invalide",
+        error: true,
+        success: false,
+      });
+    }
+
     if (newPassword !== confirmPassword) {
       return response.status(400).json({
         message: "Les mots de passe ne correspondent pas",
@@ -699,10 +885,14 @@ export async function resetpassword(request, response) {
       });
     }
 
-    // Hash et mise à jour du mot de passe (plus de vérification de l'ancien mot de passe)
     const salt = await bcryptjs.genSalt(10);
     user.password = await bcryptjs.hash(newPassword, salt);
     user.signUpWithGoogle = false;
+
+    // ✅ token à usage unique — invalidé après utilisation
+    user.resetPasswordToken = null;
+    user.resetPasswordTokenExpires = null;
+
     await user.save();
 
     return response.status(200).json({

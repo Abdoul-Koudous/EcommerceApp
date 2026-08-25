@@ -9,6 +9,7 @@ import {
   FaMapMarkerAlt,
   FaBars,
   FaTimes,
+  FaBalanceScale,
 } from "react-icons/fa";
 import "./myaccount.scss";
 import { UserContext } from "../../UserContext/UserContext";
@@ -21,9 +22,10 @@ const AccountLayout = () => {
     { id: "profile", label: "Mon Profil", icon: <FaUser /> },
     { id: "orders", label: "Mes Commandes", icon: <FaBoxOpen /> },
     { id: "wishlist", label: "Ma Liste", icon: <FaHeart /> },
+    { id: "compare", label: "Comparateur", icon: <FaBalanceScale /> },
     { id: "address", label: "Mes Adresses", icon: <FaMapMarkerAlt /> },
-    { id: "settings", label: "Paramètres", icon: <FaCog /> },
-    { id: "logout", label: "Déconnexion", icon: <FaSignOutAlt /> },
+    // { id: "settings", label: "Paramètres", icon: <FaCog /> },
+    // { id: "logout", label: "Déconnexion", icon: <FaSignOutAlt /> },
   ];
 
   return (

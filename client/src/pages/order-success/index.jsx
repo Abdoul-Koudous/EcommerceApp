@@ -1,19 +1,10 @@
+// 📁 pages/ordersuccess/OrderSuccess.jsx — MODIFIÉ
+
 import React, { useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { FaCheckCircle, FaBoxOpen, FaHome } from "react-icons/fa";
+import OrderReceipt from "../../components/OrderReceipt/OrderReceipt";
 import "./ordersuccess.scss";
-
-// ✅ NOUVEAU
-const formatSelectedVariants = (selectedVariants) => {
-  if (!selectedVariants) return "";
-  const obj =
-    selectedVariants instanceof Map
-      ? Object.fromEntries(selectedVariants)
-      : selectedVariants;
-  return Object.entries(obj)
-    .map(([key, val]) => `${key}: ${val}`)
-    .join(" · ");
-};
 
 const OrderSuccess = () => {
   const location = useLocation();
@@ -21,79 +12,22 @@ const OrderSuccess = () => {
   const order = location.state?.order;
 
   useEffect(() => {
-    if (!order) {
-      navigate("/");
-    }
+    if (!order) navigate("/");
   }, [order, navigate]);
 
   if (!order) return null;
-
-  const paymentMethodLabel = () => {
-    if (order.payment_status?.includes("livraison")) return "Paiement à la livraison";
-    if (order.paymentId?.startsWith("pi_") || order.paymentId?.length > 15) return "FedaPay";
-    return "KkiaPay";
-  };
 
   return (
     <div className="os-page">
       <div className="os-card">
         <FaCheckCircle className="os-success-icon" />
-
         <h1>Commande confirmée !</h1>
         <p className="os-subtitle">
-          Merci pour votre confiance. Voici le récapitulatif de votre commande.
+          Merci pour votre confiance. Voici le récapitulatif de votre commande{" "}
+          <strong>{order.orderId}</strong>.
         </p>
 
-        <div className="os-info-box">
-          <div className="os-info-row">
-            <span>Numéro de commande</span>
-            <strong>{order.orderId}</strong>
-          </div>
-          <div className="os-info-row">
-            <span>Méthode de paiement</span>
-            <strong>{paymentMethodLabel()}</strong>
-          </div>
-          <div className="os-info-row">
-            <span>Statut</span>
-            <strong className="os-status-badge">{order.order_status || "En attente"}</strong>
-          </div>
-          <div className="os-info-row os-total">
-            <span>Total payé</span>
-            <strong>{order.totalAmt?.toLocaleString()} FCFA</strong>
-          </div>
-        </div>
-
-        <div className="os-products">
-          <h3>Articles commandés</h3>
-          {order.products?.map((item, i) => {
-            // ✅ NOUVEAU
-            const variantLabel = formatSelectedVariants(item.selectedVariants);
-
-            return (
-              <div className="os-product-line" key={i}>
-                <img src={item.image || "/placeholder.png"} alt={item.productTitle} />
-                <div className="os-product-line-info">
-                  <span className="os-product-name">{item.productTitle}</span>
-                  {/* ✅ NOUVEAU */}
-                  {variantLabel && (
-                    <span className="os-product-variant">{variantLabel}</span>
-                  )}
-                  <span className="os-product-qty">Quantité : {item.quantity}</span>
-                </div>
-                <span className="os-product-price">
-                  {(item.price * item.quantity).toLocaleString()} FCFA
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {order.payment_status?.includes("livraison") && (
-          <div className="os-cod-notice">
-            💵 Préparez le montant exact de <strong>{order.totalAmt?.toLocaleString()} FCFA</strong> à
-            remettre au livreur lors de la réception de votre commande.
-          </div>
-        )}
+        <OrderReceipt order={order} />
 
         <div className="os-next-steps">
           <h3>Et maintenant ?</h3>

@@ -12,6 +12,8 @@ import {
     refreshToken,
     registerUserController,
     removeImageFromCloudinary,
+    resendForgotPasswordOtpController,
+    resendOtpController,
     resetpassword,
     updateUserDetails,
     userAvatarController,
@@ -29,6 +31,7 @@ const userRouter = Router();
 // ROUTES FIXES EN PREMIER
 userRouter.post('/register', registerUserController);
 userRouter.post('/verifyEmail', verifyEmailController);
+userRouter.post('/resendOtp', resendOtpController);
 userRouter.post('/login', loginUserController);
 userRouter.post('/authWithGoogle', authWithGoogle);
 userRouter.get('/logout', auth, logoutController);
@@ -38,6 +41,7 @@ userRouter.delete('/deleteImage', auth, removeImageFromCloudinary);
 
 userRouter.post('/forgot-password', forgotPasswordController);
 userRouter.post('/verify-forgot-password-otp', verifyForgotPasswordOtp);
+userRouter.post('/resend-forgot-password-otp', resendForgotPasswordOtpController);
 userRouter.post('/reset-password', resetpassword);
 userRouter.post('/refresh-token', refreshToken);
 userRouter.get('/user-details', auth, UserDetails);
