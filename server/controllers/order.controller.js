@@ -1,11 +1,13 @@
+// 📁 controllers/order.controller.js
+
 import { findOrders } from "../services/order.service.js";
 import OrderModel from "../models/order.model.js";
-import ProductModel from "../models/product.model.js"; // ✅ nécessaire pour incrémenter/décrémenter "sale"
+import ProductModel from "../models/product.model.js";
+import TrackingEventModel from "../models/trackingEvent.model.js";
+import { decrementStock, restoreStock } from "../services/stock.service.js";
 
 export const getOrderDetailsController = async (req, res) => {
   try {
-    // Côté client on ne pagine pas (l'historique perso reste complet) :
-    // perPage volontairement large pour ne pas changer ce comportement existant.
     const { orders } = await findOrders({ userId: req.userId, perPage: 1000 });
 
     res.status(200).json({
@@ -24,8 +26,6 @@ export const getOrderDetailsController = async (req, res) => {
   }
 };
 
-// Réservé aux ADMIN (voir middleware adminAuth sur la route)
-// Filtres via req.query : order_status, payment_status, search, dateFrom, dateTo, page, perPage
 export const getAllOrdersAdminController = async (req, res) => {
   try {
     const {
@@ -88,8 +88,6 @@ export const updateOrderStatusController = async (req, res) => {
       });
     }
 
-    // ✅ On récupère l'état AVANT modification pour détecter une vraie
-    // transition vers/depuis "Livrée" (et éviter de compter deux fois).
     const existingOrder = await OrderModel.findById(id);
     if (!existingOrder) {
       return res.status(404).json({
@@ -101,14 +99,27 @@ export const updateOrderStatusController = async (req, res) => {
 
     const wasDelivered = existingOrder.order_status === "Livrée";
     const willBeDelivered = order_status === "Livrée";
+    const wasCancelled = existingOrder.order_status === "Annulée";
+    const willBeCancelled = order_status === "Annulée";
+    const wasPendingPayment =
+      existingOrder.payment_status === "À payer à la livraison";
+
+    // ✅ Si une commande "à payer à la livraison" est effectivement livrée,
+    // l'argent est considéré comme encaissé → payment_status devient "Payée".
+    const setFields = { order_status };
+    if (willBeDelivered && wasPendingPayment) {
+      setFields.payment_status = "Payée";
+    }
 
     const updated = await OrderModel.findByIdAndUpdate(
       id,
-      { order_status },
+      {
+        $set: setFields,
+        $push: { statusHistory: { status: order_status, date: new Date() } },
+      },
       { new: true }
     ).populate("userId", "name email mobile");
 
-    // ✅ La commande VIENT DE PASSER à "Livrée" → on compte les ventes
     if (!wasDelivered && willBeDelivered) {
       const bulkOps = updated.products
         .filter((p) => p.productId)
@@ -124,8 +135,6 @@ export const updateOrderStatusController = async (req, res) => {
       }
     }
 
-    // ✅ La commande ÉTAIT "Livrée" et ne l'est plus (ex: annulée après coup)
-    // → on retire les ventes comptabilisées pour rester cohérent.
     if (wasDelivered && !willBeDelivered) {
       const bulkOps = updated.products
         .filter((p) => p.productId)
@@ -141,6 +150,42 @@ export const updateOrderStatusController = async (req, res) => {
       }
     }
 
+    // ✅ Commande "à payer à la livraison" venant d'être effectivement
+    // livrée → on confirme le(s) event(s) PURCHASE en attente. Ils
+    // rejoignent alors les Analytics avec leur source/canal d'origine,
+    // déjà enregistrés au moment de la commande (gère bien les variantes,
+    // puisque l'attribution est indépendante de la sélection produit).
+    if (willBeDelivered && wasPendingPayment) {
+      await TrackingEventModel.updateMany(
+        { orderId: updated.orderId, type: "PURCHASE" },
+        { $set: { confirmed: true } },
+      );
+    }
+
+    // ✅ Commande QUI VIENT D'ÊTRE annulée (transition, pas déjà annulée
+    // avant) → on restitue le stock (global ET par combinaison de variante)
+    // ET on invalide les events PURCHASE déjà trackés.
+    if (!wasCancelled && willBeCancelled) {
+      await restoreStock(updated.products);
+
+      await TrackingEventModel.updateMany(
+        { orderId: updated.orderId, type: "PURCHASE" },
+        { $set: { voided: true } },
+      );
+    }
+
+    // ✅ Cas inverse (rare) : une commande annulée par erreur est
+    // "dé-annulée" → on redécrémente le stock (variantes comprises) et on
+    // réactive le tracking, pour rester symétrique.
+    if (wasCancelled && !willBeCancelled) {
+      await decrementStock(updated.products);
+
+      await TrackingEventModel.updateMany(
+        { orderId: updated.orderId, type: "PURCHASE" },
+        { $set: { voided: false } },
+      );
+    }
+
     return res.status(200).json({
       error: false,
       success: true,
@@ -152,6 +197,53 @@ export const updateOrderStatusController = async (req, res) => {
       error: true,
       success: false,
       message: "Erreur lors de la mise à jour du statut",
+      data: error.message,
+    });
+  }
+};
+
+export const trackOrderController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    if (!orderId?.trim()) {
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: "Numéro de commande requis",
+      });
+    }
+
+    const order = await OrderModel.findOne({ orderId: orderId.trim() });
+
+    if (!order) {
+      return res.status(404).json({
+        error: true,
+        success: false,
+        message: "Aucune commande trouvée avec ce numéro",
+      });
+    }
+
+    return res.status(200).json({
+      error: false,
+      success: true,
+      message: "Commande trouvée",
+      data: {
+        orderId: order.orderId,
+        order_status: order.order_status,
+        statusHistory: order.statusHistory,
+        delivery_address: order.delivery_address,
+        products: order.products,
+        totalAmt: order.totalAmt,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: true,
+      success: false,
+      message: "Erreur lors de la récupération de la commande",
       data: error.message,
     });
   }

@@ -22,6 +22,12 @@ import contactPageRouter from "./route/contactPage.route.js";
 import contactMessageRouter from "./route/contactMessage.route.js";
 import settingsRouter from "./route/settings.route.js";
 import shippingZoneRouter from "./route/shippingZone.route.js";
+import campaignRouter from "./route/campaign.route.js";
+import shortLinkRouter from "./route/shortLink.route.js";
+import socialContentRouter from "./route/socialContent.route.js";
+import helpFaqRouter from "./route/helpFaq.route.js";
+
+
 
 
 dotenv.config();
@@ -93,6 +99,10 @@ app.use('/api/contact-page', contactPageRouter);
 app.use('/api/contact-message', contactMessageRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/shipping-zone', shippingZoneRouter);
+app.use("/api/campaign", campaignRouter);
+app.use("/go", shortLinkRouter); // ex: yebou-shop.com/go/sld-aout-montre-wa
+app.use('/api/social-content', socialContentRouter);
+app.use('/api/help-faq', helpFaqRouter);
 
 // ✅ 404 — route inconnue
 app.use((req, res) => {

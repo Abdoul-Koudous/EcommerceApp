@@ -8,8 +8,8 @@ import { UserContext } from "../../UserContext/UserContext";
 import { editData, fetchDataFromApi, postData } from "../utils/api";
 import AddressPanel from "../myaccount/addresspanel";
 import { ToastContext } from "../../context/ToastContext";
+import { trackEvent } from "../utils/tracking";
 
-// ✅ NOUVEAU
 const formatSelectedVariants = (selectedVariants) => {
   if (!selectedVariants) return "";
   const obj =
@@ -22,7 +22,7 @@ const formatSelectedVariants = (selectedVariants) => {
 };
 
 const Checkout = () => {
-  const { user, cartItems, loadCartItems } = useContext(UserContext);
+  const { user, cartItems, loadCartItems, loading } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
   const navigate = useNavigate();
 
@@ -37,6 +37,13 @@ const Checkout = () => {
   useEffect(() => {
     selectedAddressIdRef.current = selectedAddressId;
   }, [selectedAddressId]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user?._id) {
+      navigate("/login?redirect=/checkout");
+    }
+  }, [user, loading, navigate]);
 
   const handleOpenAdd = () => {
     setPanelMode("add");
@@ -177,6 +184,21 @@ const Checkout = () => {
     }
   };
 
+  // ✅ MODIFIÉ : accepte maintenant "confirmed" — true pour un paiement en
+  // ligne déjà encaissé (FedaPay/KkiaPay), false pour un paiement à la
+  // livraison (pas encore d'argent réellement reçu). Le serveur confirmera
+  // l'event lui-même une fois la commande marquée "Livrée".
+  const trackPurchase = (order, confirmed = true) => {
+    (order?.products || []).forEach((item) => {
+      trackEvent("PURCHASE", {
+        productId: item.productId,
+        orderId: order.orderId,
+        amount: item.price * item.quantity,
+        confirmed,
+      });
+    });
+  };
+
   const handlePay = () => {
     if (!selectedAddressId) {
       openToast("error", "Veuillez sélectionner une adresse de livraison");
@@ -235,6 +257,7 @@ const Checkout = () => {
 
       if (res?.success) {
         openToast("success", "Paiement confirmé, commande créée avec succès !");
+        trackPurchase(res.data); // confirmed: true (paiement en ligne)
         loadCartItems();
         navigate("/order/success", { state: { order: res.data } });
       } else {
@@ -300,6 +323,7 @@ const Checkout = () => {
 
       if (res?.success) {
         openToast("success", "Paiement confirmé, commande créée avec succès !");
+        trackPurchase(res.data); // confirmed: true (paiement en ligne)
         loadCartItems();
         navigate("/order/success", { state: { order: res.data } });
       } else {
@@ -334,6 +358,10 @@ const Checkout = () => {
 
       if (res?.success) {
         openToast("success", "Commande créée ! Vous paierez à la livraison.");
+        // ✅ MODIFIÉ : confirmed: false — l'argent n'est pas encore encaissé,
+        // le serveur confirmera l'event automatiquement quand la commande
+        // sera marquée "Livrée" côté admin.
+        trackPurchase(res.data, false);
         loadCartItems();
         navigate("/order/success", { state: { order: res.data } });
       } else {
@@ -349,10 +377,13 @@ const Checkout = () => {
     }
   };
 
+  if (loading || !user?._id) {
+    return null;
+  }
+
   return (
     <div className="co-page">
       <div className="co-container">
-        {/* === Bloc gauche : Adresse de livraison === */}
         <div className="co-billing-details">
           <div className="co-section-header">
             <h2>Adresse de livraison</h2>
@@ -418,7 +449,6 @@ const Checkout = () => {
           )}
         </div>
 
-        {/* === Bloc droite: Votre commande === */}
         <div className="co-order-summary">
           <h2>Votre commande</h2>
 
@@ -427,7 +457,6 @@ const Checkout = () => {
               <p className="co-empty-order">Votre panier est vide.</p>
             ) : (
               cartItems.map((item) => {
-                // ✅ NOUVEAU
                 const variantLabel = formatSelectedVariants(
                   item.selectedVariants,
                 );
@@ -444,7 +473,6 @@ const Checkout = () => {
                           ? item.productTitle.substring(0, 30) + "..."
                           : item.productTitle}
                       </span>
-                      {/* ✅ NOUVEAU */}
                       {variantLabel && (
                         <span className="co-item-variant">{variantLabel}</span>
                       )}

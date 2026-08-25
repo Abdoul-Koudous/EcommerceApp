@@ -4,11 +4,12 @@ import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { postData } from "../utils/api";
 import { ToastContext } from "../../context/ToastContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { UserContext } from "../../UserContext/UserContext";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { firebaseApp } from "../../firebase";
+import { getSessionId } from "../utils/tracking";
 import { useEffect } from "react";
 const auth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
@@ -24,6 +25,11 @@ const Login = () => {
   const { openToast } = useContext(ToastContext);
   const navigate = useNavigate();
 
+  // ✅ NOUVEAU : après connexion, on retourne là d'où l'utilisateur venait
+  // (ex: le checkout) plutôt que toujours à l'accueil.
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -32,6 +38,9 @@ const Login = () => {
     postData("/api/users/login", {
       email,
       password,
+      // ✅ NOUVEAU : permet au serveur de fusionner le panier invité
+      // dans le compte, en une seule requête de connexion.
+      guestSessionId: getSessionId(),
     })
       .then(async (res) => {
         if (res?.success === true) {
@@ -45,7 +54,7 @@ const Login = () => {
           // plus de setTimeout arbitraire qui pouvait arriver trop tôt
           await loadUser();
 
-          navigate("/");
+          navigate(redirectTo);
         } else {
           openToast("error", res?.message);
         }
@@ -100,6 +109,8 @@ const Login = () => {
           avatar: user.providerData[0].photoURL,
           mobile: user.providerData[0].phoneNumber,
           role: "UTILISATEUR",
+          // ✅ NOUVEAU
+          guestSessionId: getSessionId(),
         };
 
         postData("/api/users/authWithGoogle", fields)
@@ -115,7 +126,7 @@ const Login = () => {
               // ✅ on attend vraiment que le contexte soit à jour, plus de setTimeout arbitraire
               await loadUser();
 
-              navigate("/");
+              navigate(redirectTo);
             }
           })
           .finally(() => setIsLoading(false));

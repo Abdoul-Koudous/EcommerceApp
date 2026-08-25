@@ -1,294 +1,309 @@
-import React, { useState, useEffect, useContext } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
-import "./blogList.scss";
-
-import { deleteData, fetchDataFromApi } from "../utils/api";
-import { ToastContext } from "../../context/ToastContext";
-
-import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
+import React, { useEffect, useState, useContext, useCallback } from "react";
+import { FaEdit, FaTrash, FaPlus, FaStar, FaRegStar, FaSearch } from "react-icons/fa";
+import "./blogadmin.scss";
 import PaginationPro from "../../components/paginnationpro/paginationpro";
+import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
-
 import AddBlog from "./AddBlog";
-import EditBlog from "./EditBlog ";
-
+import EditBlog from "./EditBlog";
+import { fetchDataFromApi, deleteData, editData } from "../utils/api";
+import { ToastContext } from "../../context/ToastContext";
 
 const BlogList = () => {
   const { openToast } = useContext(ToastContext);
 
-  const [blogs, setBlogs] = useState([]);
-  const [selected, setSelected] = useState([]);
+  const [blogsData, setBlogsData] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [categories, setCategories] = useState(["Tous"]);
+  const [activeCategory, setActiveCategory] = useState("Tous");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [loading, setLoading] = useState(true);
 
-  const [openAdd, setOpenAdd] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [currentBlog, setCurrentBlog] = useState(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [blogToEdit, setBlogToEdit] = useState(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDeleteId, setToDeleteId] = useState(null);
-
-  const [loading, setLoading] = useState(true);
-
-  // 🔥 PAGINATION
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [totalItems, setTotalItems] = useState(0);
-
-  // 🔥 LOAD BLOGS (FIX ICI)
- const loadBlogs = async () => {
-  setLoading(true);
-  try {
-    const res = await fetchDataFromApi(
-      `/api/blog?page=${currentPage}&perPage=${itemsPerPage}`
-    );
-
-    // ✅ IMPORTANT
-    setBlogs(res?.data || []);
-    setTotalItems(res?.total || 0);
-
-  } catch (err) {
-    openToast("error", "Erreur chargement blogs");
-  } finally {
-    setLoading(false);
-  }
-};
+  const [toDeleteTitle, setToDeleteTitle] = useState("");
 
   useEffect(() => {
-    loadBlogs();
-  }, [currentPage, itemsPerPage]);
+    fetchDataFromApi("/api/blog/getCategories").then((res) => {
+      if (!res?.error) setCategories(["Tous", ...(res.categories || [])]);
+    });
+  }, []);
 
-  // 🔥 DELETE
-  const handleDeleteClick = (id) => {
+  // ✅ route admin (getAll/admin) pour voir aussi les brouillons, contrairement
+  // à /api/blog/getAll qui ne renvoie que les articles publiés côté public
+  const fetchBlogs = useCallback(async () => {
+    setLoading(true);
+
+    const params = new URLSearchParams();
+    params.set("page", currentPage);
+    params.set("perPage", itemsPerPage);
+    if (activeCategory !== "Tous") params.set("category", activeCategory);
+    if (searchTerm.trim()) params.set("search", searchTerm.trim());
+
+    const res = await fetchDataFromApi(`/api/blog/admin/getAll?${params.toString()}`);
+
+    if (!res?.error) {
+      setBlogsData(res.data || []);
+      setTotalItems(res.total || 0);
+    } else {
+      openToast("error", "Échec du chargement des articles");
+      setBlogsData([]);
+      setTotalItems(0);
+    }
+
+    setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage, activeCategory, searchTerm]);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, [fetchBlogs]);
+
+  const handleDeleteClick = (id, title) => {
     setToDeleteId(id);
+    setToDeleteTitle(title);
     setConfirmOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     try {
-      if (toDeleteId) {
-        const res = await deleteData(`/api/blog/${toDeleteId}`);
+      const res = await deleteData(`/api/blog/delete/${toDeleteId}`);
 
-        if (res?.success) {
-          setBlogs((prev) => prev.filter((b) => b._id !== toDeleteId));
-          openToast("success", "Blog supprimé");
+      if (!res?.error) {
+        openToast("success", "Article supprimé");
+
+        if (blogsData.length === 1 && currentPage > 1) {
+          setCurrentPage((p) => p - 1);
+        } else {
+          fetchBlogs();
         }
-      } else if (selected.length > 0) {
-        for (let id of selected) {
-          await deleteData(`/api/blog/${id}`);
-        }
-
-        setBlogs((prev) =>
-          prev.filter((b) => !selected.includes(b._id))
-        );
-
-        setSelected([]);
-        openToast("success", "Blogs supprimés");
+      } else {
+        openToast("error", res.message || "Échec de la suppression");
       }
-    } catch {
-      openToast("error", "Erreur suppression");
+    } catch (error) {
+      openToast("error", "Échec de la suppression");
     }
 
     setConfirmOpen(false);
     setToDeleteId(null);
   };
 
-  const handleCancelDelete = () => {
-    setConfirmOpen(false);
-    setToDeleteId(null);
-  };
+  const toggleFeatured = async (blog) => {
+    const res = await editData(`/api/blog/update/${blog._id}`, {
+      featured: !blog.featured,
+    });
 
-  // 🔥 SELECT
-  const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : [...prev, id]
-    );
-  };
-
-  const toggleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelected(blogs.map((b) => b._id));
+    if (!res?.error) {
+      openToast("success", blog.featured ? "Retiré de la une" : "Mis en avant");
+      fetchBlogs();
     } else {
-      setSelected([]);
+      openToast("error", res.message || "Échec de la mise à jour");
     }
   };
 
-  // 🔥 EDIT
-  const handleEdit = (blog) => {
-    setCurrentBlog(blog);
-    setOpenEdit(true);
+  const toggleStatus = async (blog) => {
+    const newStatus = blog.status === "published" ? "draft" : "published";
+    const res = await editData(`/api/blog/update/${blog._id}`, { status: newStatus });
+
+    if (!res?.error) {
+      openToast(
+        "success",
+        newStatus === "published" ? "Article publié" : "Repassé en brouillon"
+      );
+      fetchBlogs();
+    } else {
+      openToast("error", res.message || "Échec de la mise à jour");
+    }
   };
-  const stripHtml = (html) => {
-    const div = document.createElement("div");
-    div.innerHTML = html;
-    return div.textContent || div.innerText || "";
-  };
+
   return (
-    <div className="blog-list-page">
+    <div className="bladm-page">
+      <div className="bladm-header">
+        <h2>Articles du blog</h2>
 
-      {/* HEADER */}
-      <div className="header">
-        <h2>Liste des blogs</h2>
+        <button className="bladm-add-btn" onClick={() => setShowAddDialog(true)}>
+          <FaPlus /> Nouvel article
+        </button>
+      </div>
 
-        <div className="actions">
+      <div className="bladm-toolbar">
+        <div className="bladm-search-bar">
+          <FaSearch className="icon" />
+          <input
+            type="text"
+            placeholder="Rechercher un article..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
 
-          {/* 🔥 DELETE MULTIPLE */}
-          {selected.length > 0 && (
+        <div className="bladm-categories">
+          {categories.map((cat) => (
             <button
-              className="btn delete-multiple"
-              onClick={() => setConfirmOpen(true)}
+              key={cat}
+              className={activeCategory === cat ? "active" : ""}
+              onClick={() => {
+                setActiveCategory(cat);
+                setCurrentPage(1);
+              }}
             >
-              <FaTrash /> Supprimer ({selected.length})
+              {cat}
             </button>
-          )}
-
-          <button className="btn add" onClick={() => setOpenAdd(true)}>
-            Ajouter
-          </button>
+          ))}
         </div>
       </div>
 
-      {/* BODY */}
       {loading ? (
-        <CircularProgress />
+        <div className="bladm-loading">
+          <CircularProgress />
+        </div>
+      ) : blogsData.length === 0 ? (
+        <div className="bladm-empty">Aucun article trouvé.</div>
       ) : (
-        <div className="table-container">
-
-          <table>
+        <div className="bladm-table-wrapper">
+          <table className="bladm-table">
             <thead>
               <tr>
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={
-                      blogs.length > 0 &&
-                      selected.length === blogs.length
-                    }
-                    onChange={toggleSelectAll}
-                  />
-                </th>
-                <th>Image</th>
+                <th>Couverture</th>
                 <th>Titre</th>
-                <th>Description</th>
+                <th>Catégorie</th>
+                <th>Statut</th>
+                <th>Date</th>
+                <th>Lecture</th>
+                <th>Vedette</th>
                 <th>Actions</th>
               </tr>
             </thead>
 
             <tbody>
-              {blogs.map((blog) => (
+              {blogsData.map((blog) => (
                 <tr key={blog._id}>
                   <td>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(blog._id)}
-                      onChange={() => toggleSelect(blog._id)}
-                    />
-                  </td>
-
-                  <td>
-                    <div className="blog-image">
-                      <img src={blog.images?.[0]} alt="" />
-                    </div>
+                    {blog.image ? (
+                      <img src={blog.image} alt="" className="bladm-thumb" />
+                    ) : (
+                      "—"
+                    )}
                   </td>
 
                   <td>{blog.title}</td>
+                  <td>{blog.category}</td>
 
                   <td>
-                    <div className="blog-desc">
-                      {stripHtml(blog.description).substring(0, 100)}...
-                    </div>
+                    <button
+                      type="button"
+                      className={`bladm-status-badge ${blog.status}`}
+                      onClick={() => toggleStatus(blog)}
+                      title="Cliquer pour changer le statut"
+                    >
+                      {blog.status === "published" ? "Publié" : "Brouillon"}
+                    </button>
                   </td>
 
                   <td>
-                    <FaEdit
-                      className="icon edit"
-                      onClick={() => handleEdit(blog)}
-                    />
+                    {blog.date ? new Date(blog.date).toLocaleDateString("fr-FR") : "—"}
+                  </td>
 
-                    <FaTrash
-                      className="icon delete"
-                      onClick={() =>
-                        handleDeleteClick(blog._id)
-                      }
-                    />
+                  <td>{blog.readTime ? `${blog.readTime} min` : "—"}</td>
+
+                  <td>
+                    <button
+                      type="button"
+                      className="bladm-star"
+                      onClick={() => toggleFeatured(blog)}
+                      title={blog.featured ? "Retirer de la une" : "Mettre en avant"}
+                    >
+                      {blog.featured ? <FaStar /> : <FaRegStar />}
+                    </button>
+                  </td>
+
+                  <td className="bladm-actions">
+                    <button
+                      className="bladm-edit-btn"
+                      onClick={() => {
+                        setBlogToEdit(blog);
+                        setShowEditDialog(true);
+                      }}
+                    >
+                      <FaEdit />
+                    </button>
+
+                    <button
+                      className="bladm-delete-btn"
+                      onClick={() => handleDeleteClick(blog._id, blog.title)}
+                    >
+                      <FaTrash />
+                    </button>
                   </td>
                 </tr>
               ))}
-
-              {blogs.length === 0 && (
-                <tr>
-                  <td colSpan={5}>Aucun blog trouvé</td>
-                </tr>
-              )}
             </tbody>
           </table>
-
-          {/* FOOTER */}
-          <div className="table-footer">
-
-            <div className="items-selector">
-              <label>Afficher</label>
-
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-              </select>
-
-              <span>éléments</span>
-            </div>
-
-            <PaginationPro
-              currentPage={currentPage}
-              totalItems={totalItems}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-
         </div>
       )}
 
-      {/* ADD */}
-      {openAdd && (
+      <div className="bladm-table-footer">
+        <div className="bladm-items-selector">
+          <label>Afficher</label>
+
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+          </select>
+
+          <span>éléments</span>
+        </div>
+
+        <PaginationPro
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
+      </div>
+
+      {showAddDialog && (
         <AddBlog
-          onClose={() => setOpenAdd(false)}
-          onAddBlog={(newBlog) =>
-            setBlogs((prev) => [newBlog, ...prev])
-          }
-        />
-      )}
-
-      {/* EDIT */}
-      {openEdit && currentBlog && (
-        <EditBlog
-          blog={currentBlog}
           onClose={() => {
-            setOpenEdit(false);
-            setCurrentBlog(null);
+            setShowAddDialog(false);
+            fetchBlogs();
           }}
-          onUpdateBlog={() => loadBlogs()}
         />
       )}
 
-      {/* CONFIRM */}
+      {showEditDialog && blogToEdit && (
+        <EditBlog
+          blog={blogToEdit}
+          onClose={() => {
+            setShowEditDialog(false);
+            setBlogToEdit(null);
+            fetchBlogs();
+          }}
+        />
+      )}
+
       <ConfirmDialog
         open={confirmOpen}
-        message={
-          toDeleteId
-            ? "Supprimer ce blog ?"
-            : `Supprimer ${selected.length} blog(s) ?`
-        }
+        message={`Supprimer "${toDeleteTitle}" ? Cette action est irréversible.`}
         onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
+        onCancel={() => setConfirmOpen(false)}
       />
-
     </div>
   );
 };

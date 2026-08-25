@@ -2,11 +2,10 @@ import React, { useContext, useEffect, useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import "./cartPanel.scss";
 import { deleteData, fetchDataFromApi } from "../../pages/utils/api";
+import { getSessionId } from "../../pages/utils/tracking";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../../UserContext/UserContext";
 
-// ✅ NOUVEAU : formate la sélection de variantes pour affichage
-// (ex: { Couleur: "Rouge", Taille: "M" } → "Couleur: Rouge · Taille: M")
 const formatSelectedVariants = (selectedVariants) => {
   if (!selectedVariants) return "";
   const obj =
@@ -20,7 +19,7 @@ const formatSelectedVariants = (selectedVariants) => {
 
 const CartPanel = ({ isOpen, onClose, openToast }) => {
   const navigate = useNavigate();
-  const { cartItems, loadCartItems } = useContext(UserContext);
+  const { user, cartItems, loadCartItems } = useContext(UserContext);
 
   const [totals, setTotals] = useState({
     subTotalAmt: 0,
@@ -32,7 +31,14 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
   useEffect(() => {
     if (!isOpen || cartItems.length === 0) return;
 
-    fetchDataFromApi("/api/payment/preview-total").then((res) => {
+    // ✅ MODIFIÉ : envoie guestSessionId si pas connecté, sinon le total
+    // reste bloqué à 0 pour un visiteur anonyme (preview-total ne trouvait
+    // aucun panier faute d'identification).
+    const url = user?._id
+      ? "/api/payment/preview-total"
+      : `/api/payment/preview-total?guestSessionId=${getSessionId()}`;
+
+    fetchDataFromApi(url).then((res) => {
       if (!res?.error) {
         setTotals({
           subTotalAmt: res.subTotalAmt || 0,
@@ -42,12 +48,16 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
         });
       }
     });
-  }, [isOpen, cartItems]);
+  }, [isOpen, cartItems, user]);
 
   const handleRemoveItem = (id) => {
     if (!id) return;
 
-    deleteData(`/api/cart/delete-cart-item/${id}`)
+    const url = user?._id
+      ? `/api/cart/delete-cart-item/${id}`
+      : `/api/cart/delete-cart-item/${id}?guestSessionId=${getSessionId()}`;
+
+    deleteData(url)
       .then((res) => {
         if (res?.success) {
           openToast("success", res?.message || "Produit supprimé du panier");
@@ -65,12 +75,11 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
   const goToCartPage = () => {
     console.log("CLICK OK");
     navigate("/cart");
-    onClose(); // ferme le panel
+    onClose();
   };
 
   return (
     <div className={`cart-panel ${isOpen ? "open" : ""}`}>
-      {/* HEADER */}
       <div className="cart-header">
         <h3>Mon Panier ({cartItems.length})</h3>
         <button className="close-btn" onClick={onClose}>
@@ -78,7 +87,6 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
         </button>
       </div>
 
-      {/* ITEMS */}
       <div className="cart-items">
         {cartItems.length === 0 ? (
           <div className="empty-cart">
@@ -96,7 +104,6 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
           </div>
         ) : (
           cartItems.map((item) => {
-            // ✅ NOUVEAU
             const variantLabel = formatSelectedVariants(item.selectedVariants);
 
             return (
@@ -110,7 +117,6 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
                       ? item.productTitle.substring(0, 25) + "..."
                       : item.productTitle}
                   </h4>
-                  {/* ✅ NOUVEAU : affiche la variante choisie si présente */}
                   {variantLabel && (
                     <p className="item-variant">{variantLabel}</p>
                   )}
@@ -132,7 +138,6 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
         )}
       </div>
 
-      {/* FOOTER */}
       <div className="cart-footer">
         <div className="footer-row">
           <span>{cartItems.length} produits</span>

@@ -3,7 +3,18 @@ import { useParams, Link } from "react-router-dom";
 import { fetchDataFromApi } from "../utils/api";
 import "./productDetails.scss";
 import ProductZoom from "../../components/productzoom";
-import { FaTag, FaBuilding, FaListAlt, FaPercent, FaMemory, FaRuler, FaWeightHanging, FaCalendarAlt, FaStar } from "react-icons/fa";
+import {
+  FaTag,
+  FaBuilding,
+  FaListAlt,
+  FaPercent,
+  FaMemory,
+  FaRuler,
+  FaWeightHanging,
+  FaCalendarAlt,
+  FaStar,
+  FaLayerGroup,
+} from "react-icons/fa";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 
 const ProductDetails = () => {
@@ -125,6 +136,82 @@ const ProductDetails = () => {
               <span className="value">{reviews.length} avis</span>
             </div>
           </div>
+
+          {/* ✅ NOUVEAU : section Variantes, affichée seulement si le produit
+             utilise le système de variantes V2 (hasVariants + types définis) */}
+          {product.hasVariants && product.variants?.length > 0 && (
+            <div className="pdt-variants">
+              <h3>
+                <FaLayerGroup className="icon" /> Variantes (
+                {product.variants.map((v) => v.name).join(", ")})
+              </h3>
+
+              {product.variantCombinations?.length > 0 ? (
+                <div className="pdt-variants-table-wrapper">
+                  <table className="pdt-variants-table">
+                    <thead>
+                      <tr>
+                        <th>Combinaison</th>
+                        <th>Stock</th>
+                        <th>Prix</th>
+                        <th>SKU</th>
+                        <th>Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {product.variantCombinations.map((combo, idx) => {
+                        const label = Object.entries(combo.combination || {})
+                          .map(([key, val]) => `${key}: ${val}`)
+                          .join(" · ");
+
+                        return (
+                          <tr
+                            key={combo._id || idx}
+                            className={!combo.isActive ? "pdt-combo-inactive" : ""}
+                          >
+                            <td>{label}</td>
+                            <td className={combo.stock <= 0 ? "pdt-stock-empty" : ""}>
+                              {combo.stock}
+                            </td>
+                            <td>
+                              {combo.price !== null && combo.price !== undefined ? (
+                                `${combo.price} FCFA`
+                              ) : (
+                                <span className="pdt-price-inherited">
+                                  Prix produit ({product.price} FCFA)
+                                </span>
+                              )}
+                            </td>
+                            <td>{combo.sku || "—"}</td>
+                            <td>
+                              <span
+                                className={`pdt-combo-status ${
+                                  combo.isActive ? "active" : "inactive"
+                                }`}
+                              >
+                                {combo.isActive ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="pdt-no-combinations">
+                  Types de variantes définis, mais aucune combinaison créée.
+                </p>
+              )}
+
+              {product.useVariantStock && (
+                <p className="pdt-variant-stock-note">
+                  Stock géré par combinaison — le stock global (
+                  {product.countIntStock}) est recalculé automatiquement.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="pdt-description">
             <h3>Description</h3>

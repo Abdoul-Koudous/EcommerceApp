@@ -1,0 +1,215 @@
+// 📁 Fichier à créer : admin/src/pages/help-faq/helpfaqform.scss
+// Autonome — ne dépend d'aucun autre fichier scss (pas de blogform.scss)
+
+.hlpf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.hlpf-content {
+  width: 100%;
+  max-width: 640px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  font-family: var(--font-main);
+
+  &.opening {
+    animation: hlpf-in 0.25s ease-out;
+  }
+
+  &.closing {
+    animation: hlpf-out 0.25s ease-in forwards;
+  }
+}
+
+@keyframes hlpf-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hlpf-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.hlpf-header {
+  position: relative;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border-light);
+
+  h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.hlpf-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.hlpf-body {
+  padding: 24px;
+}
+
+.hlpf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hlpf-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .hlpf-form-group {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+.hlpf-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    font-family: var(--font-main);
+    font-size: 13.5px;
+    color: var(--color-text);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+  }
+
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+    font-family: var(--font-main);
+  }
+}
+
+// Toggle publié / brouillon
+.hlpf-toggle {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  label {
+    font-size: 13.5px;
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+
+.hlpf-switch {
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--color-border);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+
+  &.active {
+    background: var(--color-primary);
+
+    .hlpf-slider {
+      transform: translateX(18px);
+    }
+  }
+}
+
+.hlpf-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--transition-fast);
+}
+
+.hlpf-publish-btn {
+  margin-top: 6px;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--color-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

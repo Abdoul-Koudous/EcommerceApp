@@ -10,6 +10,7 @@ import Reviews from "./reviews";
 import { UserContext } from "../../UserContext/UserContext";
 import { postData, editData, fetchDataFromApi } from "../utils/api";
 import { ToastContext } from "../../context/ToastContext";
+import { captureUtmFromUrl, trackEvent, getSessionId } from "../utils/tracking";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -27,8 +28,7 @@ const ProductDetails = () => {
   const [selectedRam, setSelectedRam] = useState(null);
   const [selectedWeight, setSelectedWeight] = useState(null);
 
-  // ✅ NOUVEAU : sélection générique pour le système de variantes V2
-  // Ex: { "Couleur": "Rouge", "Taille": "M" }
+  // ✅ sélection générique pour le système de variantes V2
   const [selectedVariants, setSelectedVariants] = useState({});
 
   const [activeTab, setActiveTab] = useState(0);
@@ -41,10 +41,7 @@ const ProductDetails = () => {
     (item) => item.productId === product?._id,
   );
 
-  // ✅ NOUVEAU : retrouve la combinaison exacte correspondant à la sélection
-  // en cours, pour connaître son stock/prix réels. null tant que la
-  // sélection n'est pas complète, undefined si le produit n'a pas de
-  // variantes du tout.
+  // ✅ retrouve la combinaison exacte correspondant à la sélection en cours
   const matchedCombination = useMemo(() => {
     if (!product?.hasVariants || !product?.variants?.length) return undefined;
 
@@ -67,9 +64,6 @@ const ProductDetails = () => {
     );
   }, [product, selectedVariants]);
 
-  // ✅ Stock et prix effectifs à afficher/utiliser, selon qu'on est sur
-  // le nouveau système de variantes (avec stock détaillé) ou l'ancien
-  // système / un produit simple.
   const effectiveStock = useMemo(() => {
     if (product?.hasVariants && product?.useVariantStock) {
       return matchedCombination ? matchedCombination.stock : 0;
@@ -89,10 +83,8 @@ const ProductDetails = () => {
   }, [product, matchedCombination]);
 
   const handleAddToCart = () => {
-    if (!user?._id) {
-      openToast("error", "Veuillez vous connecter");
-      return;
-    }
+    // ✅ MODIFIÉ : le panier est accessible sans connexion — plus de
+    // blocage ici. La connexion n'est demandée qu'au moment du checkout.
 
     // ✅ NOUVEAU SYSTÈME : le produit a des types de variantes définis
     if (product.hasVariants && product.variants?.length > 0) {
@@ -153,13 +145,11 @@ const ProductDetails = () => {
       discount: product.discount,
       productId: product._id,
       quantity,
-      userId: user._id,
+      userId: user?._id, // ✅ peut être undefined si non connecté
       rating: product.rating,
       countInStock: effectiveStock,
       brand: product.brand,
 
-      // Ancien système (toujours envoyé pour rétrocompatibilité, vide si
-      // le nouveau système de variantes est utilisé)
       size: selectedSize,
       color: selectedColor,
       ram: selectedRam,
@@ -170,8 +160,9 @@ const ProductDetails = () => {
       ramOptions: product.productRam || [],
       weightOptions: product.productWeight || [],
 
-      // ✅ NOUVEAU
       selectedVariants: product.hasVariants ? selectedVariants : {},
+      // ✅ NOUVEAU : identifie le panier invité si pas connecté
+      guestSessionId: user?._id ? undefined : getSessionId(),
     };
 
     postData("/api/cart/add", data).then((res) => {
@@ -179,17 +170,20 @@ const ProductDetails = () => {
       if (res?.success) {
         openToast("success", "Produit ajouté");
         loadCartItems();
+        // ✅ NOUVEAU
+        trackEvent("ADD_TO_CART", {
+          productId: product._id,
+          amount: effectivePrice * quantity,
+        });
       } else {
         openToast("error", res?.message);
       }
     });
   };
 
-    const handleUpdateCart = () => {
+  const handleUpdateCart = () => {
     if (!currentCartItem?._id) return;
 
-    // ✅ On vérifie le stock de la NOUVELLE sélection avant d'envoyer,
-    // pour donner un retour immédiat sans attendre la réponse serveur.
     if (product.hasVariants && product.variants?.length > 0) {
       const missingType = product.variants.find(
         (v) => !selectedVariants[v.name],
@@ -220,8 +214,9 @@ const ProductDetails = () => {
       ram: selectedRam,
       weight: selectedWeight,
 
-      // ✅ NOUVEAU : permet de changer de variante sans supprimer/rajouter
       selectedVariants: product.hasVariants ? selectedVariants : undefined,
+      // ✅ NOUVEAU
+      guestSessionId: user?._id ? undefined : getSessionId(),
     }).then((res) => {
       setLoadingCart(false);
       if (res?.success) {
@@ -258,6 +253,14 @@ const ProductDetails = () => {
     getProduct().finally(() => setLoading(false));
   }, [id]);
 
+  // ✅ capture l'attribution de campagne (si présente dans l'URL) puis
+  // enregistre la vue produit, une fois le produit chargé.
+  useEffect(() => {
+    if (!product) return;
+    captureUtmFromUrl();
+    trackEvent("PRODUCT_VIEW", { productId: product._id });
+  }, [product]);
+
   useEffect(() => {
     if (!id) return;
 
@@ -289,9 +292,7 @@ const ProductDetails = () => {
       setSelectedWeight(product.productWeight[0]);
   }, [product]);
 
-  // ✅ NOUVEAU : présélectionne la première valeur de chaque type de
-  // variante, pour que le client voie tout de suite un état valide
-  // (comme le fait déjà l'ancien système ci-dessus).
+  // ✅ présélectionne la première valeur de chaque type de variante
   useEffect(() => {
     if (!product?.hasVariants || !product?.variants?.length) return;
 
@@ -315,7 +316,6 @@ const ProductDetails = () => {
     setSelectedRam(currentCartItem.ram || null);
     setSelectedWeight(currentCartItem.weight || null);
 
-    // ✅ NOUVEAU : restaure la sélection de variantes depuis le panier
     if (currentCartItem.selectedVariants) {
       setSelectedVariants(currentCartItem.selectedVariants);
     }
@@ -323,7 +323,7 @@ const ProductDetails = () => {
 
   const handleSelectVariant = (variantName, value) => {
     setSelectedVariants((prev) => ({ ...prev, [variantName]: value }));
-    setQuantity(1); // évite de garder une quantité invalide en changeant de variante
+    setQuantity(1);
   };
 
   return (
@@ -408,7 +408,7 @@ const ProductDetails = () => {
                 <p className="desc">{product.description}</p>
               )}
 
-              {/* ✅ NOUVEAU : sélecteurs de variantes génériques */}
+              {/* ✅ sélecteurs de variantes génériques */}
               {product.hasVariants && product.variants?.length > 0 && (
                 <div className="characteristics">
                   {product.variants.map((variant) => (
@@ -579,7 +579,6 @@ const ProductDetails = () => {
               <div className="tab-info">
                 <table>
                   <tbody>
-                    {/* IDENTITÉ PRODUIT */}
                     <tr>
                       <th>Nom</th>
                       <td>{product.name}</td>
@@ -600,7 +599,6 @@ const ProductDetails = () => {
                       <td>{product.subCat || "-"}</td>
                     </tr>
 
-                    {/* PRIX */}
                     <tr>
                       <th>Prix</th>
                       <td>{effectivePrice} FCFA</td>
@@ -616,7 +614,6 @@ const ProductDetails = () => {
                       <td>{product.discount || 0}%</td>
                     </tr>
 
-                    {/* STOCK */}
                     <tr>
                       <th>Stock</th>
                       <td
@@ -632,7 +629,7 @@ const ProductDetails = () => {
                       </td>
                     </tr>
 
-                    {/* ✅ NOUVEAU : variantes génériques */}
+                    {/* ✅ variantes génériques */}
                     {product.hasVariants &&
                       product.variants?.map((variant) => (
                         <tr key={variant.name}>
@@ -671,7 +668,6 @@ const ProductDetails = () => {
                       </tr>
                     )}
 
-                    {/* DATES */}
                     <tr>
                       <th>Date création</th>
                       <td>

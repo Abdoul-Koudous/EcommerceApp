@@ -12,7 +12,7 @@ import { match } from "assert";
 import { text } from "stream/consumers";
 import { error } from "console";
 import ReviewsModel from "../models/reviews.model.js";
-
+import { mergeGuestCart } from "./cart.controller.js";
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
     api_key: process.env.cloudinary_Config_api_key,
@@ -183,6 +183,12 @@ export async function authWithGoogle(request, response){
             response.cookie('accessToken',accesstoken,cookiesOption)
             response.cookie('refreshToken',refreshToken,cookiesOption)
 
+            // ✅ NOUVEAU : fusionne le panier invité pour un tout nouveau
+            // compte créé via Google (manquait auparavant).
+            if (request.body.guestSessionId) {
+                await mergeGuestCart(user._id, request.body.guestSessionId);
+            }
+
             return response.json({
                 message : "La connexion faite avec succès",
                 error: false,
@@ -214,6 +220,13 @@ export async function authWithGoogle(request, response){
             }
             response.cookie('accessToken',accesstoken,cookiesOption)
             response.cookie('refreshToken',refreshToken,cookiesOption)
+
+            // ✅ CORRIGÉ : utilisait "user" (undefined dans cette branche),
+            // remplacé par "existingUser" — sinon ReferenceError à chaque
+            // connexion Google d'un compte déjà existant.
+            if (request.body.guestSessionId) {
+                await mergeGuestCart(existingUser._id, request.body.guestSessionId);
+            }
 
             return response.json({
                 message : "La connexion faite avec succès",
@@ -291,6 +304,12 @@ export async function loginUserController(request, response) {
         }
         response.cookie('accessToken',accesstoken,cookiesOption)
         response.cookie('refreshToken',refreshToken,cookiesOption)
+
+        // ✅ fusionne le panier invité (s'il existe) dans le
+        // compte qui vient de se connecter, en une seule requête.
+        if (request.body.guestSessionId) {
+            await mergeGuestCart(user._id, request.body.guestSessionId);
+        }
 
         return response.json({
             message : "La connexion faite avec succès",

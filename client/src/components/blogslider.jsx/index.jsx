@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import BlogItem from "../blogitem";
-import { fetchDataFromApi } from "../../pages/utils/api";
+import { getArticles, formatDate } from "../../pages/blog/data";
 import "./blogslider.scss";
 
 const BlogSlider = ({ items = 3 }) => {
@@ -9,18 +9,20 @@ const BlogSlider = ({ items = 3 }) => {
 
   const sliderRef = useRef(null);
 
-  // 🔥 FETCH BLOGS (avec ta route réelle)
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
 
-        const res = await fetchDataFromApi("/api/blog/");
+        // excludeFeatured: false -> le slider peut afficher aussi l'article
+        // à la une ; passe à true si tu veux le même comportement que la
+        // page liste (qui l'exclut car déjà affiché en hero).
+        const { articles } = await getArticles({
+          excludeFeatured: false,
+          perPage: items,
+        });
 
-        // 🔥 IMPORTANT (adapter selon ton controller)
-        const blogsData = res?.blogs || res?.data || res || [];
-
-        setBlogs(blogsData);
+        setBlogs(articles);
       } catch (error) {
         console.error(error);
         setBlogs([]);
@@ -30,7 +32,7 @@ const BlogSlider = ({ items = 3 }) => {
     };
 
     fetchBlogs();
-  }, []);
+  }, [items]);
 
   const scrollLeft = () =>
     sliderRef.current.scrollBy({ left: -400, behavior: "smooth" });
@@ -41,25 +43,19 @@ const BlogSlider = ({ items = 3 }) => {
   if (loading) return <p>Chargement des blogs...</p>;
   if (blogs.length === 0) return <p>Aucun blog disponible.</p>;
 
-  const visibleBlogs = blogs.slice(0, items);
-
   return (
     <section className="blog-slider">
       <button className="banner-btn left" onClick={scrollLeft}>‹</button>
 
       <div className="blog-container" ref={sliderRef}>
-        {visibleBlogs.map((blog) => (
+        {blogs.map((blog) => (
           <BlogItem
             key={blog._id}
             _id={blog._id}
-            image={blog.images?.[0]}
+            image={blog.image}
             title={blog.title}
-            date={
-              blog.createdAt
-                ? new Date(blog.createdAt).toLocaleDateString("fr-FR")
-                : ""
-            }
-            description={blog.description}
+            date={blog.date ? formatDate(blog.date) : ""}
+            description={blog.excerpt}
           />
         ))}
       </div>

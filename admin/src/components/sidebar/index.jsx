@@ -13,6 +13,9 @@ import {
   FaBlog,
   FaTags,
   FaCog,
+  FaBullhorn,
+  FaChartBar,
+  FaQuestionCircle,
 } from "react-icons/fa";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import "./adminsidebar.scss";
@@ -52,6 +55,8 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
       ],
     },
     { to: "/orders", label: "Commandes", icon: <FaShoppingCart /> },
+    { to: "/campaigns", label: "Campagnes", icon: <FaBullhorn /> },
+    { to: "/analytics", label: "Analytics", icon: <FaChartBar /> }, // ✅ NOUVEAU
     {
       label: "Pages du site",
       icon: <FaFileAlt />,
@@ -61,6 +66,10 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
         { to: "/contact-messages", label: "Messages reçus" },
       ],
     },
+
+
+    { to: "/help-faq/lists", label: "Centre d'aide", icon: <FaQuestionCircle /> },
+
     { to: "/users", label: "Utilisateurs", icon: <FaUsers /> },
     { to: "/settings", label: "Paramètres", icon: <FaCog /> },
   ];

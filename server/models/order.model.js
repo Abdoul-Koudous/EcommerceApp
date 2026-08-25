@@ -1,3 +1,5 @@
+// 📁 Fichier à remplacer : models/order.model.js
+
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
@@ -19,9 +21,9 @@ const orderSchema = new mongoose.Schema(
         price: { type: Number },
         quantity: { type: Number },
 
-        // ✅ NOUVEAU : snapshot de la variante choisie au moment de la
-        // commande (ex: { "Couleur": "Rouge", "Taille": "M" }), figé
-        // même si le produit change après.
+        // Snapshot de la variante choisie au moment de la commande
+        // (ex: { "Couleur": "Rouge", "Taille": "M" }), figé même si le
+        // produit change après.
         selectedVariants: {
           type: Map,
           of: String,
@@ -44,6 +46,29 @@ const orderSchema = new mongoose.Schema(
       enum: ["Reçue", "En préparation", "Expédiée", "Livrée", "Annulée"],
       default: "Reçue",
     },
+
+    // ✅ AJOUT : historique des changements de statut, pour la timeline de
+    // suivi public (voir trackOrderController). Une entrée est ajoutée
+    // automatiquement à chaque changement dans updateOrderStatusController.
+    // ⚠️ Il faut aussi ajouter la première entrée ("Reçue") au moment de la
+    // création de la commande, là où OrderModel est instancié — ce fichier
+    // n'a pas été fourni, donc à faire manuellement (voir note dans le chat).
+    statusHistory: {
+      type: [
+        {
+          status: {
+            type: String,
+            enum: ["Reçue", "En préparation", "Expédiée", "Livrée", "Annulée"],
+          },
+          date: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      default: [],
+    },
+
     delivery_address: {
       addressId: { type: mongoose.Schema.ObjectId, ref: "Address" },
       name: { type: String, required: true },

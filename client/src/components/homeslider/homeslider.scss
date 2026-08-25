@@ -3,108 +3,291 @@
 .home-slider {
   position: relative;
   width: 100%;
-  height: 500px;
+  height: 560px;
   overflow: hidden;
+  background: var(--color-surface-alt);
 
   @include respond("laptop") {
-    height: 400px;
+    height: 440px;
   }
 
   @include respond("tablet") {
-    height: 320px;
+    height: 380px;
   }
 
   @include respond("mobile") {
-    height: 260px;
+    height: 320px;
+  }
+
+  &--empty {
+    background: var(--color-surface-alt);
   }
 
   .slide {
     position: absolute;
-    top: 0;
-    left: 100%;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background-size: cover;
     background-position: center;
-    transition: all 0.8s ease;
     opacity: 0;
+    visibility: hidden;
+    // Courbe plus douce et durée un peu plus longue : le crossfade
+    // n'est plus un cut linéaire, il "respire" en entrée/sortie.
+    transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-end;
+
+    // Ken Burns : léger zoom continu, plus marqué pendant que le slide est visible
+    animation: kenburns 9s ease-in-out infinite alternate;
+    animation-play-state: paused;
 
     &.active {
-      left: 0;
       opacity: 1;
+      visibility: visible;
+      z-index: 1;
+      animation-play-state: running;
     }
 
-    .overlay {
+    &__scrim {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--color-overlay);
+      inset: 0;
+      background: linear-gradient(
+        100deg,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.45) 32%,
+        rgba(0, 0, 0, 0.05) 62%
+      );
+    }
+  }
+
+  @keyframes kenburns {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.08);
+    }
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    color: var(--color-text-on-photo, #fff);
+    padding: 0 4rem 4.5rem;
+    max-width: 620px;
+
+    @include respond("laptop") {
+      padding: 0 2.5rem 3.5rem;
+      max-width: 520px;
     }
 
-    .content {
-      position: relative;
-      color: #fff; // texte sur photo : constant, pas un token de thème
-      text-align: center;
-      z-index: 2;
-      padding: 0 20px;
+    @include respond("tablet") {
+      padding: 0 1.75rem 3rem;
+      max-width: 440px;
+    }
 
-      h2 {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
+    @include respond("mobile") {
+      padding: 0 1.25rem 2rem;
+      max-width: 100%;
+    }
 
-        @include respond("tablet") {
-          font-size: 1.8rem;
-        }
+    > * {
+      opacity: 0;
+      // La variante (--slide-anim) est définie par le modificateur
+      // .content--rise / --slide-left / --slide-right / --zoom ci-dessous.
+      animation: var(--slide-anim, rise-in) 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
 
-        @include respond("mobile") {
-          font-size: 1.3rem;
-          margin-bottom: 0.3rem;
-        }
+    .badge {
+      animation-delay: 0.05s;
+    }
+    .title {
+      animation-delay: 0.15s;
+    }
+    .subtitle {
+      animation-delay: 0.25s;
+    }
+    .highlights {
+      animation-delay: 0.35s;
+    }
+    .cta {
+      animation-delay: 0.45s;
+    }
+  }
+
+  // ─── Variantes d'entrée ─────────────────────────────────────────
+  // Chaque slide se voit assigner une de ces 4 signatures (cycle par index),
+  // pour que le carrousel ne fasse jamais deux fois la même animation d'affilée.
+  .content--rise {
+    --slide-anim: rise-in;
+  }
+  .content--slide-left {
+    --slide-anim: rise-in-left;
+  }
+  .content--slide-right {
+    --slide-anim: rise-in-right;
+  }
+  .content--zoom {
+    --slide-anim: rise-in-zoom;
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes rise-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-38px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes rise-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(38px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes rise-in-zoom {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.9rem;
+    color: var(--color-text-on-primary);
+
+    &--primary {
+      background: var(--color-primary);
+    }
+    &--accent {
+      background: var(--color-accent);
+    }
+    &--success {
+      background: var(--color-success);
+    }
+    &--danger {
+      background: var(--color-danger);
+    }
+  }
+
+  .title {
+    font-family: var(--font-main);
+    font-weight: 700;
+    font-size: 2.75rem;
+    line-height: 1.1;
+    margin: 0 0 0.6rem;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+
+    @include respond("tablet") {
+      font-size: 2rem;
+    }
+
+    @include respond("mobile") {
+      font-size: 1.45rem;
+      margin-bottom: 0.4rem;
+    }
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: var(--color-photo-text-secondary);
+    margin: 0 0 1.1rem;
+    max-width: 480px;
+
+    @include respond("mobile") {
+      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+    }
+  }
+
+  .highlights {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      background: var(--color-glass);
+      backdrop-filter: blur(4px);
+      font-size: 0.85rem;
+      color: var(--color-text);
+
+      svg {
+        color: var(--color-success);
+        font-size: 0.75rem;
+        flex-shrink: 0;
       }
+    }
 
-      p {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
+    @include respond("mobile") {
+      gap: 0.4rem;
+      margin-bottom: 1rem;
 
-        @include respond("tablet") {
-          font-size: 1rem;
-        }
-
-        @include respond("mobile") {
-          font-size: 0.85rem;
-          margin-bottom: 0.6rem;
-        }
-      }
-
-      button {
-        background: var(--color-accent);
-        color: #fff;
-        border: none;
-        padding: 0.8rem 1.5rem;
-        border-radius: 30px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: background var(--transition-base);
-
-        &:hover {
-          background: var(--color-primary);
-        }
-
-        @include respond("mobile") {
-          padding: 0.5rem 1rem;
-          font-size: 0.85rem;
-        }
+      li {
+        font-size: 0.75rem;
+        padding: 0.28rem 0.65rem;
       }
     }
   }
 
-  .prev,
-  .next {
+  .cta {
+    background: var(--color-accent);
+    color: var(--color-text-on-primary);
+    border: none;
+    padding: 0.9rem 2rem;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base), transform var(--transition-fast);
+
+    &:hover {
+      background: var(--color-primary);
+      transform: translateY(-2px);
+    }
+
+    @include respond("mobile") {
+      padding: 0.65rem 1.4rem;
+      font-size: 0.85rem;
+    }
+  }
+
+  .nav-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -113,8 +296,12 @@
     border-radius: 50%;
     width: 45px;
     height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+    color: var(--color-text);
     transition: background var(--transition-base);
     z-index: 3;
 
@@ -125,13 +312,12 @@
     @include respond("mobile") {
       width: 32px;
       height: 32px;
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
   }
 
   .prev {
     left: 20px;
-
     @include respond("mobile") {
       left: 10px;
     }
@@ -139,43 +325,92 @@
 
   .next {
     right: 20px;
-
     @include respond("mobile") {
       right: 10px;
     }
   }
 
-  .dots {
+  .progress {
     position: absolute;
     bottom: 20px;
-    width: 100%;
-    text-align: center;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
     z-index: 3;
 
     @include respond("mobile") {
       bottom: 10px;
+      gap: 4px;
     }
 
-    .dot {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--color-dot);
-      margin: 0 5px;
+    &__segment {
+      background: none;
+      border: none;
+      padding: 4px 0;
       cursor: pointer;
-      transition: all var(--transition-base);
 
-      &.active {
-        background: var(--color-accent);
-        transform: scale(1.2);
+      &::before {
+        content: "";
+        display: block;
+        width: 42px;
+        height: 3px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.35);
+
+        @include respond("mobile") {
+          width: 26px;
+        }
       }
+
+      &:hover::before {
+        background: rgba(255, 255, 255, 0.55);
+      }
+    }
+
+    &__fill {
+      position: relative;
+      display: block;
+      width: 42px;
+      height: 3px;
+      margin-top: -3px;
+      border-radius: 3px;
+      overflow: hidden;
+      pointer-events: none;
 
       @include respond("mobile") {
-        width: 8px;
-        height: 8px;
-        margin: 0 3px;
+        width: 26px;
       }
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--color-accent);
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+
+      &.is-done::after {
+        transform: scaleX(1);
+      }
+
+      &.is-active::after {
+        animation: fill-progress 5s linear forwards;
+      }
+
+      &.is-active.is-paused::after {
+        animation-play-state: paused;
+      }
+    }
+  }
+
+  @keyframes fill-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
     }
   }
 }

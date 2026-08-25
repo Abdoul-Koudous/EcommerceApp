@@ -17,9 +17,8 @@ import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import { deleteData, editData, postData } from "../../pages/utils/api";
 import CircularProgress from "../CircularProgress/CircularProgress";
+import { trackEvent, getSessionId } from "../../pages/utils/tracking";
 
-// ✅ NOUVEAU : retrouve la combinaison de variantes exacte dans le produit,
-// à partir d'une sélection donnée.
 const resolveVariantCombination = (product, selectedVariants) => {
   if (
     !product?.hasVariants ||
@@ -84,12 +83,9 @@ const ProductItem = ({ product }) => {
     return diffDays <= 7;
   };
 
+  // ✅ MODIFIÉ : plus de blocage sur userId undefined — un visiteur non
+  // connecté peut ajouter au panier (guestSessionId prend le relais).
   const addToCart = (productId, userId, quantity, options = {}) => {
-    if (userId === undefined) {
-      openToast("error", "Veuillez vous connecter pour ajouter au panier");
-      return false;
-    }
-
     const data = {
       productTitle: product.name,
       image: product.images[0] || "",
@@ -98,25 +94,24 @@ const ProductItem = ({ product }) => {
       discount: product.discount,
       productId,
       quantity,
-      userId,
+      userId, // peut être undefined
       rating: product.rating,
       countInStock: product.countIntStock,
       brand: product.brand,
 
-      // OPTIONS CHOISIES (ancien système)
       size: options.size,
       color: options.color,
       ram: options.ram,
       weight: options.weight,
 
-      // OPTIONS DISPONIBLES
       sizeOptions: product.size || [],
       colorOptions: product.colors || [],
       ramOptions: product.productRam || [],
       weightOptions: product.productWeight || [],
 
-      // ✅ NOUVEAU
       selectedVariants: options.selectedVariants || {},
+      // ✅ NOUVEAU
+      guestSessionId: userId ? undefined : getSessionId(),
     };
     setCartLoading(true);
 
@@ -126,6 +121,11 @@ const ProductItem = ({ product }) => {
           openToast("success", res?.message || "Produit ajouté au panier");
           setIsAdded(true);
           loadCartItems();
+          // ✅ NOUVEAU
+          trackEvent("ADD_TO_CART", {
+            productId: product._id,
+            amount: product.price * quantity,
+          });
         } else {
           openToast(
             "error",
@@ -145,7 +145,6 @@ const currentCartItem = cartItems?.find(
   (item) => (item.productId?._id || item.productId) === product._id,
 );
 
-  // ✅ NOUVEAU : sélection de variantes déjà enregistrée sur l'item du panier
   const currentSelectedVariants = useMemo(() => {
     if (!currentCartItem?.selectedVariants) return {};
     return currentCartItem.selectedVariants instanceof Map
@@ -153,8 +152,6 @@ const currentCartItem = cartItems?.find(
       : currentCartItem.selectedVariants;
   }, [currentCartItem]);
 
-  // ✅ NOUVEAU : stock max utilisable pour les boutons +/- de la carte,
-  // basé sur la combinaison déjà choisie dans le panier (si applicable)
   const maxQtyForCard = useMemo(() => {
     if (product.hasVariants && product.useVariantStock) {
       const combo = resolveVariantCombination(product, currentSelectedVariants);
@@ -193,6 +190,8 @@ const currentCartItem = cartItems?.find(
       editData("/api/cart/update-qty", {
         _id: currentCartItem._id,
         qty: newQty,
+        // ✅ NOUVEAU
+        guestSessionId: user?._id ? undefined : getSessionId(),
       })
         .then((res) => {
           if (res?.success) {
@@ -213,7 +212,12 @@ const currentCartItem = cartItems?.find(
       return;
     }
 
-    deleteData(`/api/cart/delete-cart-item/${currentCartItem._id}`)
+    // ✅ NOUVEAU : DELETE n'a pas de body, guestSessionId passe en query
+    const deleteUrl = user?._id
+      ? `/api/cart/delete-cart-item/${currentCartItem._id}`
+      : `/api/cart/delete-cart-item/${currentCartItem._id}?guestSessionId=${getSessionId()}`;
+
+    deleteData(deleteUrl)
       .then((res) => {
         if (res?.success) {
           openToast("success", "Produit retiré du panier");
@@ -239,9 +243,6 @@ const currentCartItem = cartItems?.find(
       return;
     }
 
-    // ✅ MODIFIÉ : utilise le stock de la combinaison sélectionnée si
-    // le produit a des variantes avec stock détaillé, sinon le stock
-    // global comme avant.
     if (quantity >= maxQtyForCard) {
       openToast("error", "Stock insuffisant");
       return;
@@ -256,6 +257,8 @@ const currentCartItem = cartItems?.find(
     editData("/api/cart/update-qty", {
       _id: currentCartItem._id,
       qty: newQty,
+      // ✅ NOUVEAU
+      guestSessionId: user?._id ? undefined : getSessionId(),
     })
       .then((res) => {
         if (res?.success) {
@@ -275,8 +278,6 @@ const currentCartItem = cartItems?.find(
       });
   };
 
-  // ✅ MODIFIÉ : un produit avec le nouveau système de variantes a
-  // toujours des "options" à choisir, même si l'ancien système est vide.
   const hasOptions =
     product.hasVariants && product.variants?.length > 0
       ? true
@@ -285,6 +286,7 @@ const currentCartItem = cartItems?.find(
         product.productRam?.length > 0 ||
         product.productWeight?.length > 0;
 
+  // ✅ MODIFIÉ : plus besoin d'être connecté pour ajouter au panier
   const handleAddClick = () => {
     if (hasOptions) {
       openToast("error", "Veuillez choisir les options");

@@ -9,6 +9,7 @@ import { useNavigate, Link } from "react-router";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { firebaseApp } from "../../firebase";
 import { UserContext } from "../../UserContext/UserContext";
+import { getSessionId } from "../utils/tracking";
 import { useEffect } from "react";
 const auth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
@@ -33,6 +34,9 @@ const Register = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // ⚠️ INCHANGÉ : l'inscription classique ne connecte pas directement
+  // (redirection vers /verify pour l'OTP), donc pas de fusion de panier
+  // ici — elle se fera au prochain login réel.
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -63,7 +67,10 @@ const Register = () => {
           password: null,
           avatar: user.providerData[0].photoURL,
           mobile: user.providerData[0].phoneNumber,
-          role: "UTILISATEUR"
+          role: "UTILISATEUR",
+          // ✅ NOUVEAU : cette voie CONNECTE directement (contrairement à
+          // l'inscription classique ci-dessus), donc la fusion s'applique.
+          guestSessionId: getSessionId(),
         };
 
         postData("/api/users/authWithGoogle", fields)

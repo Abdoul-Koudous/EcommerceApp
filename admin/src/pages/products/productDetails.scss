@@ -87,6 +87,91 @@
           }
         }
       }
+
+      // ✅ NOUVEAU : section Variantes (système V2)
+      .pdt-variants {
+        margin-top: 1.5rem;
+
+        h3 {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--color-text);
+          margin-bottom: 0.75rem;
+
+          .icon {
+            color: var(--color-primary);
+          }
+        }
+
+        .pdt-variants-table-wrapper {
+          overflow-x: auto;
+          border: 1px solid var(--color-border-light);
+          border-radius: 8px;
+        }
+
+        .pdt-variants-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.9rem;
+
+          th,
+          td {
+            text-align: left;
+            padding: 0.6rem 0.9rem;
+            border-bottom: 1px solid var(--color-border-light);
+            color: var(--color-text);
+            white-space: nowrap;
+          }
+
+          th {
+            color: var(--color-text-secondary);
+            font-weight: 600;
+            background: var(--color-surface-alt);
+          }
+
+          tr:last-child td {
+            border-bottom: none;
+          }
+        }
+
+        .pdt-combo-inactive {
+          opacity: 0.5;
+        }
+
+        .pdt-stock-empty {
+          color: var(--color-danger);
+          font-weight: 600;
+        }
+
+        .pdt-price-inherited {
+          color: var(--color-text-secondary);
+          font-size: 0.85rem;
+        }
+
+        .pdt-combo-status {
+          font-weight: 600;
+
+          &.active {
+            color: var(--color-success);
+          }
+
+          &.inactive {
+            color: var(--color-danger);
+          }
+        }
+
+        .pdt-no-combinations {
+          color: var(--color-text-secondary);
+          font-style: italic;
+        }
+
+        .pdt-variant-stock-note {
+          margin-top: 0.6rem;
+          font-size: 0.85rem;
+          color: var(--color-text-secondary);
+        }
+      }
     }
   }
 

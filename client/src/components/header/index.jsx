@@ -26,7 +26,8 @@ const Header = () => {
   const stickyRef = useRef(null);
 
   const { theme } = useContext(ThemeContext);
-  const { user, setUser, cartItems, categories, myListItems } = useContext(UserContext);
+  const { user, setUser, cartItems, categories, myListItems } =
+    useContext(UserContext);
   const { openToast } = useContext(ToastContext);
 
   const isLoggedIn = !!user?._id;
@@ -67,7 +68,10 @@ const Header = () => {
     const updateHeight = () => {
       if (stickyRef.current) {
         const height = stickyRef.current.offsetHeight;
-        document.documentElement.style.setProperty("--header-height", `${height}px`);
+        document.documentElement.style.setProperty(
+          "--header-height",
+          `${height}px`,
+        );
       }
     };
 
@@ -95,12 +99,12 @@ const Header = () => {
               <div className="site-header__top-right">
                 <ul>
                   <li>
-                    <Link to="track-order" className="site-header__top-link">
+                    <Link to="/track-order" className="site-header__top-link">
                       Suivre la commande
                     </Link>
                   </li>
                   <li>
-                    <Link to="help-center" className="site-header__top-link">
+                    <Link to="/help-center" className="site-header__top-link">
                       Centre d'aide
                     </Link>
                   </li>
@@ -143,15 +147,22 @@ const Header = () => {
                   </div>
                 ) : (
                   <li className="site-header__user-menu">
-                    <div className="site-header__user-info" onClick={toggleDropdown}>
+                    <div
+                      className="site-header__user-info"
+                      onClick={toggleDropdown}
+                    >
                       <img
                         src={user?.avatar || "/user.jpg"}
                         alt="User"
                         className="site-header__user-avatar"
                       />
                       <div className="site-header__user-details">
-                        <span className="site-header__user-name">{user?.name}</span>
-                        <span className="site-header__user-email">{user?.email}</span>
+                        <span className="site-header__user-name">
+                          {user?.name}
+                        </span>
+                        <span className="site-header__user-email">
+                          {user?.email}
+                        </span>
                       </div>
                     </div>
 
@@ -178,9 +189,14 @@ const Header = () => {
                   </li>
                 )}
 
-                <li className="site-header__icon-box" onClick={() => navigate("/account/wishlist")}>
+                <li
+                  className="site-header__icon-box"
+                  onClick={() => navigate("/account/wishlist")}
+                >
                   <FaHeart className="site-header__icon" />
-                  <span className="site-header__badge">{myListItems.length}</span>
+                  <span className="site-header__badge">
+                    {myListItems.length}
+                  </span>
                   <span className="site-header__tooltip">Souhaits</span>
                 </li>
                 <li className="site-header__icon-box">

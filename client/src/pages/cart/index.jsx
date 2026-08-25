@@ -4,10 +4,11 @@ import "./cartpage.scss";
 import CartItems from "./cartitems";
 import { UserContext } from "../../UserContext/UserContext";
 import { fetchDataFromApi } from "../utils/api";
+import { getSessionId } from "../utils/tracking";
 
 const CartPage = () => {
-  const navigate = useNavigate(); // ✅ NOUVEAU : nécessaire pour la redirection
-  const { cartItems, loadCartItems } = useContext(UserContext);
+  const navigate = useNavigate();
+  const { cartItems, loadCartItems, user } = useContext(UserContext);
 
   const [totals, setTotals] = useState({
     subTotalAmt: 0,
@@ -26,7 +27,13 @@ const CartPage = () => {
       return;
     }
 
-    fetchDataFromApi("/api/payment/preview-total").then((res) => {
+    // ✅ MODIFIÉ : envoie guestSessionId si pas connecté, comme dans
+    // CartPanel.jsx — sinon total bloqué à 0 pour un visiteur anonyme.
+    const url = user?._id
+      ? "/api/payment/preview-total"
+      : `/api/payment/preview-total?guestSessionId=${getSessionId()}`;
+
+    fetchDataFromApi(url).then((res) => {
       if (!res?.error) {
         setTotals({
           subTotalAmt: res.subTotalAmt || 0,
@@ -36,10 +43,8 @@ const CartPage = () => {
         });
       }
     });
-  }, [cartItems]);
+  }, [cartItems, user]);
 
-  // ✅ NOUVEAU : le bouton n'avait aucun onClick avant, donc ne faisait
-  // strictement rien au clic.
   const handleGoToCheckout = () => {
     if (cartItems.length === 0) return;
     navigate("/checkout");

@@ -33,6 +33,10 @@ import AccountLayout from "./pages/myaccount/accountlayout";
 import SearchPage from "./components/searchs";
 import About from "./pages/about";
 import Contact from "./pages/contact";
+import Blog from "./pages/blog";
+import BlogDetails from "./pages/blog/details";
+import TrackOrder from "./pages/trackorder";
+import HelpCenter from "./pages/helpcenter";
 
 function App() {
   return (
@@ -46,6 +50,10 @@ function App() {
 
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogDetails />} />
+          <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/help-center" element={<HelpCenter />} />
 
           {/* ✅ accessibles uniquement si NON connecté */}
           <Route

@@ -2,15 +2,22 @@ import cartProductModel from "../models/cartproduct.model.js";
 import ProductModel from "../models/product.model.js";
 
 // ────────────────────────────────────────────────────────────
-// ✅ Helper partagé : retrouve la combinaison de variantes exacte
-// choisie par le client parmi celles définies sur le produit, et
-// renvoie le stock/prix/sku effectifs à utiliser.
-//
-// Retourne null si le produit n'utilise pas le stock par combinaison
-// ou si aucune variante n'a été sélectionnée (comportement identique
-// à avant pour les produits simples). Retourne undefined si une
-// sélection a été fournie mais ne correspond à aucune combinaison connue.
+// ✅ Helper : construit le filtre d'identité du panier — soit par
+// compte (userId, priorité si connecté), soit par session invité
+// (guestSessionId). Centralise cette logique pour ne pas la répéter
+// dans chaque fonction.
 // ────────────────────────────────────────────────────────────
+function buildOwnerFilter(request) {
+  if (request.userId) {
+    return { userId: request.userId };
+  }
+  const guestSessionId = request.body?.guestSessionId || request.query?.guestSessionId;
+  if (guestSessionId) {
+    return { guestSessionId };
+  }
+  return null; // ni connecté, ni sessionId fourni : requête invalide
+}
+
 function resolveVariantCombination(product, selectedVariants) {
   if (
     !product.hasVariants ||
@@ -34,12 +41,6 @@ function resolveVariantCombination(product, selectedVariants) {
   return matched || undefined;
 }
 
-// ────────────────────────────────────────────────────────────
-// ✅ Helper : compare deux objets de variantes sélectionnées pour
-// savoir s'il s'agit de la MÊME combinaison (utilisé pour détecter
-// les doublons dans le panier, variante par variante — pas juste
-// par productId).
-// ────────────────────────────────────────────────────────────
 function sameSelectedVariants(a, b) {
   const objA = a instanceof Map ? Object.fromEntries(a) : a || {};
   const objB = b instanceof Map ? Object.fromEntries(b) : b || {};
@@ -53,7 +54,14 @@ function sameSelectedVariants(a, b) {
 
 export const addToCartItemController = async (req, res) => {
   try {
-    const userId = req.userId;
+    const ownerFilter = buildOwnerFilter(req);
+
+    if (!ownerFilter) {
+      return res.status(400).json({
+        message: "Identification du panier requise (connexion ou session)",
+        success: false,
+      });
+    }
 
     const {
       productTitle,
@@ -68,7 +76,7 @@ export const addToCartItemController = async (req, res) => {
       weight,
       ram,
       brand,
-      selectedVariants, // ✅ ex: { "Couleur": "Rouge", "Taille": "M" }
+      selectedVariants,
     } = req.body;
 
     if (!productId || !quantity || !price) {
@@ -80,8 +88,6 @@ export const addToCartItemController = async (req, res) => {
 
     const qty = Number(quantity);
 
-    // ✅ On récupère le produit réel pour vérifier le stock à la source,
-    // jamais faire confiance au stock envoyé par le front.
     const product = await ProductModel.findById(productId);
 
     if (!product) {
@@ -126,7 +132,6 @@ export const addToCartItemController = async (req, res) => {
       }
     }
 
-    // ✅ Vérification du stock AVANT ajout au panier
     if (qty > countInStock) {
       return res.status(400).json({
         message:
@@ -137,11 +142,7 @@ export const addToCartItemController = async (req, res) => {
       });
     }
 
-    // ✅ CORRIGÉ : on ne bloque plus sur productId seul — un même produit
-    // avec DEUX variantes différentes (ex: Rouge et Noir) doit pouvoir
-    // coexister comme deux lignes distinctes dans le panier. On ne bloque
-    // que si c'est vraiment LA MÊME combinaison déjà présente.
-    const existingItems = await cartProductModel.find({ userId, productId });
+    const existingItems = await cartProductModel.find({ ...ownerFilter, productId });
     const exists = existingItems.find((item) =>
       sameSelectedVariants(item.selectedVariants, selectedVariants),
     );
@@ -161,7 +162,7 @@ export const addToCartItemController = async (req, res) => {
       subTotal: qty * effectivePrice,
       productId,
       countInStock,
-      userId,
+      ...ownerFilter, // userId OU guestSessionId, jamais les deux
       oldPrice,
       discount,
       rating,
@@ -193,12 +194,16 @@ export const addToCartItemController = async (req, res) => {
 
 export const getCartItemController = async (request, response) => {
   try {
-    const userId = request.userId;
+    const ownerFilter = buildOwnerFilter(request);
+
+    if (!ownerFilter) {
+      // Pas d'erreur bloquante ici : un visiteur tout juste arrivé, sans
+      // sessionId encore généré côté front, a simplement un panier vide.
+      return response.json({ data: [], error: false, success: true });
+    }
 
     const cartItems = await cartProductModel
-      .find({
-        userId: userId,
-      })
+      .find(ownerFilter)
       .populate("productId");
     return response.json({
       data: cartItems,
@@ -216,7 +221,15 @@ export const getCartItemController = async (request, response) => {
 
 export const updateCartItemController = async (req, res) => {
   try {
-    const userId = req.userId;
+    const ownerFilter = buildOwnerFilter(req);
+
+    if (!ownerFilter) {
+      return res.status(400).json({
+        message: "Identification du panier requise (connexion ou session)",
+        success: false,
+      });
+    }
+
     const { _id, qty, size, color, ram, weight, selectedVariants } = req.body;
 
     if (!_id) {
@@ -226,7 +239,7 @@ export const updateCartItemController = async (req, res) => {
       });
     }
 
-    const cartItem = await cartProductModel.findOne({ _id, userId });
+    const cartItem = await cartProductModel.findOne({ _id, ...ownerFilter });
 
     if (!cartItem) {
       return res.status(404).json({
@@ -244,8 +257,6 @@ export const updateCartItemController = async (req, res) => {
       });
     }
 
-    // ✅ Si le client change de variante, on utilise la NOUVELLE sélection
-    // envoyée ; sinon on retombe sur celle déjà enregistrée sur l'item.
     const nextSelectedVariants =
       selectedVariants !== undefined
         ? selectedVariants
@@ -253,12 +264,9 @@ export const updateCartItemController = async (req, res) => {
           ? Object.fromEntries(cartItem.selectedVariants)
           : {};
 
-    // ✅ Si la variante change, il faut vérifier qu'on ne crée pas un
-    // doublon avec une AUTRE ligne déjà présente dans le panier pour
-    // cette même combinaison.
     if (selectedVariants !== undefined) {
       const otherItems = await cartProductModel.find({
-        userId,
+        ...ownerFilter,
         productId: cartItem.productId,
         _id: { $ne: _id },
       });
@@ -317,7 +325,7 @@ export const updateCartItemController = async (req, res) => {
     const newQty = Math.min(Math.max(1, Number(qty || cartItem.quantity)), maxStock);
 
     const updated = await cartProductModel.findOneAndUpdate(
-      { _id, userId },
+      { _id, ...ownerFilter },
       {
         quantity: newQty,
         subTotal: newQty * effectivePrice,
@@ -344,9 +352,18 @@ export const updateCartItemController = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
 export const deleteCartItemQtyController = async (req, res) => {
   try {
-    const userId = req.userId;
+    const ownerFilter = buildOwnerFilter(req);
+
+    if (!ownerFilter) {
+      return res.status(400).json({
+        message: "Identification du panier requise (connexion ou session)",
+        success: false,
+      });
+    }
+
     const { id } = req.params;
 
     if (!id) {
@@ -358,7 +375,7 @@ export const deleteCartItemQtyController = async (req, res) => {
 
     const deleted = await cartProductModel.deleteOne({
       _id: id,
-      userId,
+      ...ownerFilter,
     });
 
     if (deleted.deletedCount === 0) {
@@ -382,9 +399,13 @@ export const deleteCartItemQtyController = async (req, res) => {
 
 export const emptyCartController = async (req, res) => {
   try {
+    // ⚠️ Cette route utilise déjà un :id dans l'URL — on garde la
+    // rétrocompatibilité en la traitant comme un userId direct, mais
+    // ce n'est utilisé qu'après connexion dans la pratique (vidage
+    // du panier après commande).
     const userId = req.params.id;
 
-    await cartProductModel.deleteMany({ userId: userId });
+    await cartProductModel.deleteMany({ userId });
 
     res.status(200).json({
       message: "Panier vidé avec succès",
@@ -396,5 +417,68 @@ export const emptyCartController = async (req, res) => {
       error: true,
       success: false,
     });
+  }
+};
+
+// ────────────────────────────────────────────────────────────
+// ✅ NOUVEAU : fusionne le panier invité (guestSessionId) dans le
+// panier du compte (userId), appelé juste après une connexion réussie.
+// Les items en doublon (même produit + même variante) sont ignorés
+// côté invité pour ne pas créer de conflit avec ce que l'utilisateur
+// avait déjà dans son panier de compte.
+// ────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────
+// ✅ Fonction pure (pas un handler de route) : fusionne le panier
+// invité (guestSessionId) dans le panier du compte (userId). Appelée
+// directement depuis loginUserController/authWithGoogle pour tout
+// faire en une seule requête de connexion, sans aller-retour réseau
+// supplémentaire côté front.
+// ────────────────────────────────────────────────────────────
+export async function mergeGuestCart(userId, guestSessionId) {
+  if (!userId || !guestSessionId) return;
+
+  const guestItems = await cartProductModel.find({ guestSessionId });
+  if (guestItems.length === 0) return;
+
+  const userItems = await cartProductModel.find({ userId });
+
+  for (const guestItem of guestItems) {
+    const duplicate = userItems.find(
+      (item) =>
+        item.productId === guestItem.productId &&
+        sameSelectedVariants(item.selectedVariants, guestItem.selectedVariants),
+    );
+
+    if (duplicate) {
+      await cartProductModel.deleteOne({ _id: guestItem._id });
+    } else {
+      await cartProductModel.updateOne(
+        { _id: guestItem._id },
+        { $set: { userId }, $unset: { guestSessionId: "" } },
+      );
+    }
+  }
+}
+
+// Route HTTP conservée (utile si on veut fusionner sans repasser par un
+// login complet, ex: sur un token déjà valide) — appelle juste la
+// fonction pure ci-dessus.
+export const mergeGuestCartController = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { guestSessionId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Connexion requise", success: false });
+    }
+
+    await mergeGuestCart(userId, guestSessionId);
+
+    return res.status(200).json({
+      message: "Panier fusionné avec succès",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, success: false });
   }
 };

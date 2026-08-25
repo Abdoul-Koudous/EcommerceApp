@@ -15,7 +15,6 @@ import AddWEIGHT from "./pages/products/addWEIGHT";
 import AddSIZE from "./pages/products/addSIZE";
 import HomeSlidePage from "./pages/HomeSliderBanners";
 import BannerV1List from "./pages/Banners";
-import BlogList from "./pages/blog";
 import Users from "./pages/Users/Users";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import AboutPage from "./pages/AboutPage/AboutPage";
@@ -23,6 +22,14 @@ import ContactPage from "./pages/ContactPage/ContactPage";
 import ContactMessages from "./pages/ContactMessages/ContactMessages";
 import Orders from "./pages/Orders";
 import Settings from "./pages/Settings/Settings";
+import Campaigns from "./pages/Campaigns/Campaigns";
+import Analytics from "./pages/Analytics/Analytics";
+import HelpFaqList from "./pages/help-faq/HelpFaqList";
+
+
+// ✅ AJOUT : import manquant — BlogList gère elle-même l'ouverture
+// des modales AddBlog / EditBlog, donc pas besoin de les importer ici
+import BlogList from "./pages/blog";
 
 function App() {
   return (
@@ -69,16 +76,42 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/blogs/lists"
+                <Route
+          path="/analytics"
           element={
             <ProtectedRoute>
               <AdminLayout>
-                <BlogList />
+                <Analytics />
               </AdminLayout>
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/help-faq/lists"
+  element={
+    <ProtectedRoute>
+      <AdminLayout>
+        <HelpFaqList />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
+
+        {/* === Blog : une seule route, Add/Edit s'ouvrent en modale === */}
+        <Route
+  path="/blogs/lists"
+  element={
+    <ProtectedRoute>
+      <AdminLayout>
+        <BlogList />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
+        {/* ❌ SUPPRIMÉ : /blog/add et /blog/edit/:id — plus utilisées,
+            AddBlog et EditBlog sont maintenant des modales ouvertes
+            depuis BlogList, comme AddProduct/EditProduct pour Products */}
+
         <Route
           path="/products/RAM/add"
           element={
@@ -209,6 +242,16 @@ function App() {
             <ProtectedRoute>
               <AdminLayout>
                 <Settings />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/campaigns"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <Campaigns />
               </AdminLayout>
             </ProtectedRoute>
           }

@@ -1,0 +1,292 @@
+// ===== Liste =====
+.blog-list {
+  font-family: "Poppins", sans-serif;
+  padding: 1.5rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__add-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: var(--radius-md, 8px);
+    padding: 0.55rem 1rem;
+    text-decoration: none;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  &__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__search {
+    display: flex;
+    gap: 0.5rem;
+
+    input {
+      border: 1px solid var(--border-color, #e2e2e2);
+      border-radius: var(--radius-sm, 4px);
+      padding: 0.45rem 0.7rem;
+      min-width: 220px;
+    }
+
+    button {
+      border: 1px solid var(--color-primary);
+      background: transparent;
+      color: var(--color-primary);
+      border-radius: var(--radius-sm, 4px);
+      padding: 0.45rem 0.9rem;
+      cursor: pointer;
+
+      &:hover {
+        background: var(--color-primary);
+        color: #fff;
+      }
+    }
+  }
+
+  &__categories {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+
+    button {
+      border: 1px solid var(--border-color, #e2e2e2);
+      background: #fff;
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+
+      &.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+      }
+    }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: var(--radius-md, 8px);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+
+    th,
+    td {
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color, #eee);
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--bg-subtle, #f7f7f9);
+      font-weight: 600;
+    }
+  }
+
+  &__thumb {
+    width: 56px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: var(--radius-sm, 4px);
+  }
+
+  &__star {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-primary);
+    font-size: 1rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+
+    a,
+    button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--text-muted, #555);
+
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  &__pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+
+    button {
+      border: 1px solid var(--border-color, #e2e2e2);
+      background: #fff;
+      border-radius: var(--radius-sm, 4px);
+      padding: 0.35rem 0.8rem;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__loading,
+  &__empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted, #888);
+  }
+}
+
+// ===== Formulaire =====
+.blog-form {
+  font-family: "Poppins", sans-serif;
+  padding: 1.5rem;
+
+  &__loading {
+    padding: 2rem;
+    text-align: center;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__save {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--color-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md, 8px);
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main,
+  &__sidebar {
+    background: #fff;
+    border-radius: var(--radius-md, 8px);
+    box-shadow: var(--shadow-card);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__section-title {
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-top: 0.5rem;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted, #555);
+  }
+
+  input[type="text"],
+  textarea {
+    border: 1px solid var(--border-color, #e2e2e2);
+    border-radius: var(--radius-sm, 4px);
+    padding: 0.55rem 0.7rem;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+  }
+
+  &__checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+
+    input {
+      width: auto;
+    }
+  }
+
+  &__cover {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    img {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: var(--radius-sm, 4px);
+    }
+  }
+
+  &__cover-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-subtle, #f7f7f9);
+    border-radius: var(--radius-sm, 4px);
+    color: var(--text-muted, #ccc);
+    font-size: 2rem;
+  }
+}

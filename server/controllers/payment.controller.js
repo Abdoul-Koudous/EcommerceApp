@@ -7,107 +7,7 @@ import ProductModel from "../models/product.model.js";
 import AddressModel from "../models/address.model.js";
 import kkiapayClient from "../config/kkiapay.js";
 import { calculateOrderTotals } from "../services/pricing.service.js";
-
-// 📉 Décrémente le stock des produits commandés (utilisé par les trois
-// méthodes de paiement).
-//
-// ✅ NOUVEAU : si un item a une combinaison de variantes sélectionnée
-// (produit avec hasVariants + useVariantStock), on décrémente AUSSI le
-// stock spécifique de cette combinaison, en plus du stock global du
-// produit — cohérent avec la vérification faite côté panier.
-// 📉 Décrémente le stock des produits commandés (utilisé par les trois
-// méthodes de paiement).
-//
-// ✅ Si un item a une combinaison de variantes sélectionnée (produit avec
-// hasVariants + useVariantStock), on décrémente le stock de CETTE
-// combinaison précise, puis on RECALCULE countIntStock comme la somme
-// des stocks de toutes les combinaisons actives — countIntStock devient
-// ainsi un total toujours synchronisé, jamais désynchronisé manuellement.
-const decrementStock = async (products) => {
-  // 1. Produits SANS variantes à stock détaillé : décrément direct classique
-  const simpleBulkOps = [];
-
-  for (const item of products) {
-    const selectedVariants =
-      item.selectedVariants instanceof Map
-        ? Object.fromEntries(item.selectedVariants)
-        : item.selectedVariants || {};
-
-    const hasSelectedVariants =
-      selectedVariants && Object.keys(selectedVariants).length > 0;
-
-    if (!hasSelectedVariants) {
-      // Produit simple ou ancien système : comportement inchangé
-      simpleBulkOps.push({
-        updateOne: {
-          filter: { _id: item.productId },
-          update: { $inc: { countIntStock: -item.quantity } },
-        },
-      });
-      continue;
-    }
-
-    // 2. Produit avec variante sélectionnée : on décrémente la combinaison
-    // précise, puis on recalcule countIntStock à partir de la somme des
-    // combinaisons actives.
-    const product = await ProductModel.findById(item.productId);
-    if (!product || !product.hasVariants || !product.useVariantStock) {
-      // Sécurité : si le produit a changé de configuration entre-temps,
-      // on retombe sur le décrément global classique plutôt que de
-      // ne rien faire.
-      simpleBulkOps.push({
-        updateOne: {
-          filter: { _id: item.productId },
-          update: { $inc: { countIntStock: -item.quantity } },
-        },
-      });
-      continue;
-    }
-
-    const comboIndex = product.variantCombinations.findIndex((combo) => {
-      const comboObj = Object.fromEntries(combo.combination);
-      return (
-        Object.keys(selectedVariants).length === Object.keys(comboObj).length &&
-        Object.entries(selectedVariants).every(
-          ([key, val]) => comboObj[key] === val,
-        )
-      );
-    });
-
-    if (comboIndex === -1) {
-      console.warn(
-        `Combinaison introuvable pour décrément stock — produit ${item.productId}`,
-      );
-      continue;
-    }
-
-    // Décrémente la combinaison précise
-    await ProductModel.updateOne(
-      { _id: item.productId },
-      {
-        $inc: {
-          [`variantCombinations.${comboIndex}.stock`]: -item.quantity,
-        },
-      },
-    );
-
-    // ✅ Recalcule countIntStock = somme des stocks des combinaisons
-    // actives, à partir de l'état FRAIS du produit (après décrément)
-    const refreshedProduct = await ProductModel.findById(item.productId);
-    const recalculatedStock = refreshedProduct.variantCombinations
-      .filter((combo) => combo.isActive)
-      .reduce((sum, combo) => sum + Math.max(0, combo.stock), 0);
-
-    await ProductModel.updateOne(
-      { _id: item.productId },
-      { $set: { countIntStock: recalculatedStock } },
-    );
-  }
-
-  if (simpleBulkOps.length > 0) {
-    await ProductModel.bulkWrite(simpleBulkOps);
-  }
-};
+import { decrementStock } from "../services/stock.service.js"; // ✅ MODIFIÉ : importé, plus défini localement — partagé avec order.controller.js (restoreStock/decrementStock symétriques)
 
 // 📸 Résout une adresse du carnet de l'utilisateur et renvoie un snapshot
 // prêt à être stocké tel quel dans order.delivery_address.
@@ -132,8 +32,8 @@ const resolveDeliverySnapshot = async (userId, addressId) => {
   };
 };
 
-// ✅ NOUVEAU : helper partagé pour transformer un item de panier en ligne
-// de commande, en incluant la variante sélectionnée.
+// ✅ Helper partagé pour transformer un item de panier en ligne de
+// commande, en incluant la variante sélectionnée.
 const mapCartItemToOrderProduct = (item) => ({
   productId: item.productId,
   productTitle: item.productTitle,
@@ -187,7 +87,6 @@ export const verifyPaymentController = async (req, res) => {
       });
     }
 
-    // ✅ MODIFIÉ : inclut selectedVariants / selectedCombinationSku
     const products = cartItems.map(mapCartItemToOrderProduct);
 
     const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
@@ -274,7 +173,6 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       });
     }
 
-    // ✅ MODIFIÉ
     const products = cartItems.map(mapCartItemToOrderProduct);
 
     const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
@@ -351,7 +249,6 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       });
     }
 
-    // ✅ MODIFIÉ
     const products = cartItems.map(mapCartItemToOrderProduct);
 
     const { subTotalAmt, shippingAmt, taxAmt, totalAmt } =
@@ -375,6 +272,13 @@ export const createCashOnDeliveryOrder = async (req, res) => {
 
     const savedOrder = await order.save();
 
+    // 📉 Décrémenter le stock (commande ferme, même si paiement différé) —
+    // ⚠️ le stock est bien retiré immédiatement à la commande, PAS à la
+    // livraison. Ce qui change avec notre correction, c'est uniquement le
+    // moment où l'event PURCHASE compte dans les Analytics (confirmed:
+    // false ici, confirmé plus tard côté order.controller.js quand
+    // order_status passe à "Livrée"). Le stock, lui, reste réservé dès la
+    // commande — cohérent avec "commande ferme" même si le paiement est différé.
     await decrementStock(products);
 
     await CartProductModel.deleteMany({ userId });
@@ -397,10 +301,29 @@ export const createCashOnDeliveryOrder = async (req, res) => {
 
 export const getOrderPreviewController = async (req, res) => {
   try {
-    const userId = req.userId;
     const { city } = req.query;
 
-    const cartItems = await CartProductModel.find({ userId });
+    // ✅ MODIFIÉ : supporte le panier invité, comme cart.controller.js —
+    // sinon le total reste à 0 pour un visiteur non connecté.
+    const ownerFilter = req.userId
+      ? { userId: req.userId }
+      : req.query.guestSessionId
+        ? { guestSessionId: req.query.guestSessionId }
+        : null;
+
+    if (!ownerFilter) {
+      return res.status(200).json({
+        error: false,
+        success: true,
+        subTotalAmt: 0,
+        shippingAmt: 0,
+        taxAmt: 0,
+        totalAmt: 0,
+        currency: "FCFA",
+      });
+    }
+
+    const cartItems = await CartProductModel.find(ownerFilter);
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(200).json({

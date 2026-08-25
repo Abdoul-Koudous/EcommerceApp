@@ -9,6 +9,13 @@ import AddHomeSlide from "./addHomeSlide";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import PaginationPro from "../../components/paginnationpro/paginationpro";
 
+const formatDate = (value) => {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("fr-FR");
+};
+
 const HomeSlidePage = () => {
   const [slides, setSlides] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -22,10 +29,9 @@ const HomeSlidePage = () => {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(3);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Charger les slides depuis l'API
   const loadSlides = async () => {
     setLoadingSlides(true);
     try {
@@ -45,29 +51,27 @@ const HomeSlidePage = () => {
     loadSlides();
   }, [currentPage, itemsPerPage]);
 
-  // Supprimer un slide unique
   const handleDeleteClick = (_id) => {
     setToDeleteId(_id);
     setConfirmOpen(true);
   };
 
-  // Supprimer un ou plusieurs slides
   const handleConfirmDelete = async () => {
     try {
       if (toDeleteId) {
-        // Suppression d'un seul slide
         const res = await deleteData(`/api/homeSlide/${toDeleteId}`);
         if (res?.success) {
-          setSlides(prev => prev.filter(slide => slide._id !== toDeleteId));
+          setSlides((prev) => prev.filter((slide) => slide._id !== toDeleteId));
           openToast("success", res.message || "Slide supprimé avec succès");
         } else {
           openToast("error", res?.message || "Erreur suppression slide");
         }
       } else if (selected.length > 0) {
-        // Suppression multiple
-        const res = await deleteData("/api/homeSlide/deleteMultipleSlides", { ids: selected });
+        const res = await deleteData("/api/homeSlide/deleteMultipleSlides", {
+          ids: selected,
+        });
         if (!res?.error) {
-          setSlides(prev => prev.filter(slide => !selected.includes(slide._id)));
+          setSlides((prev) => prev.filter((slide) => !selected.includes(slide._id)));
           setSelected([]);
           openToast("success", res.message || "Slides supprimés avec succès");
         } else {
@@ -87,23 +91,28 @@ const HomeSlidePage = () => {
     setConfirmOpen(false);
   };
 
-  // Sélection d'un slide ou plusieurs
   const toggleSelect = (_id) => {
-    setSelected(prev => prev.includes(_id) ? prev.filter(id => id !== _id) : [...prev, _id]);
+    setSelected((prev) =>
+      prev.includes(_id) ? prev.filter((id) => id !== _id) : [...prev, _id]
+    );
   };
 
   const toggleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelected(slides.map(s => s._id));
-    } else {
-      setSelected([]);
-    }
+    setSelected(e.target.checked ? slides.map((s) => s._id) : []);
   };
 
-  // Éditer un slide
   const handleEdit = (slide) => {
     setCurrentSlide(slide);
     setOpenEdit(true);
+  };
+
+  // Un slide est "en diffusion" seulement si actif ET dans sa fenêtre de dates
+  const isCurrentlyLive = (slide) => {
+    if (!slide.isActive) return false;
+    const now = new Date();
+    if (slide.startDate && new Date(slide.startDate) > now) return false;
+    if (slide.endDate && new Date(slide.endDate) < now) return false;
+    return true;
   };
 
   return (
@@ -122,7 +131,9 @@ const HomeSlidePage = () => {
               <FaTrash /> Supprimer ({selected.length})
             </button>
           )}
-          <button className="hsl-btn hsl-btn-add" onClick={() => setOpenAdd(true)}>Ajouter</button>
+          <button className="hsl-btn hsl-btn-add" onClick={() => setOpenAdd(true)}>
+            Ajouter
+          </button>
         </div>
       </div>
 
@@ -141,6 +152,11 @@ const HomeSlidePage = () => {
                   />
                 </th>
                 <th>Image</th>
+                <th>Titre</th>
+                <th>Badge</th>
+                <th>Diffusion</th>
+                <th>Ordre</th>
+                <th>Statut</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -155,26 +171,59 @@ const HomeSlidePage = () => {
                     />
                   </td>
                   <td>
-                    {/* ✅ wrapper .hsl-thumb branché — plus d'image affichée à sa taille native */}
                     <div className="hsl-thumb">
-                      <img src={slide.images?.[0]} alt="Slide" />
+                      <img src={slide.images?.[0]} alt={slide.title || "Slide"} />
                     </div>
                   </td>
                   <td>
+                    <div className="hsl-title-cell">
+                      <span className="hsl-title-main">{slide.title || "—"}</span>
+                      {slide.subtitle && (
+                        <span className="hsl-title-sub">{slide.subtitle}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    {slide.badgeText ? (
+                      <span className={`hsl-badge hsl-badge-${slide.badgeColor || "accent"}`}>
+                        {slide.badgeText}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td>
+                    <span className="hsl-dates">
+                      {formatDate(slide.startDate)} → {formatDate(slide.endDate)}
+                    </span>
+                  </td>
+                  <td>{slide.order ?? 0}</td>
+                  <td>
+                    <span
+                      className={`hsl-status ${
+                        isCurrentlyLive(slide) ? "hsl-status-live" : "hsl-status-off"
+                      }`}
+                    >
+                      {isCurrentlyLive(slide) ? "En ligne" : "Hors ligne"}
+                    </span>
+                  </td>
+                  <td>
                     <FaEdit className="hsl-icon hsl-icon-edit" onClick={() => handleEdit(slide)} />
-                    <FaTrash className="hsl-icon hsl-icon-delete" onClick={() => handleDeleteClick(slide._id)} />
+                    <FaTrash
+                      className="hsl-icon hsl-icon-delete"
+                      onClick={() => handleDeleteClick(slide._id)}
+                    />
                   </td>
                 </tr>
               ))}
               {slides.length === 0 && (
                 <tr>
-                  <td colSpan={3}>Aucun slide trouvé</td>
+                  <td colSpan={8}>Aucun slide trouvé</td>
                 </tr>
               )}
             </tbody>
           </table>
 
-          {/* Pagination */}
           <div className="hsl-table-footer">
             <div className="hsl-items-selector">
               <label>Afficher</label>
@@ -204,15 +253,13 @@ const HomeSlidePage = () => {
         </div>
       )}
 
-      {/* Ajouter un slide */}
       {openAdd && (
         <AddHomeSlide
           onClose={() => setOpenAdd(false)}
-          onAddSlide={(newSlide) => setSlides(prev => [...prev, newSlide])}
+          onAddSlide={() => loadSlides()}
         />
       )}
 
-      {/* Éditer un slide */}
       {openEdit && currentSlide && (
         <EditHomeSlide
           slide={currentSlide}
@@ -220,13 +267,10 @@ const HomeSlidePage = () => {
             setOpenEdit(false);
             setCurrentSlide(null);
           }}
-          onUpdateSlide={(updatedSlide) => {
-            setSlides(prev => prev.map(s => s._id === updatedSlide._id ? updatedSlide : s));
-          }}
+          onUpdateSlide={() => loadSlides()}
         />
       )}
 
-      {/* Confirmation suppression */}
       <ConfirmDialog
         open={confirmOpen}
         message={

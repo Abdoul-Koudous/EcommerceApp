@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, useContext } from "react";
 import { fetchDataFromApi } from "../pages/utils/api";
+import { getSessionId } from "../pages/utils/tracking";
 import { ToastContext } from "../context/ToastContext";
 
 // Création du contexte
@@ -117,9 +118,21 @@ export const UserProvider = ({ children }) => {
   // =========================
   // CART
   // =========================
+  // ✅ MODIFIÉ : le panier est accessible sans connexion. Si l'utilisateur
+  // n'est pas connecté, on envoie guestSessionId pour que le backend
+  // (optionalAuth + buildOwnerFilter) retrouve le bon panier.
+  //
+  // ⚠️ Il n'y a plus de fonction mergeGuestCart ici : la fusion du panier
+  // invité vers le compte se fait désormais directement côté serveur, dans
+  // loginUserController/authWithGoogle, en une seule requête de connexion
+  // (le front envoie guestSessionId dans le payload de login).
   const loadCartItems = async () => {
     try {
-      const res = await fetchDataFromApi("/api/cart/get");
+      const url = user?._id
+        ? "/api/cart/get"
+        : `/api/cart/get?guestSessionId=${getSessionId()}`;
+
+      const res = await fetchDataFromApi(url);
 
       console.log("🛒 CART RESPONSE:", res);
 
@@ -158,12 +171,18 @@ export const UserProvider = ({ children }) => {
     loadUser();
   }, []);
 
+  // ✅ Le panier se charge TOUJOURS (connecté ou non), une fois que
+  // loadUser a fini de vérifier la session (loading devient false).
+  // Les favoris restent réservés aux comptes connectés.
   useEffect(() => {
+    if (loading) return; // attend que loadUser ait fini son premier check
+
+    loadCartItems();
+
     if (user?._id) {
-      loadCartItems();
       loadMyListItems();
     }
-  }, [user]);
+  }, [user, loading]);
 
   return (
     <UserContext.Provider
@@ -186,7 +205,7 @@ export const UserProvider = ({ children }) => {
         setProducts,
         loadProducts,
 
-        loading, // ✅ pour ProtectedRoute / GuestOnlyRoute
+        loading,
         loadUser,
       }}
     >

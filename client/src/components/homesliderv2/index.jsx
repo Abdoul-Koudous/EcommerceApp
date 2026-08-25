@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { fetchDataFromApi } from "../../pages/utils/api";
 import "./homesliderv2.scss";
 
@@ -8,6 +9,9 @@ const HomeBannerV2 = () => {
   const [bannerProducts, setBannerProducts] = useState([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const longPressTimer = useRef(null);
+  const navigate = useNavigate();
 
   // 🔹 Récupération des produits à afficher dans la bannière
   useEffect(() => {
@@ -28,14 +32,37 @@ const HomeBannerV2 = () => {
     fetchBannerProducts();
   }, []);
 
-  // 🔹 Défilement automatique
+  // 🔹 Défilement automatique — suspendu tant que isPaused est vrai
   useEffect(() => {
-    if (bannerProducts.length === 0) return;
+    if (bannerProducts.length === 0 || isPaused) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % bannerProducts.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, [bannerProducts]);
+  }, [bannerProducts, isPaused]);
+
+  // 🔹 Nettoyage du timer d'appui long si le composant se démonte
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+  }, []);
+
+  // 🔹 Petits écrans / tactile : appui long sur le slide (pas juste le
+  // bouton) met en pause. Court appui = tap normal (ex: navigation).
+  const handleTouchStart = () => {
+    longPressTimer.current = setTimeout(() => {
+      setIsPaused(true);
+    }, 400);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setIsPaused(false);
+  };
 
   const nextSlide = () =>
     setCurrent((prev) => (prev + 1) % bannerProducts.length);
@@ -48,6 +75,9 @@ const HomeBannerV2 = () => {
   if (bannerProducts.length === 0) return <p>Aucun produit en bannière.</p>;
 
   const currentSlide = bannerProducts[current];
+
+  // 🔹 Même destination que le clic sur une carte produit (ProductItem)
+  const goToProduct = () => navigate(`/product/${currentSlide._id}`);
 
   return (
     <div className="home-banner-v2">
@@ -66,6 +96,9 @@ const HomeBannerV2 = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
         >
           <div className="slide-content">
             <motion.p
@@ -104,9 +137,12 @@ const HomeBannerV2 = () => {
               </h3>
             </motion.div>
 
-            {/* ✅ Bouton original */}
+            {/* ✅ Bouton original, maintenant cliquable vers la page produit */}
             <motion.button
               className="slide-btn"
+              onClick={goToProduct}
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.3, duration: 0.6 }}

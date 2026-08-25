@@ -1,0 +1,176 @@
+// admin/src/pages/Campaigns/campaignAnalyticsPanel.scss
+.cap-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+}
+
+.cap-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 90%;
+  max-width: 700px;
+  height: 100vh;
+  background: var(--color-surface);
+  z-index: 2001;
+  overflow-y: auto;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+
+  .cap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--color-border-light);
+    background: var(--color-surface-alt);
+
+    h3 {
+      font-size: 1.2rem;
+      color: var(--color-text);
+    }
+
+    .cap-subtitle {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+    }
+
+    .cap-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  .cap-body {
+    padding: 1.5rem;
+  }
+
+  .cap-loading {
+    display: flex;
+    justify-content: center;
+    padding: 3rem;
+  }
+
+  .cap-empty {
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .cap-best-channel {
+    background: var(--color-surface-alt);
+    border-left: 3px solid var(--color-primary);
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .cap-funnel-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+
+    .cap-funnel-header,
+    .cap-funnel-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr 1fr 0.8fr 0.8fr 1fr 1.2fr;
+      gap: 0.6rem;
+      align-items: center;
+      min-width: 600px;
+    }
+
+    .cap-funnel-header {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      padding: 0 0.6rem;
+    }
+
+    .cap-funnel-row {
+      padding: 0.6rem;
+      background: var(--color-surface-alt);
+      border-radius: 8px;
+      font-size: 0.85rem;
+
+      .cap-conversion {
+        font-weight: 600;
+        color: var(--color-primary);
+      }
+
+      .cap-revenue {
+        font-weight: 600;
+      }
+    }
+  }
+
+  .cap-channel-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: white;
+    width: fit-content;
+
+    &.cap-whatsapp { background: #25d366; }
+    &.cap-instagram { background: #e1306c; }
+    &.cap-facebook { background: #1877f2; }
+    &.cap-tiktok { background: #000; }
+    &.cap-direct { background: var(--color-text-secondary); }
+  }
+
+  .cap-funnel-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+
+    .cap-funnel-bar-group {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+
+      .cap-funnel-bar-label {
+        width: 90px;
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+        flex-shrink: 0;
+      }
+
+      .cap-funnel-bar-track {
+        flex: 1;
+        background: var(--color-surface-alt);
+        border-radius: 6px;
+        overflow: hidden;
+        height: 28px;
+      }
+
+      .cap-funnel-bar {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding-left: 0.6rem;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 600;
+        min-width: 30px;
+        transition: width 0.3s ease;
+
+        &.cap-whatsapp { background: #25d366; }
+        &.cap-instagram { background: #e1306c; }
+        &.cap-facebook { background: #1877f2; }
+        &.cap-tiktok { background: #000; }
+        &.cap-direct { background: var(--color-text-secondary); }
+      }
+    }
+  }
+}

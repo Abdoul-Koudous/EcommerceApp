@@ -1,0 +1,242 @@
+// ============================================================
+// Détail d'article — complète blog.scss (importé en plus de ce
+// fichier). Réutilise .seal-tag, .blog-hero__scrim/__sep/__meta,
+// .blog-grid et .blog-card pour rester visuellement cohérent
+// avec la page liste.
+// ============================================================
+
+.article-page__container {
+  max-width: 960px;
+}
+
+// --- Hero (plus compact que celui de la liste) --------------------------
+.article-hero {
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+
+  &__media {
+    position: absolute;
+    inset: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__content {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    padding: 40px 24px;
+    margin: 0 auto;
+    width: 100%;
+    color: var(--color-text-on-primary);
+
+    h1 {
+      font-size: clamp(24px, 3.6vw, 34px);
+      line-height: 1.2;
+      font-weight: 700;
+      margin: 14px 0 12px;
+    }
+  }
+}
+
+// --- Fil d'Ariane -----------------------------------------------------------
+.article-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 28px 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+
+  a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+}
+
+// --- Mise en page corps + aside ---------------------------------------------
+.article-layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 48px;
+  align-items: start;
+
+  @media (max-width: 780px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// --- Corps de l'article -------------------------------------------------------
+.article-body {
+  font-size: 15.5px;
+  line-height: 1.75;
+  color: var(--color-text);
+
+  &__paragraph {
+    margin: 0 0 20px;
+  }
+
+  &__heading {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 36px 0 14px;
+  }
+
+  &__quote {
+    margin: 28px 0;
+    padding: 4px 0 4px 20px;
+    border-left: 3px solid var(--color-primary);
+    font-size: 17px;
+    font-style: italic;
+    color: var(--color-text);
+  }
+
+  &__figure {
+    margin: 28px 0;
+
+    img {
+      width: 100%;
+      border-radius: var(--radius-md);
+      display: block;
+    }
+
+    figcaption {
+      margin-top: 8px;
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+      text-align: center;
+    }
+  }
+
+  &__list {
+    margin: 0 0 20px;
+    padding-left: 20px;
+
+    li {
+      margin-bottom: 8px;
+    }
+  }
+}
+
+.article-tags {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+// --- Aside : auteur + partage -------------------------------------------------
+.article-aside {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  @media (max-width: 780px) {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.article-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  &__role {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+}
+
+.article-share {
+  p {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+  }
+
+  &__links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    a,
+    button {
+      font-family: var(--font-main);
+      text-align: left;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 9px 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+    }
+  }
+}
+
+// --- Articles liés -------------------------------------------------------------
+.article-related {
+  margin-top: 72px;
+  padding-top: 40px;
+  border-top: 1px solid var(--color-border-light);
+
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 24px;
+  }
+
+  .blog-grid {
+    grid-template-columns: repeat(3, 1fr);
+
+    @media (max-width: 780px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}

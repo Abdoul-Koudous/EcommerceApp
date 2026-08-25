@@ -2,11 +2,9 @@ import React, { useContext } from "react";
 import { FaTrash, FaStar, FaRegStar } from "react-icons/fa";
 import { UserContext } from "../../UserContext/UserContext";
 import { deleteData, editData } from "../../pages/utils/api";
+import { getSessionId } from "../utils/tracking";
 import "./cartitems.scss";
 
-// ✅ NOUVEAU : retrouve la combinaison de variantes exacte dans le
-// produit vivant (liveProduct), à partir de la sélection stockée sur
-// l'item du panier.
 const resolveVariantCombination = (product, selectedVariants) => {
   if (
     !product?.hasVariants ||
@@ -29,10 +27,17 @@ const resolveVariantCombination = (product, selectedVariants) => {
 };
 
 const CartItems = () => {
-  const { cartItems, loadCartItems } = useContext(UserContext);
+  // ✅ NOUVEAU : besoin de user pour savoir si on doit passer guestSessionId
+  const { user, cartItems, loadCartItems } = useContext(UserContext);
 
   const handleRemove = (id) => {
-    deleteData(`/api/cart/delete-cart-item/${id}`)
+    // ✅ NOUVEAU : DELETE n'a pas de body — le guestSessionId doit être
+    // passé en query string pour que buildOwnerFilter le retrouve côté serveur.
+    const url = user?._id
+      ? `/api/cart/delete-cart-item/${id}`
+      : `/api/cart/delete-cart-item/${id}?guestSessionId=${getSessionId()}`;
+
+    deleteData(url)
       .then(() => loadCartItems())
       .catch(() => console.log("Erreur suppression"));
   };
@@ -41,6 +46,8 @@ const CartItems = () => {
     editData("/api/cart/update-qty", {
       _id: id,
       ...data,
+      // ✅ NOUVEAU
+      guestSessionId: user?._id ? undefined : getSessionId(),
     })
       .then(() => loadCartItems())
       .catch(() => console.log("Erreur update"));
@@ -79,8 +86,6 @@ const CartItems = () => {
           const liveProduct = item.productId;
           const isProductDeleted = !liveProduct;
 
-          // ✅ NOUVEAU : normalise selectedVariants (Map Mongoose ou objet
-          // simple selon la sérialisation) en objet JS classique.
           const itemSelectedVariants = item.selectedVariants
             ? item.selectedVariants instanceof Map
               ? Object.fromEntries(item.selectedVariants)
@@ -96,8 +101,6 @@ const CartItems = () => {
             ? resolveVariantCombination(liveProduct, itemSelectedVariants)
             : null;
 
-          // ✅ CORRIGÉ : le stock affiché tient compte de la combinaison
-          // précise choisie, pas seulement du stock global du produit.
           const realStock = isProductDeleted
             ? 0
             : liveProduct.hasVariants && liveProduct.useVariantStock
@@ -108,8 +111,6 @@ const CartItems = () => {
           const isOutOfStock = maxQty === 0;
           const isQuantityTooHigh = !isOutOfStock && item.quantity > maxQty;
 
-          // Ancien système (affiché seulement si le produit n'utilise pas
-          // le nouveau système de variantes)
           const availableSizes =
             liveProduct?.size?.length > 0 ? liveProduct.size : item.sizeOptions || [];
           const availableColors =
@@ -149,9 +150,6 @@ const CartItems = () => {
                   </p>
                 )}
 
-                {/* ✅ NOUVEAU : affichage de la variante choisie (lecture
-                    seule — pour changer de variante, le client repasse
-                    par la fiche produit) */}
                 {!isProductDeleted && liveProduct.hasVariants && (
                   <div className="cp-item-attributes">
                     {Object.entries(itemSelectedVariants).map(([key, val]) => (
@@ -167,8 +165,6 @@ const CartItems = () => {
                   </div>
                 )}
 
-                {/* Ancien système, affiché seulement si le produit n'a
-                    pas de variantes du nouveau système */}
                 {!isProductDeleted && !liveProduct.hasVariants && (
                   <div className="cp-item-attributes">
                     {availableSizes.length > 0 && (

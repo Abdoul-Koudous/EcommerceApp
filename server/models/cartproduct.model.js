@@ -10,28 +10,21 @@ const cartProductSchema = new mongoose.Schema(
     oldPrice: Number,
     discount: Number,
 
-    // OPTIONS DISPONIBLES (produit)
     sizeOptions: [String],
     colorOptions: [String],
     ramOptions: [String],
     weightOptions: [String],
 
-    // OPTIONS CHOISIES (panier) — ⚠️ INCHANGÉ : rétrocompatibilité avec
-    // l'ancien système figé
     size: String,
     color: String,
     ram: String,
     weight: String,
 
-    // ✅ NOUVEAU : sélection générique pour le système de variantes V2
-    // Ex: { "Couleur": "Rouge", "Taille": "M" }
     selectedVariants: {
       type: Map,
       of: String,
       default: {},
     },
-
-    // ✅ Snapshot du SKU de la combinaison choisie au moment de l'ajout
     selectedCombinationSku: { type: String, default: "" },
 
     quantity: { type: Number, required: true },
@@ -39,12 +32,25 @@ const cartProductSchema = new mongoose.Schema(
 
     productId: { type: String, required: true },
     countInStock: { type: Number, required: true },
-    userId: { type: String, required: true },
+
+    // ✅ MODIFIÉ : plus obligatoire — un panier peut appartenir à un
+    // visiteur non connecté (identifié par guestSessionId à la place).
+    userId: { type: String, required: false },
+
+    // ✅ NOUVEAU : identifiant de session anonyme, réutilise le même
+    // sessionId que le système de tracking (client/src/pages/utils/tracking.js),
+    // pour garder une seule notion de "visiteur" cohérente dans tout le site.
+    guestSessionId: { type: String, required: false },
 
     brand: String,
   },
   { timestamps: true }
 );
+
+// Un item de panier doit appartenir à un compte OU à une session invité,
+// jamais aucun des deux (sécurité applicative, vérifiée dans le controller).
+cartProductSchema.index({ userId: 1 });
+cartProductSchema.index({ guestSessionId: 1 });
 
 const CartProductModel = mongoose.model("CartProduct", cartProductSchema);
 export default CartProductModel;
