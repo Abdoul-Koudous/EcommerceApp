@@ -78,7 +78,7 @@ const Footer = () => {
         <div className="ft-payments">
           <img src="https://logos-world.net/wp-content/uploads/2020/05/Visa-Logo.png" alt="Visa" />
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkzpbskcw38f0FCjHYQaIlxTv6vc2myE0GBQ&s" alt="MasterCard" />
-          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrJdjso_lcyN_0SmKZH4T0LwvUKVms39KghA&s" alt="PayPal" />
+          {/* <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrJdjso_lcyN_0SmKZH4T0LwvUKVms39KghA&s" alt="PayPal" /> */}
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRP7IDLhhgwF0FiAVhWTC5RIQgj4zoiFjJ5m4iJV_nY2WqCCq8_T499AA9J&s=10" alt="Moov" />
           <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/e/e9/Mtn-logo-svg.svg/3840px-Mtn-logo-svg.svg.png?utm_source=fr.wikipedia.org&utm_campaign=index&utm_content=thumbnail" alt="MTN" />
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgi-zVk5ohj_wx54ges-qW_yM9L9tNebaD-hp1Uj0IGvy4sx-P4SkN21MP&s=10" alt="Celtiis" />
