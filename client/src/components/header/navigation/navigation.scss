@@ -1,10 +1,16 @@
+@use "sass:map";
 @use "../../../styles/breakpoints" as *;
 @use "../../../styles/mixins" as *;
 
-nav {
+// ===================== BANDEAU DESKTOP =====================
+.primary-nav {
   width: 100%;
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+
+  @include respond("tablet") {
+    display: none;
+  }
 
   .container {
     width: 90%;
@@ -13,135 +19,66 @@ nav {
     justify-content: space-between;
     align-items: center;
     height: 60px;
-    position: relative;
-
-    @include respond("tablet") {
-      height: auto;
-      padding: 10px 0;
-    }
   }
 
-  .cont1 {
-    button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background-color: var(--color-primary);
-      color: var(--color-text-on-primary);
-      border: none;
-      padding: 10px 16px;
-      font-size: 14px;
-      font-weight: 500;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: background-color var(--transition-base), transform 0.1s ease;
-
-      &:hover {
-        background-color: var(--color-primary-hover);
-      }
-
-      &:active {
-        transform: scale(0.95);
-      }
-
-      svg {
-        font-size: 18px;
-      }
-
-      @include respond("mobile") {
-        padding: 10px 12px;
-
-        .label {
-          display: none;
-        }
-      }
-    }
-  }
-
-  .mobile-toggle {
-    display: none;
-    background: none;
+  .cont1 button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--color-primary);
+    color: var(--color-text-on-primary);
     border: none;
-    font-size: 26px;
-    color: var(--color-text);
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    transition: background-color var(--transition-base), transform 0.1s ease;
 
-    @include respond("tablet") {
-      display: block;
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
+    &:active {
+      transform: scale(0.96);
+    }
+    svg {
+      font-size: 18px;
     }
   }
 
-  .cont2 {
-    ul {
-      display: flex;
-      align-items: center;
-      gap: 25px;
+  .cont2 ul {
+    display: flex;
+    align-items: center;
+    gap: 25px;
 
-      li {
-        list-style: none;
+    li {
+      list-style: none;
 
-        a {
-          @include link-hover;
-          text-decoration: none;
-          color: var(--color-text);
-          font-weight: 500;
-          font-size: 14px;
-          position: relative;
+      a {
+        @include link-hover;
+        text-decoration: none;
+        color: var(--color-text);
+        font-weight: 500;
+        font-size: 14px;
+        position: relative;
 
-          &::after {
-            content: "";
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: var(--color-primary);
-            transition: width var(--transition-base);
-          }
-
-          &:hover::after,
-          &.active::after {
-            width: 100%;
-          }
-
-          &.active {
-            color: var(--color-primary);
-          }
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background-color: var(--color-primary);
+          transition: width var(--transition-base);
         }
-      }
-    }
-
-    @include respond("tablet") {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      width: 100%;
-      background: var(--color-surface);
-      box-shadow: var(--shadow-dropdown);
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height var(--transition-base);
-      z-index: 50;
-
-      ul {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0;
-        padding: 0 20px;
-
-        li {
+        &:hover::after,
+        &.active::after {
           width: 100%;
-
-          a {
-            display: block;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--color-border-light);
-          }
         }
-      }
-
-      &.open {
-        max-height: 300px;
+        &.active {
+          color: var(--color-primary);
+        }
       }
     }
   }
@@ -157,25 +94,22 @@ nav {
     svg {
       font-size: 18px;
     }
-
     @include respond("laptop") {
-      display: none; // info secondaire, priorité à l'espace pour cont1/cont2
+      display: none;
     }
   }
 }
 
-/* === FOND SOMBRE DERRIÈRE LE DRAWER === */
+// ===================== DRAWER UNIFIÉ =====================
 .drawer-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--color-overlay);
+  inset: 0;
+  background: var(--color-overlay, rgba(10, 10, 15, 0.6));
   opacity: 0;
   visibility: hidden;
   transition: opacity var(--transition-base);
-  z-index: 90;
+  z-index: 190;
+  cursor: pointer;
 
   &.show {
     opacity: 1;
@@ -183,21 +117,23 @@ nav {
   }
 }
 
-/* === DRAWER PRINCIPAL (MENU LATÉRAL) === */
 .drawer {
   position: fixed;
   top: 0;
-  left: -300px;
-  width: 280px;
+  left: -320px;
+  width: 300px;
   height: 100%;
   background: var(--color-surface);
   box-shadow: var(--shadow-drawer);
-  z-index: 100;
+  z-index: 200;
   transition: left var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 
   @include respond("mobile") {
-    width: 85vw;
-    left: -85vw;
+    width: 86vw;
+    left: -86vw;
   }
 
   &.open {
@@ -205,108 +141,260 @@ nav {
   }
 
   a {
-    @include link-hover;
     text-decoration: none;
     color: var(--color-text);
-    font-weight: 500;
-    flex: 1;
+  }
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 18px 14px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  flex-shrink: 0;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
   }
 
-  .drawer-header {
+  .close-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: var(--color-text-on-primary);
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform var(--transition-fast), background var(--transition-fast);
+
+    &:hover {
+      transform: rotate(90deg);
+      background: rgba(255, 255, 255, 0.28);
+    }
+  }
+}
+
+// Signature : bandeau d'accueil + barre "charge"
+.drawer-welcome {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  flex-shrink: 0;
+
+  &-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 18px;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 14px;
+
+    strong {
+      font-weight: 700;
+    }
+
+    a {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 12.5px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+}
+
+.drawer-charge-bar {
+  height: 3px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary) 0%,
+    #ffb37a 45%,
+    var(--color-primary) 100%
+  );
+  background-size: 200% 100%;
+  animation: chargeSweep 2.6s ease-in-out infinite;
+}
+
+@keyframes chargeSweep {
+  0% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Sections du drawer
+.drawer-nav-links {
+  padding: 4px 0 10px;
+  border-bottom: 1px solid var(--color-border-light);
+
+  // Doublon avec .primary-nav au-dessus du seuil tablette : masqué à partir de là
+  display: none;
+
+  @include respond("tablet") {
+    display: block;
+  }
+}
+
+.drawer-account-links,
+.drawer-list {
+  padding: 4px 0 10px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.drawer-section-title {
+  padding: 16px 18px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.drawer-nav-links ul,
+.drawer-account-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    position: relative;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 18px;
+    font-size: 14.5px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: border-color var(--transition-fast), background var(--transition-fast), padding-left var(--transition-fast);
+
+    &:hover,
+    &.active {
+      border-left-color: var(--color-primary);
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      padding-left: 21px;
+    }
+  }
+}
+
+.drawer-account-icon {
+  font-size: 15px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.drawer-account-badge {
+  margin-left: auto;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+// Catégories (accordéon, restylé)
+.drawer-list {
+  list-style: none;
+  padding: 4px 0 20px;
+  margin: 0;
+  border-bottom: none;
+
+  li {
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .category-title,
+  .subcategory-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 18px;
-    background: var(--color-primary);
-    color: var(--color-text-on-primary);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px 18px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14.5px;
+    color: var(--color-text);
+    transition: background var(--transition-fast);
 
-    h3 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
+    &:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
     }
 
-    .close-btn {
-      background: none;
-      border: none;
-      color: var(--color-text-on-primary);
-      font-size: 22px;
-      cursor: pointer;
-      transition: transform var(--transition-fast), opacity var(--transition-fast);
-
-      &:hover {
-        transform: rotate(90deg);
-        opacity: 0.8;
-      }
+    .toggle-icon {
+      font-size: 12px;
+      color: var(--color-primary);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--color-primary-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform var(--transition-fast);
     }
   }
 
-  .drawer-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  .sub-list {
+    background: var(--color-surface-alt);
 
     li {
-      border-bottom: 1px solid var(--color-border-light);
+      border: none;
+    }
 
-      .category-title,
-      .subcategory-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 18px;
+    .subcategory-title {
+      font-size: 13.5px;
+      padding-left: 30px;
+    }
+
+    .sub-sub-list {
+      background: var(--color-surface-alt-2);
+
+      li {
+        padding: 9px 40px;
+        font-size: 13px;
+        color: var(--color-text-secondary);
         cursor: pointer;
-        transition: background var(--transition-fast);
-        font-weight: 500;
-        font-size: 15px;
-        color: var(--color-text);
+        transition: background var(--transition-fast), color var(--transition-fast);
 
         &:hover {
-          background: var(--color-primary-soft);
+          background: var(--color-primary-soft-strong);
           color: var(--color-primary);
-        }
-
-        .toggle-icon {
-          font-size: 13px;
-          color: var(--color-primary);
-          transition: transform var(--transition-fast);
-        }
-
-        &.open .toggle-icon {
-          transform: rotate(90deg);
-        }
-      }
-
-      .sub-list {
-        background: var(--color-surface-alt);
-        transition: all var(--transition-base);
-        overflow: hidden;
-
-        li {
-          border: none;
-
-          .subcategory-title {
-            font-size: 14px;
-            padding-left: 25px;
-          }
-
-          .sub-sub-list {
-            background: var(--color-surface-alt-2);
-
-            li {
-              padding: 8px 35px;
-              font-size: 13px;
-              color: var(--color-text-secondary);
-              cursor: pointer;
-              transition: background var(--transition-fast);
-
-              &:hover {
-                background: var(--color-primary-soft-strong);
-                color: var(--color-primary);
-              }
-            }
-          }
         }
       }
     }

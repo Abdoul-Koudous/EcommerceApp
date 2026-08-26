@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Search from "../search";
 import Navigation from "./navigation";
 import CartPanel from "../cartpanel";
+import CategoryPanel from "./navigation/categoryPanel";
 import {
   FaHeart,
   FaShoppingCart,
@@ -11,6 +12,8 @@ import {
   FaBoxOpen,
   FaSignOutAlt,
 } from "react-icons/fa";
+import { RiMenu3Line } from "react-icons/ri";
+import { IoSearchOutline, IoClose } from "react-icons/io5";
 import { fetchDataFromApi } from "../../pages/utils/api";
 import "./header.scss";
 import { UserContext } from "../../UserContext/UserContext";
@@ -21,13 +24,14 @@ import { ThemeContext } from "../../context/ThemeContext";
 const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showTopStrip, setShowTopStrip] = useState(true);
   const navigate = useNavigate();
   const stickyRef = useRef(null);
 
   const { theme } = useContext(ThemeContext);
-  // dans la déstructuration du contexte, ajoute compareItems
-  const { user, setUser, cartItems, categories, myListItems, compareItems } =
+  const { user, setUser, cartItems, myListItems, compareItems } =
     useContext(UserContext);
   const { openToast } = useContext(ToastContext);
 
@@ -35,6 +39,10 @@ const Header = () => {
 
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
   const toggleCart = () => setCartOpen(!cartOpen);
+  const openDrawer = () => setDrawerOpen(true);
+  const closeDrawer = () => setDrawerOpen(false);
+  const openMobileSearch = () => setMobileSearchOpen(true);
+  const closeMobileSearch = () => setMobileSearchOpen(false);
 
   const logout = async () => {
     try {
@@ -51,11 +59,7 @@ const Header = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("PANIER CONTEXT:", cartItems);
-  }, [cartItems]);
-
-  // ✅ Masque le top-strip après un petit scroll (réapparaît si on remonte tout en haut)
+  // Masque le top-strip après un petit scroll (réapparaît si on remonte tout en haut)
   useEffect(() => {
     const handleScroll = () => {
       setShowTopStrip(window.scrollY < 60);
@@ -64,7 +68,7 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ Mesure la hauteur réelle du bloc fixed et pousse le contenu en dessous
+  // Mesure la hauteur réelle du bloc fixed et pousse le contenu en dessous
   useEffect(() => {
     const updateHeight = () => {
       if (stickyRef.current) {
@@ -87,6 +91,14 @@ const Header = () => {
       resizeObserver.disconnect();
     };
   }, [showTopStrip]);
+
+  // Ferme la recherche mobile avec la touche Échap
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+    const onKey = (e) => e.key === "Escape" && closeMobileSearch();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileSearchOpen]);
 
   return (
     <header className="site-header">
@@ -115,6 +127,67 @@ const Header = () => {
           </div>
         )}
 
+        {/* ===== Ligne compacte mobile (< 768px) ===== */}
+        <div className="site-header__mobile-bar">
+          <button
+            className="site-header__mobile-btn"
+            onClick={openDrawer}
+            aria-label="Ouvrir le menu"
+          >
+            <RiMenu3Line />
+          </button>
+
+          <Link to="/" className="site-header__mobile-logo">
+            {theme === "dark" ? (
+              <img src="/logo-dark.png" alt="logo" />
+            ) : (
+              <img src="/logo-light.png" alt="logo" />
+            )}
+          </Link>
+
+          <div className="site-header__mobile-actions">
+            <ThemeToggle />
+            <button
+              className="site-header__mobile-btn"
+              onClick={openMobileSearch}
+              aria-label="Rechercher"
+            >
+              <IoSearchOutline />
+            </button>
+            <button
+              className="site-header__mobile-btn site-header__mobile-btn--cart"
+              onClick={toggleCart}
+              aria-label="Panier"
+            >
+              <FaShoppingCart />
+              {cartItems.length > 0 && (
+                <span className="site-header__mobile-badge">
+                  {cartItems.length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Overlay de recherche plein écran, mobile uniquement */}
+        <div
+          className={`site-header__search-overlay ${
+            mobileSearchOpen ? "is-open" : ""
+          }`}
+        >
+          <div className="site-header__search-overlay-bar">
+            <Search autoFocus onSubmitSuccess={closeMobileSearch} />
+            <button
+              className="site-header__mobile-btn"
+              onClick={closeMobileSearch}
+              aria-label="Fermer la recherche"
+            >
+              <IoClose />
+            </button>
+          </div>
+        </div>
+
+        {/* ===== Ligne complète desktop (>= 768px) ===== */}
         <div className="site-header__main">
           <div className="site-header__main-container">
             <div className="site-header__logo">
@@ -221,12 +294,13 @@ const Header = () => {
           </div>
         </div>
 
-        <Navigation />
+        <Navigation onOpenDrawer={openDrawer} />
       </div>
 
       {/* Espace réservé pour compenser le header fixed */}
       <div className="site-header__spacer" />
 
+      <CategoryPanel isOpen={drawerOpen} onClose={closeDrawer} />
       <CartPanel isOpen={cartOpen} onClose={toggleCart} openToast={openToast} />
     </header>
   );
