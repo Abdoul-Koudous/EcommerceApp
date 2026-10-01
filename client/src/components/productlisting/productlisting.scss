@@ -1,3 +1,10 @@
+// ====== Réglages de la grille produits ======
+// Nombre minimum de colonnes : en dessous, la grille ne rétrécit plus
+// et un scroll horizontal apparaît. Mettez 2 pour un rendu mobile classique.
+$pl-min-columns: 3;
+$pl-card-min: 230px;
+$pl-grid-gap: 1.5rem;
+
 .productlisting {
 
   .pl-breadcrumb-wrapper {
@@ -8,10 +15,15 @@
       font-size: 16px;
       margin: 20px 0;
       color: var(--color-text-secondary);
-      margin-left: 100px;
+      margin-left: 12px; // ✅ mobile/tablette : aligné sur le padding de pl-body
+
+      @media (min-width: 1025px) {
+        margin-left: 100px;
+      }
 
       ul {
         display: flex;
+        flex-wrap: wrap;
         list-style: none;
         padding: 0;
         margin: 0;
@@ -49,92 +61,128 @@
     align-items: flex-start;
     background-color: var(--color-surface);
     margin-bottom: 10px;
-    gap: 20px;
-    padding: 0 20px; // ✅ symétrique gauche/droite
+    padding: 0 12px; // ✅ mobile/tablette : marges réduites, plus d'espace réservé à la sidebar
+    gap: 0;
+
+    @media (min-width: 1025px) {
+      padding: 0 20px;
+      gap: 20px; // ✅ l'écart n'existe que sur desktop, où la sidebar est une vraie colonne
+    }
 
     .pl-sidebar {
-      position: relative;
       flex-shrink: 0;
-      width: 50px; // ✅ mobile/tablette : réduit en icône
+      width: 0; // ✅ mobile/tablette : aucune place prise dans la mise en page
 
       @media (min-width: 1025px) {
         width: 280px; // ✅ desktop : vraie colonne fixe
       }
 
-      .pl-sidebar-toggle {
-        position: relative;
-        width: 40px;
-        height: 40px;
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 16px;
-        color: var(--color-text-secondary);
-        z-index: 20;
-        transition: color var(--transition-base), border-color var(--transition-base);
-
-        &:hover {
-          color: var(--color-primary);
-          border-color: var(--color-primary);
-        }
+      /* Fond sombre derrière le tiroir (mobile/tablette uniquement) */
+      .pl-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s;
 
         @media (min-width: 1025px) {
-          display: none; // ✅ inutile sur desktop, la sidebar est déjà ouverte
+          display: none;
         }
       }
 
       .pl-sidebar-panel {
-        position: absolute;
-        top: 50px;
+        // ✅ mobile/tablette : tiroir qui glisse depuis la gauche
+        position: fixed;
+        top: 0;
         left: 0;
-        width: 280px;
-        max-width: 90vw;
+        bottom: 0;
+        width: 300px;
+        max-width: 85vw;
+        overflow-y: auto;
         background: var(--color-surface);
-        border-radius: var(--radius-md);
         box-shadow: var(--shadow-dropdown);
-        z-index: 15;
+        z-index: 1001;
 
-        opacity: 0;
+        transform: translateX(-100%);
         visibility: hidden;
-        transform: translateY(-8px);
-        pointer-events: none;
-        transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+        transition: transform 0.3s ease, visibility 0.3s;
 
         @media (min-width: 1025px) {
-          // ✅ desktop : panneau toujours visible, en flux normal, plus de dropdown
+          // ✅ desktop : panneau toujours visible, en flux normal
           position: static;
           width: 100%;
           max-width: 100%;
+          overflow: visible;
           box-shadow: none;
-          opacity: 1;
-          visibility: visible;
           transform: none;
-          pointer-events: auto;
+          visibility: visible;
+          z-index: auto;
+          border-radius: var(--radius-md);
+        }
+
+        .pl-sidebar-panel-head {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          background: var(--color-surface);
+          border-bottom: 1px solid var(--color-border-light);
+          font-weight: 600;
+          color: var(--color-text);
+
+          button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: color var(--transition-base), border-color var(--transition-base);
+
+            &:hover {
+              color: var(--color-primary);
+              border-color: var(--color-primary);
+            }
+          }
+
+          @media (min-width: 1025px) {
+            display: none;
+          }
         }
       }
 
-      &.open .pl-sidebar-panel {
+      &.open .pl-sidebar-backdrop {
         opacity: 1;
         visibility: visible;
-        transform: translateY(0);
-        pointer-events: auto;
+      }
+
+      &.open .pl-sidebar-panel {
+        transform: translateX(0);
+        visibility: visible;
       }
     }
 
     .pl-content {
       flex: 1;
-      min-width: 0;
-      padding: 20px 0; // ✅ symétrique, le padding horizontal vient déjà de pl-body
+      min-width: 0; // ✅ indispensable : permet au scroll horizontal de la grille de fonctionner
+      padding: 20px 0;
 
       /* === Head === */
       .pl-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
         margin-bottom: 20px;
         border-bottom: 1px solid var(--color-border-light);
         padding-bottom: 10px;
@@ -142,7 +190,33 @@
         .pl-layout-icons {
           display: flex;
           align-items: center;
+          flex-wrap: wrap;
           gap: 10px;
+
+          // ✅ Bouton filtres (mobile/tablette uniquement)
+          .pl-filter-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: color var(--transition-base), border-color var(--transition-base);
+
+            &:hover {
+              color: var(--color-primary);
+              border-color: var(--color-primary);
+            }
+
+            @media (min-width: 1025px) {
+              display: none;
+            }
+          }
 
           .pl-icon {
             font-size: 20px;
@@ -157,10 +231,14 @@
           }
 
           .pl-product-count {
-            font-size: 16px;
+            font-size: 14px;
             color: var(--color-text);
-            margin-left: 10px;
             font-weight: 500;
+
+            @media (min-width: 641px) {
+              font-size: 16px;
+              margin-left: 10px;
+            }
           }
         }
 
@@ -207,6 +285,7 @@
             list-style: none;
             padding: 0;
             width: 250px;
+            max-width: calc(100vw - 24px);
             z-index: 10;
 
             max-height: 0;
@@ -239,11 +318,15 @@
 
       .pl-bodi {
         margin-top: 20px;
+        overflow-x: auto; // ✅ scroll horizontal quand l'écran est plus étroit que la grille minimale
+        padding: 4px 0 8px; // évite de couper l'ombre et le survol des cartes
 
         .pl-product-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(auto-fill, minmax($pl-card-min, 1fr));
+          gap: $pl-grid-gap;
+          // ✅ la grille ne descend jamais sous $pl-min-columns colonnes
+          min-width: calc(#{$pl-card-min * $pl-min-columns} + #{$pl-grid-gap * ($pl-min-columns - 1)});
           transition: all 0.3s ease-in-out;
         }
 

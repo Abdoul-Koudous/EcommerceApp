@@ -20,6 +20,25 @@ const getHeaders = (type = "json") => {
   return headers;
 };
 
+// ✅ Transforme une erreur axios en objet { error, success, message }
+// en gardant le message envoyé par le serveur (ex : "Mot de passe actuel
+// incorrect") au lieu du message générique d'axios
+// ("Request failed with status code 400").
+const formatError = (error) => {
+  console.log(error);
+
+  const serverData = error.response?.data;
+  if (serverData && typeof serverData === "object") {
+    return { success: false, ...serverData, error: true };
+  }
+
+  return {
+    error: true,
+    success: false,
+    message: error.message || "Erreur serveur",
+  };
+};
+
 // ✅ POST (création)
 export const postData = async (url, formData) => {
   try {
@@ -44,8 +63,7 @@ export const postDataFromApi = async (url, body) => {
     });
     return data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message };
+    return formatError(error);
   }
 };
 
@@ -57,8 +75,7 @@ export const fetchDataFromApi = async (url) => {
     });
     return data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
 
@@ -70,8 +87,7 @@ export const uploadImage = async (url, formData) => {
     });
     return response.data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
 
@@ -83,8 +99,7 @@ export const uploadImages = async (url, formData) => {
     });
     return response.data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
 
@@ -96,8 +111,7 @@ export const editData = async (url, updatedData) => {
     });
     return response.data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
 
@@ -110,8 +124,7 @@ export const deleteData = async (url, data = {}) => {
     });
     return response.data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
 
@@ -123,6 +136,6 @@ export const deleteImages = async (url) => {
     });
     return response.data;
   } catch (error) {
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };

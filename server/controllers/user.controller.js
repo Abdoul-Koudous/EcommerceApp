@@ -768,6 +768,82 @@ export async function resendOtpController(request, response) {
     }
 }
 
+export async function changePasswordController(request, response) {
+    try {
+        const userId = request.userId; // fourni par votre middleware auth
+        const { currentPassword, newPassword, confirmPassword } = request.body;
+
+        if (!newPassword || !confirmPassword) {
+            return response.status(400).json({
+                message: "Nouveau mot de passe et confirmation obligatoires",
+                error: true,
+                success: false
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return response.status(400).json({
+                message: "Les mots de passe ne correspondent pas",
+                error: true,
+                success: false
+            });
+        }
+
+        if (newPassword.length < 8) {
+            return response.status(400).json({
+                message: "Le mot de passe doit contenir au moins 8 caractères",
+                error: true,
+                success: false
+            });
+        }
+
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return response.status(400).json({
+                message: "Utilisateur introuvable",
+                error: true,
+                success: false
+            });
+        }
+
+        // Compte Google : pas de vrai mot de passe, on ne demande pas l'ancien
+        if (!user.signUpWithGoogle) {
+            if (!currentPassword) {
+                return response.status(400).json({
+                    message: "Mot de passe actuel obligatoire",
+                    error: true,
+                    success: false
+                });
+            }
+            const ok = await bcryptjs.compare(currentPassword, user.password);
+            if (!ok) {
+                return response.status(400).json({
+                    message: "Mot de passe actuel incorrect",
+                    error: true,
+                    success: false
+                });
+            }
+        }
+
+        const salt = await bcryptjs.genSalt(10);
+        user.password = await bcryptjs.hash(newPassword, salt);
+        user.signUpWithGoogle = false;
+        await user.save();
+
+        return response.status(200).json({
+            message: "Mot de passe modifié avec succès",
+            error: false,
+            success: true
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+
 // 📌 Renvoi de l'OTP — mot de passe oublié
 export async function resendForgotPasswordOtpController(request, response) {
     try {

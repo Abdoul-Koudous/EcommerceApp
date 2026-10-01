@@ -20,7 +20,7 @@ const HomeSlider = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchDataFromApi("/api/homeSlide").then((res) => {
+    fetchDataFromApi("/api/homeSlide/active").then((res) => {
       if (res?.data) {
         setSlides(
           res.data.map((item) => ({

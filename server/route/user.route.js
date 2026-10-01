@@ -19,7 +19,8 @@ import {
     userAvatarController,
     UserDetails,
     verifyEmailController,
-    verifyForgotPasswordOtp
+    verifyForgotPasswordOtp,
+    changePasswordController
 } from '../controllers/user.controller.js';
 
 import auth from '../middlewares/auth.js';
@@ -37,6 +38,7 @@ userRouter.post('/authWithGoogle', authWithGoogle);
 userRouter.get('/logout', auth, logoutController);
 
 userRouter.put('/user-avatar', auth, upload.array('avatar'), userAvatarController);
+userRouter.put('/change-password', auth, changePasswordController);
 userRouter.delete('/deleteImage', auth, removeImageFromCloudinary);
 
 userRouter.post('/forgot-password', forgotPasswordController);

@@ -16,6 +16,33 @@ const formatDate = (value) => {
   return d.toLocaleDateString("fr-FR");
 };
 
+// Statut d'un slide : actif ET dans sa fenêtre de dates.
+// Renvoie la raison précise quand il n'est pas diffusé, pour ne plus
+// confondre « désactivé », « expiré » et « pas encore commencé ».
+const getSlideStatus = (slide) => {
+  if (!slide.isActive) {
+    return { live: false, key: "disabled", label: "Désactivée" };
+  }
+
+  const now = new Date();
+
+  if (slide.startDate && new Date(slide.startDate) > now) {
+    return { live: false, key: "scheduled", label: "Programmée" };
+  }
+
+  if (slide.endDate) {
+    // Les dates sont stockées à minuit UTC : la date de fin est incluse
+    // jusqu'à la fin de la journée, comme sur l'API de la boutique.
+    const end = new Date(slide.endDate);
+    end.setUTCHours(23, 59, 59, 999);
+    if (end < now) {
+      return { live: false, key: "expired", label: "Expirée" };
+    }
+  }
+
+  return { live: true, key: "live", label: "En ligne" };
+};
+
 const HomeSlidePage = () => {
   const [slides, setSlides] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -38,6 +65,16 @@ const HomeSlidePage = () => {
       const res = await fetchDataFromApi(
         `/api/homeSlide?page=${currentPage}&perPage=${itemsPerPage}`
       );
+
+      // ✅ fetchDataFromApi ne lève plus d'exception : on lit l'erreur ici
+      // (ex : session expirée ou droits insuffisants une fois la route protégée)
+      if (res?.error) {
+        openToast("error", res.message || "Erreur récupération des slides");
+        setSlides([]);
+        setTotalItems(0);
+        return;
+      }
+
       setSlides(res?.data || []);
       setTotalItems(res?.total || 0);
     } catch (err) {
@@ -106,15 +143,6 @@ const HomeSlidePage = () => {
     setOpenEdit(true);
   };
 
-  // Un slide est "en diffusion" seulement si actif ET dans sa fenêtre de dates
-  const isCurrentlyLive = (slide) => {
-    if (!slide.isActive) return false;
-    const now = new Date();
-    if (slide.startDate && new Date(slide.startDate) > now) return false;
-    if (slide.endDate && new Date(slide.endDate) < now) return false;
-    return true;
-  };
-
   return (
     <div className="hsl-page">
       <div className="hsl-header">
@@ -161,61 +189,67 @@ const HomeSlidePage = () => {
               </tr>
             </thead>
             <tbody>
-              {slides.map((slide) => (
-                <tr key={slide._id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(slide._id)}
-                      onChange={() => toggleSelect(slide._id)}
-                    />
-                  </td>
-                  <td>
-                    <div className="hsl-thumb">
-                      <img src={slide.images?.[0]} alt={slide.title || "Slide"} />
-                    </div>
-                  </td>
-                  <td>
-                    <div className="hsl-title-cell">
-                      <span className="hsl-title-main">{slide.title || "—"}</span>
-                      {slide.subtitle && (
-                        <span className="hsl-title-sub">{slide.subtitle}</span>
+              {slides.map((slide) => {
+                const status = getSlideStatus(slide);
+
+                return (
+                  <tr key={slide._id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(slide._id)}
+                        onChange={() => toggleSelect(slide._id)}
+                      />
+                    </td>
+                    <td>
+                      <div className="hsl-thumb">
+                        <img src={slide.images?.[0]} alt={slide.title || "Slide"} />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="hsl-title-cell">
+                        <span className="hsl-title-main">{slide.title || "—"}</span>
+                        {slide.subtitle && (
+                          <span className="hsl-title-sub">{slide.subtitle}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      {slide.badgeText ? (
+                        <span className={`hsl-badge hsl-badge-${slide.badgeColor || "accent"}`}>
+                          {slide.badgeText}
+                        </span>
+                      ) : (
+                        "—"
                       )}
-                    </div>
-                  </td>
-                  <td>
-                    {slide.badgeText ? (
-                      <span className={`hsl-badge hsl-badge-${slide.badgeColor || "accent"}`}>
-                        {slide.badgeText}
+                    </td>
+                    <td>
+                      <span className="hsl-dates">
+                        {formatDate(slide.startDate)} → {formatDate(slide.endDate)}
                       </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td>
-                    <span className="hsl-dates">
-                      {formatDate(slide.startDate)} → {formatDate(slide.endDate)}
-                    </span>
-                  </td>
-                  <td>{slide.order ?? 0}</td>
-                  <td>
-                    <span
-                      className={`hsl-status ${
-                        isCurrentlyLive(slide) ? "hsl-status-live" : "hsl-status-off"
-                      }`}
-                    >
-                      {isCurrentlyLive(slide) ? "En ligne" : "Hors ligne"}
-                    </span>
-                  </td>
-                  <td>
-                    <FaEdit className="hsl-icon hsl-icon-edit" onClick={() => handleEdit(slide)} />
-                    <FaTrash
-                      className="hsl-icon hsl-icon-delete"
-                      onClick={() => handleDeleteClick(slide._id)}
-                    />
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>{slide.order ?? 0}</td>
+                    <td>
+                      {/* hsl-status-live / hsl-status-off gardent vos couleurs actuelles ;
+                          hsl-status-<key> permet de styler chaque cas séparément plus tard */}
+                      <span
+                        className={`hsl-status ${
+                          status.live ? "hsl-status-live" : "hsl-status-off"
+                        } hsl-status-${status.key}`}
+                      >
+                        {status.label}
+                      </span>
+                    </td>
+                    <td>
+                      <FaEdit className="hsl-icon hsl-icon-edit" onClick={() => handleEdit(slide)} />
+                      <FaTrash
+                        className="hsl-icon hsl-icon-delete"
+                        onClick={() => handleDeleteClick(slide._id)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
               {slides.length === 0 && (
                 <tr>
                   <td colSpan={8}>Aucun slide trouvé</td>

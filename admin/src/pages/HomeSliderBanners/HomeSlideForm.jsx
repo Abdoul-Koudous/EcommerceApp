@@ -359,7 +359,10 @@ const HomeSlideForm = ({ initialSlide, onSubmit, submitLabel = "Publier" }) => {
           />
         </div>
       </div>
-
+      <p className="hsf-hint">
+         Hors de cette période, le slide n'est pas affiché sur le site, même si « Actif » est coché.
+      </p>
+      
       <div className="hsf-row">
         <div className="hsf-field">
           <label htmlFor="hsf-order">Ordre d'affichage</label>

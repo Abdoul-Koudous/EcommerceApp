@@ -1,14 +1,46 @@
 import axios from "axios";
+
 const apiUrl = import.meta.env.VITE_API_URL;
+
+// 🔥 Headers centralisés (évite la répétition)
+const getHeaders = (type = "json") => {
+  const headers = {
+    Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
+  };
+
+  // ✅ Pour "form" (multipart), on NE fixe PAS Content-Type : le navigateur/axios
+  // doit le générer lui-même pour inclure le "boundary", sinon multer côté
+  // serveur ne peut pas parser correctement les fichiers.
+  if (type !== "form") {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
+};
+
+// ✅ Transforme une erreur axios en { error, success, message } en gardant
+// le message envoyé par le serveur au lieu du message générique d'axios
+// ("Request failed with status code 400").
+const formatError = (error) => {
+  console.log(error);
+
+  const serverData = error.response?.data;
+  if (serverData && typeof serverData === "object") {
+    return { success: false, ...serverData, error: true };
+  }
+
+  return {
+    error: true,
+    success: false,
+    message: error.message || "Erreur serveur",
+  };
+};
 
 export const postData = async (url, formData) => {
   try {
     const response = await fetch(apiUrl + url, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
-        "Content-Type": "application/json",
-      },
+      headers: getHeaders(),
       body: JSON.stringify(formData),
     });
 
@@ -23,106 +55,67 @@ export const postData = async (url, formData) => {
   }
 };
 
-
 export const fetchDataFromApi = async (url) => {
   try {
-    const params = {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
-        "Content-Type": "application/json",
-      },
-    };
-    const { data } = await axios.get(apiUrl + url, params);
+    const { data } = await axios.get(apiUrl + url, { headers: getHeaders() });
     return data;
   } catch (error) {
-    console.log(error);
-    return {
-      error: true,
-      success: false,
-      message: error.response?.data?.message || error.message || "Erreur serveur",
-    };
+    return formatError(error);
   }
 };
-
 
 export const uploadImage = async (url, updatedData) => {
   try {
-    const params = {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
-        // ✅ Content-Type retiré : le navigateur/axios doit le générer lui-même
-        // pour inclure le "boundary" (ex: multipart/form-data; boundary=...),
-        // sinon multer côté serveur ne peut pas parser correctement les fichiers,
-        // ce qui cause des uploads d'images qui échouent de façon intermittente.
-      },
-    };
-    const response = await axios.put(apiUrl + url, updatedData, params);
+    const response = await axios.put(apiUrl + url, updatedData, {
+      headers: getHeaders("form"),
+    });
     return response.data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
-
 
 export const uploadImages = async (url, formData) => {
   try {
-    const params = {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
-        // ✅ idem : pas de Content-Type manuel pour un envoi multipart
-      },
-    };
-    const response = await axios.post(apiUrl + url, formData, params);
+    const response = await axios.post(apiUrl + url, formData, {
+      headers: getHeaders("form"),
+    });
     return response.data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
 
-
-
 export const editData = async (url, updatedData) => {
   try {
-    const params = {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("accesstoken")}`,
-        "Content-Type": "application/json",
-      },
-    };
-    const response = await axios.put(apiUrl + url, updatedData, params);
+    const response = await axios.put(apiUrl + url, updatedData, {
+      headers: getHeaders(),
+    });
     return response.data;
   } catch (error) {
-    console.log(error);
-    return { error: true, message: error.message || "Erreur serveur" };
+    return formatError(error);
   }
 };
 
 export const deleteImages = async (url) => {
   try {
-    const params = {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
-      },
-    };
-
-    const { data } = await axios.delete(apiUrl + url, params);
+    const { data } = await axios.delete(apiUrl + url, {
+      headers: getHeaders("form"),
+    });
     return data;
-
   } catch (error) {
-    return { error: true, message: error.message };
+    return formatError(error);
   }
 };
 
-
 export const deleteData = async (url, data = {}) => {
-  const params = {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("accesstoken")}`,
-    },
-    data,
-  };
-  const res = await axios.delete(apiUrl + url, params);
-  return res.data; 
-}
+  try {
+    const res = await axios.delete(apiUrl + url, {
+      headers: getHeaders(),
+      data, // 🔥 important pour envoyer un body
+    });
+    return res.data;
+  } catch (error) {
+    return formatError(error);
+  }
+};

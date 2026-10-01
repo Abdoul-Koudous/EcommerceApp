@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   FaThLarge, FaBars, FaSortDown, FaSortUp, 
   FaAngleLeft, FaAngleRight, FaAngleDoubleLeft, FaAngleDoubleRight,
-  FaSlidersH
+  FaSlidersH, FaTimes
 } from "react-icons/fa";
 import SideBar from '../sidebar';
 import ProductItem from '../productitem';
@@ -29,7 +29,8 @@ const ProductListing = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState("desc");
 
-  // ✅ Contrôle l'affichage de la sidebar : icône repliée ou dropdown ouvert
+  // ✅ Mobile/tablette : ouvre ou ferme le tiroir de filtres
+  // (sur desktop, la sidebar est toujours affichée, cet état n'a aucun effet)
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSortSelect = (option) => {
@@ -77,15 +78,25 @@ const ProductListing = () => {
 
       <div className="pl-body">
         <div className={`pl-sidebar ${sidebarOpen ? "open" : ""}`}>
-          <button
-            className="pl-sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            title={sidebarOpen ? "Fermer les filtres" : "Afficher les filtres"}
-          >
-            <FaSlidersH />
-          </button>
+          {/* Fond sombre (mobile/tablette) : un clic ferme le tiroir */}
+          <div
+            className="pl-sidebar-backdrop"
+            onClick={() => setSidebarOpen(false)}
+          />
 
           <div className="pl-sidebar-panel">
+            {/* En-tête du tiroir (visible seulement sur mobile/tablette) */}
+            <div className="pl-sidebar-panel-head">
+              <span>Filtres</span>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Fermer les filtres"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
             <SideBar 
               productsData={productsData} 
               setProductsData={setProductsData}
@@ -104,6 +115,17 @@ const ProductListing = () => {
         <div className="pl-content">
           <div className="pl-head">
             <div className="pl-layout-icons">
+              {/* ✅ Bouton filtres : dans l'en-tête, donc plus de colonne vide à gauche */}
+              <button
+                type="button"
+                className="pl-filter-toggle"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Afficher les filtres"
+                title="Afficher les filtres"
+              >
+                <FaSlidersH />
+              </button>
+
               <FaThLarge 
                 className={`pl-icon ${viewMode === "grid" ? "active" : ""}`} 
                 title="Vue Grille" 

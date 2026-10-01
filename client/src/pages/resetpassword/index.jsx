@@ -1,14 +1,16 @@
-import React, { useState, useContext, useEffect,useRef } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { FaLock, FaKey, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./resetpassword.scss";
 import { useNavigate } from "react-router-dom";
 import { ToastContext } from "../../context/ToastContext";
+import { UserContext } from "../../UserContext/UserContext";
 import { postData } from "../utils/api";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const { openToast } = useContext(ToastContext);
+  const { loadUser } = useContext(UserContext);
 
   const [formFields, setFormFields] = useState({
     email: localStorage.getItem("userEmail") || "",
@@ -22,7 +24,7 @@ const ResetPassword = () => {
   // ✅ garde : sans resetToken (donc sans OTP validé avant), impossible d'arriver ici
   const hasChecked = useRef(false);
 
-useEffect(() => {
+  useEffect(() => {
     if (hasChecked.current) return;
     hasChecked.current = true;
 
@@ -34,7 +36,7 @@ useEffect(() => {
       navigate("/login", { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,6 +45,11 @@ useEffect(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formFields.newPassword !== formFields.confirmPassword) {
+      return openToast("error", "Les mots de passe ne correspondent pas");
+    }
+
     setLoading(true);
 
     try {
@@ -50,14 +57,29 @@ useEffect(() => {
 
       const res = await postData("/api/users/reset-password", {
         ...formFields,
-        resetToken, // ✅ requis par le backend désormais
+        resetToken, // ✅ requis par le backend
       });
 
       if (res?.success) {
         openToast("success", res.message);
+
+        // ✅ nettoyage : tout ce qui servait au flux OTP est à usage unique
         localStorage.removeItem("userEmail");
-        localStorage.removeItem("resetToken"); // ✅ à usage unique côté client aussi
-        setTimeout(() => navigate("/login"), 800);
+        localStorage.removeItem("resetToken");
+        localStorage.removeItem("actionType");
+
+        // ✅ si l'utilisateur est déjà connecté (ex : compte Google qui définit
+        // un mot de passe), on rafraîchit son profil (signUpWithGoogle → false)
+        // et on le ramène sur son compte. loadUser() renvoie null si le token
+        // est absent ou invalide : dans ce cas, c'est le cas « mot de passe
+        // oublié » classique, donc direction /login.
+        const loggedUser = localStorage.getItem("accesstoken")
+          ? await loadUser()
+          : null;
+
+        setTimeout(() => {
+          navigate(loggedUser ? "/account/profile" : "/login");
+        }, 800);
       } else {
         openToast("error", res.message || "Erreur lors de la réinitialisation");
       }

@@ -147,15 +147,16 @@ export async function getActiveHomeSlides(request, response) {
   try {
     const now = new Date();
 
+    // Vos dates sont stockées à minuit UTC : on compare au début de la journée
+    // pour que le dernier jour de diffusion soit inclus en entier.
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
     const filter = {
       isActive: true,
       $and: [
-        {
-          $or: [{ startDate: null }, { startDate: { $lte: now } }],
-        },
-        {
-          $or: [{ endDate: null }, { endDate: { $gte: now } }],
-        },
+        { $or: [{ startDate: null }, { startDate: { $lte: now } }] },
+        { $or: [{ endDate: null }, { endDate: { $gte: today } }] },
       ],
     };
 
