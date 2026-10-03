@@ -1,8 +1,9 @@
-import React, { useState,useContext } from 'react'; 
-import { Link, useNavigate } from 'react-router-dom';
-import Search from '../search';
-import Navigation from './navigation';
-import CartPanel from '../cartpanel';
+import React, { useState, useContext, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Search from "../search";
+import Navigation from "./navigation";
+import CartPanel from "../cartpanel";
+import CategoryPanel from "./navigation/categoryPanel";
 import {
   FaHeart,
   FaShoppingCart,
@@ -11,145 +12,378 @@ import {
   FaBoxOpen,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { fetchDataFromApi } from '../../pages/utils/api';
+import { RiMenu3Line } from "react-icons/ri";
+import { IoSearchOutline, IoClose } from "react-icons/io5";
+import { fetchDataFromApi } from "../../pages/utils/api";
 import "./header.scss";
-import { UserContext } from '../../UserContext/UserContext';
+import { UserContext } from "../../UserContext/UserContext";
+import { ToastContext } from "../../context/ToastContext";
+import ThemeToggle from "../themetoggle";
+import { ThemeContext } from "../../context/ThemeContext";
 
 const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileUserOpen, setMobileUserOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [showTopStrip, setShowTopStrip] = useState(true);
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const stickyRef = useRef(null);
+  const mobileUserRef = useRef(null);
 
+  const { theme } = useContext(ThemeContext);
+  const { user, setUser, cartItems, myListItems, compareItems } =
+    useContext(UserContext);
+  const { openToast } = useContext(ToastContext);
 
-   const cartItems = [
-      { image: "/od11.jpg",name: "Produit 1", quantity: 2, price: 1500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od31.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      { image: "/od21.jpg",name: "Produit 2", quantity: 1, price: 2500 },
-      
-  ];
+  const isLoggedIn = !!user?._id;
 
+  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
+  const toggleMobileUser = () => setMobileUserOpen((prev) => !prev);
+  const closeMobileUser = () => setMobileUserOpen(false);
   const toggleCart = () => setCartOpen(!cartOpen);
-
-  const isLoggedIn = !!localStorage.getItem("accesstoken");
+  const openDrawer = () => setDrawerOpen(true);
+  const closeDrawer = () => setDrawerOpen(false);
+  const openMobileSearch = () => setMobileSearchOpen(true);
+  const closeMobileSearch = () => setMobileSearchOpen(false);
 
   const logout = async () => {
     try {
-      // Appel backend pour supprimer cookies
-      await fetchDataFromApi("/api/users/logout", { method: "POST" });
-      
-      // Nettoyage localStorage
+      await fetchDataFromApi("/api/users/logout");
       localStorage.removeItem("accesstoken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userEmail");
-
-      // Redirection vers accueil
+      setUser(null);
+      setDropdownOpen(false);
+      setMobileUserOpen(false);
       navigate("/");
-      window.location.reload(); // pour rafraîchir le header
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
+      openToast("error", "Erreur lors de la déconnexion");
     }
-  }
- 
+  };
+
+  // Masque le top-strip après un petit scroll (réapparaît si on remonte tout en haut)
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowTopStrip(window.scrollY < 60);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Mesure la hauteur réelle du bloc fixed et pousse le contenu en dessous
+  useEffect(() => {
+    const updateHeight = () => {
+      if (stickyRef.current) {
+        const height = stickyRef.current.offsetHeight;
+        document.documentElement.style.setProperty(
+          "--header-height",
+          `${height}px`,
+        );
+      }
+    };
+
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    if (stickyRef.current) resizeObserver.observe(stickyRef.current);
+
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      resizeObserver.disconnect();
+    };
+  }, [showTopStrip]);
+
+  // Ferme la recherche mobile avec la touche Échap
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+    const onKey = (e) => e.key === "Escape" && closeMobileSearch();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileSearchOpen]);
+
+  // Ferme le menu utilisateur mobile au clic / toucher à l'extérieur
+  useEffect(() => {
+    if (!mobileUserOpen) return;
+    const onClickOutside = (e) => {
+      if (mobileUserRef.current && !mobileUserRef.current.contains(e.target)) {
+        setMobileUserOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("touchstart", onClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("touchstart", onClickOutside);
+    };
+  }, [mobileUserOpen]);
+
   return (
-    <header>
-      <div className="top-strip">
-        <div className="container">
-          <div className="cont1">
-            <p>Obtenez 25% de réduction sur vos achats cette semaine !!!</p>
+    <header className="site-header">
+      <div className="site-header__sticky-wrap" ref={stickyRef}>
+        {showTopStrip && (
+          <div className="site-header__top-strip">
+            <div className="site-header__top-container">
+              <div className="site-header__top-left">
+                <p>Obtenez 25% de réduction sur vos achats cette semaine !!!</p>
+              </div>
+              <div className="site-header__top-right">
+                <ul>
+                  <li>
+                    <Link to="/track-order" className="site-header__top-link">
+                      Suivre la commande
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/help-center" className="site-header__top-link">
+                      Centre d'aide
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <div className="cont2">
-            <ul>
-              <li><Link to="track-order" className='lien'>Suivre la commande</Link></li>
-              <li><Link to="help-center" className='lien'>Centre d'aide</Link></li>
-            </ul>
-          </div>
-        </div>
-      </div>
+        )}
 
-      <div className="header">
-        <div className="container">
-          <div className="cont1">
-            <Link to={"/"}><img src="/logo.png" alt="logo" /></Link>
-          </div>
+        {/* ===== Ligne compacte mobile (< 768px) ===== */}
+        <div className="site-header__mobile-bar">
+          <button
+            className="site-header__mobile-btn"
+            onClick={openDrawer}
+            aria-label="Ouvrir le menu"
+          >
+            <RiMenu3Line />
+          </button>
 
-          <div className="cont2">
-            <Search />
-          </div>
+          <Link to="/" className="site-header__mobile-logo">
+            {theme === "dark" ? (
+              <img src="/logo-dark.png" alt="logo" />
+            ) : (
+              <img src="/logo-light.png" alt="logo" />
+            )}
+          </Link>
 
-          <div className="cont3">
-            <ul>
-              {!isLoggedIn ? (
-                <div>
-                  <Link className='lien2' to="/login">Connexion</Link> |{" "}
-                  <Link className='lien2' to="/register">Enregistrement</Link>
-                </div>
-              ) : (
-                <li className="user-menu">
-                  <div className="user-info" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                    <img
-                      src={user?.avatar || "/user.jpg"}
-                      alt="User"
-                      className="user-avatar"
-                    />
+          <div className="site-header__mobile-actions">
+            <ThemeToggle />
+            <button
+              className="site-header__mobile-btn"
+              onClick={openMobileSearch}
+              aria-label="Rechercher"
+            >
+              <IoSearchOutline />
+            </button>
 
-                    <div className="user-details">
-                      <span className="user-name">{user?.name}</span>
-                      <span className="user-email">{user?.email}</span>
+            {/* Compte utilisateur / déconnexion (mobile) */}
+            {!isLoggedIn ? (
+              <Link
+                to="/login"
+                className="site-header__mobile-btn"
+                aria-label="Connexion"
+              >
+                <FaUser />
+              </Link>
+            ) : (
+              <div className="site-header__mobile-user" ref={mobileUserRef}>
+                <button
+                  className="site-header__mobile-btn"
+                  onClick={toggleMobileUser}
+                  aria-label="Menu utilisateur"
+                >
+                  <img
+                    src={user?.avatar || "/user.jpg"}
+                    alt="User"
+                    className="site-header__mobile-avatar"
+                  />
+                </button>
 
-                    </div>
-                  </div>
+                {mobileUserOpen && (
+                  <ul className="site-header__mobile-dropdown">
+                    <li className="site-header__mobile-dropdown-head">
+                      <strong>{user?.name}</strong>
+                      <small>{user?.email}</small>
+                    </li>
+                    <li>
+                      <Link to="/account/profile" onClick={closeMobileUser}>
+                        <FaUser /> Mon compte
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/account/orders" onClick={closeMobileUser}>
+                        <FaBoxOpen /> Mes commandes
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/account/wishlist" onClick={closeMobileUser}>
+                        <FaHeart /> Ma liste
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMobileUser();
+                          logout();
+                        }}
+                      >
+                        <FaSignOutAlt /> Déconnexion
+                      </button>
+                    </li>
+                  </ul>
+                )}
+              </div>
+            )}
 
-                  {dropdownOpen && (
-                    <ul className="dropdown-menu">
-                      <li>
-                        <FaUser className="icon" />
-                        <Link to="/account/profile">Mon compte</Link>
-                      </li>
-                      <li>
-                        <FaBoxOpen className="icon" />
-                        <Link to="/account/orders">Mes commandes</Link>
-                      </li>
-                      <li>
-                        <FaHeart className="icon" />
-                        <Link to="/account/wishlist">Ma liste</Link>
-                      </li>
-                      <li onClick={logout}>
-                        <FaSignOutAlt className="icon" />
-                        <span style={{ cursor: "pointer" }}>Déconnexion</span>
-                      </li>
-                    </ul>
-                  )}
-                </li>
+            <button
+              className="site-header__mobile-btn site-header__mobile-btn--cart"
+              onClick={toggleCart}
+              aria-label="Panier"
+            >
+              <FaShoppingCart />
+              {cartItems.length > 0 && (
+                <span className="site-header__mobile-badge">
+                  {cartItems.length}
+                </span>
               )}
-
-              <li className="iconBox">
-                <FaHeart className="icon" />
-                <span className="count">3</span>
-                <span className="tooltip">Souhaits</span>
-              </li>
-              <li className="iconBox">
-                <FaBalanceScale className="icon" />
-                <span className="count">2</span>
-                <span className="tooltip">Comparer</span>
-              </li>
-              <li className="iconBox" onClick={toggleCart}>
-                <FaShoppingCart className="icon" />
-                <span className="count">{cartItems.length}</span>
-                <span className="tooltip">Panier</span>
-              </li>
-            </ul>
+            </button>
           </div>
         </div>
+
+        {/* Overlay de recherche plein écran, mobile uniquement */}
+        <div
+          className={`site-header__search-overlay ${
+            mobileSearchOpen ? "is-open" : ""
+          }`}
+        >
+          <div className="site-header__search-overlay-bar">
+            <Search autoFocus onSubmitSuccess={closeMobileSearch} />
+            <button
+              className="site-header__mobile-btn"
+              onClick={closeMobileSearch}
+              aria-label="Fermer la recherche"
+            >
+              <IoClose />
+            </button>
+          </div>
+        </div>
+
+        {/* ===== Ligne complète desktop (>= 768px) ===== */}
+        <div className="site-header__main">
+          <div className="site-header__main-container">
+            <div className="site-header__logo">
+              <Link to={"/"}>
+                {theme === "dark" ? (
+                  <img src="/logo-dark.png" alt="logo dark" />
+                ) : (
+                  <img src="/logo-light.png" alt="logo light" />
+                )}
+              </Link>
+            </div>
+
+            <div className="site-header__search">
+              <Search />
+            </div>
+
+            <div className="site-header__actions">
+              <ul>
+                <li className="site-header__theme-toggle">
+                  <ThemeToggle />
+                </li>
+                {!isLoggedIn ? (
+                  <div>
+                    <Link className="site-header__auth-link" to="/login">
+                      Connexion
+                    </Link>{" "}
+                    |{" "}
+                    <Link className="site-header__auth-link" to="/register">
+                      Enregistrement
+                    </Link>
+                  </div>
+                ) : (
+                  <li className="site-header__user-menu">
+                    <div
+                      className="site-header__user-info"
+                      onClick={toggleDropdown}
+                    >
+                      <img
+                        src={user?.avatar || "/user.jpg"}
+                        alt="User"
+                        className="site-header__user-avatar"
+                      />
+                      <div className="site-header__user-details">
+                        <span className="site-header__user-name">
+                          {user?.name}
+                        </span>
+                        <span className="site-header__user-email">
+                          {user?.email}
+                        </span>
+                      </div>
+                    </div>
+
+                    {dropdownOpen && (
+                      <ul className="site-header__dropdown-menu">
+                        <li>
+                          <FaUser className="site-header__dropdown-icon" />
+                          <Link to="/account/profile">Mon compte</Link>
+                        </li>
+                        <li>
+                          <FaBoxOpen className="site-header__dropdown-icon" />
+                          <Link to="/account/orders">Mes commandes</Link>
+                        </li>
+                        <li>
+                          <FaHeart className="site-header__dropdown-icon" />
+                          <Link to="/account/wishlist">Ma liste</Link>
+                        </li>
+                        <li onClick={logout}>
+                          <FaSignOutAlt className="site-header__dropdown-icon" />
+                          <span style={{ cursor: "pointer" }}>Déconnexion</span>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+                )}
+
+                <li
+                  className="site-header__icon-box"
+                  onClick={() => navigate("/account/wishlist")}
+                >
+                  <FaHeart className="site-header__icon" />
+                  <span className="site-header__badge">
+                    {myListItems.length}
+                  </span>
+                  <span className="site-header__tooltip">Souhaits</span>
+                </li>
+
+                <li
+                  className="site-header__icon-box"
+                  onClick={() => navigate("/account/compare")}
+                >
+                  <FaBalanceScale className="site-header__icon" />
+                  <span className="site-header__badge">
+                    {compareItems.length}
+                  </span>
+                  <span className="site-header__tooltip">Comparer</span>
+                </li>
+                <li className="site-header__icon-box" onClick={toggleCart}>
+                  <FaShoppingCart className="site-header__icon" />
+                  <span className="site-header__badge">{cartItems.length}</span>
+                  <span className="site-header__tooltip">Panier</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <Navigation onOpenDrawer={openDrawer} />
       </div>
 
-      <Navigation />
-      <CartPanel isOpen={cartOpen} onClose={toggleCart} cartItems={cartItems} />
+      {/* Espace réservé pour compenser le header fixed */}
+      <div className="site-header__spacer" />
+
+      <CategoryPanel isOpen={drawerOpen} onClose={closeDrawer} />
+      <CartPanel isOpen={cartOpen} onClose={toggleCart} openToast={openToast} />
     </header>
   );
 };
