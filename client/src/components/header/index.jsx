@@ -24,11 +24,13 @@ import { ThemeContext } from "../../context/ThemeContext";
 const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileUserOpen, setMobileUserOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showTopStrip, setShowTopStrip] = useState(true);
   const navigate = useNavigate();
   const stickyRef = useRef(null);
+  const mobileUserRef = useRef(null);
 
   const { theme } = useContext(ThemeContext);
   const { user, setUser, cartItems, myListItems, compareItems } =
@@ -38,6 +40,8 @@ const Header = () => {
   const isLoggedIn = !!user?._id;
 
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
+  const toggleMobileUser = () => setMobileUserOpen((prev) => !prev);
+  const closeMobileUser = () => setMobileUserOpen(false);
   const toggleCart = () => setCartOpen(!cartOpen);
   const openDrawer = () => setDrawerOpen(true);
   const closeDrawer = () => setDrawerOpen(false);
@@ -52,6 +56,7 @@ const Header = () => {
       localStorage.removeItem("userEmail");
       setUser(null);
       setDropdownOpen(false);
+      setMobileUserOpen(false);
       navigate("/");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
@@ -99,6 +104,22 @@ const Header = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileSearchOpen]);
+
+  // Ferme le menu utilisateur mobile au clic / toucher à l'extérieur
+  useEffect(() => {
+    if (!mobileUserOpen) return;
+    const onClickOutside = (e) => {
+      if (mobileUserRef.current && !mobileUserRef.current.contains(e.target)) {
+        setMobileUserOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("touchstart", onClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("touchstart", onClickOutside);
+    };
+  }, [mobileUserOpen]);
 
   return (
     <header className="site-header">
@@ -154,6 +175,67 @@ const Header = () => {
             >
               <IoSearchOutline />
             </button>
+
+            {/* Compte utilisateur / déconnexion (mobile) */}
+            {!isLoggedIn ? (
+              <Link
+                to="/login"
+                className="site-header__mobile-btn"
+                aria-label="Connexion"
+              >
+                <FaUser />
+              </Link>
+            ) : (
+              <div className="site-header__mobile-user" ref={mobileUserRef}>
+                <button
+                  className="site-header__mobile-btn"
+                  onClick={toggleMobileUser}
+                  aria-label="Menu utilisateur"
+                >
+                  <img
+                    src={user?.avatar || "/user.jpg"}
+                    alt="User"
+                    className="site-header__mobile-avatar"
+                  />
+                </button>
+
+                {mobileUserOpen && (
+                  <ul className="site-header__mobile-dropdown">
+                    <li className="site-header__mobile-dropdown-head">
+                      <strong>{user?.name}</strong>
+                      <small>{user?.email}</small>
+                    </li>
+                    <li>
+                      <Link to="/account/profile" onClick={closeMobileUser}>
+                        <FaUser /> Mon compte
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/account/orders" onClick={closeMobileUser}>
+                        <FaBoxOpen /> Mes commandes
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/account/wishlist" onClick={closeMobileUser}>
+                        <FaHeart /> Ma liste
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMobileUser();
+                          logout();
+                        }}
+                      >
+                        <FaSignOutAlt /> Déconnexion
+                      </button>
+                    </li>
+                  </ul>
+                )}
+              </div>
+            )}
+
             <button
               className="site-header__mobile-btn site-header__mobile-btn--cart"
               onClick={toggleCart}
