@@ -36,7 +36,9 @@ const Header = () => {
   const { theme } = useContext(ThemeContext);
   const storeIdentity = useStoreIdentity();
   const storeLogo =
-    theme === "dark" ? storeIdentity.logoDark : storeIdentity.logoLight;
+    theme === "dark"
+      ? storeIdentity.logoDark || storeIdentity.logoLight
+      : storeIdentity.logoLight || storeIdentity.logoDark;
   const { user, setUser, cartItems, myListItems, compareItems } =
     useContext(UserContext);
   const { openToast } = useContext(ToastContext);

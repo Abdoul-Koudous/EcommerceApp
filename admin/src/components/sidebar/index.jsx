@@ -27,7 +27,10 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
   const [openMenus, setOpenMenus] = useState({});
   const { identity } = useStoreIdentity();
   const { theme } = useContext(ThemeContext);
-  const storeLogo = theme === "dark" ? identity.logoDark : identity.logoLight;
+  const storeLogo =
+    theme === "dark"
+      ? identity.logoDark || identity.logoLight
+      : identity.logoLight || identity.logoDark;
 
   const toggleMenu = (menu) => {
     if (collapsed) return; // ✅ pas de sous-menu déroulant en mode replié
