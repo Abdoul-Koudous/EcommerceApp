@@ -3,7 +3,7 @@ services:
     name: ecommerce-demo
     runtime: node
     plan: free
-    buildCommand: npm ci --prefix server && npm ci --prefix client && npm ci --prefix admin && npm run build --prefix client && npm run build --prefix admin
+    buildCommand: npm ci --include=dev --prefix server && npm ci --include=dev --prefix client && npm ci --include=dev --prefix admin && npm run build --prefix client && npm run build --prefix admin
     startCommand: npm start --prefix server
     healthCheckPath: /health/ready
     envVars:
