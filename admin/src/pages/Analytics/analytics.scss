@@ -228,3 +228,74 @@
     color: var(--color-primary);
   }
 }
+
+@media (max-width: 640px) {
+  .an-page {
+    padding: 0.75rem;
+
+    .an-totals-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 1.25rem;
+
+      .an-total-card {
+        min-width: 0;
+        padding: 0.85rem;
+
+        .an-total-value {
+          font-size: 1.2rem;
+          overflow-wrap: anywhere;
+        }
+      }
+    }
+
+    .an-section {
+      padding: 0.85rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .an-channel-bar-group {
+      flex-wrap: wrap;
+
+      .an-channel-bar-label {
+        width: calc(100% - 120px);
+      }
+
+      .an-channel-bar-track {
+        flex: 1 1 100%;
+        order: 3;
+      }
+
+      .an-channel-bar-conversion {
+        width: auto;
+        margin-left: auto;
+      }
+    }
+
+    .an-product-row,
+    .an-campaign-row {
+      grid-template-columns: 30px minmax(0, 1fr);
+      gap: 0.4rem 0.65rem;
+      font-size: 0.82rem;
+
+      .an-product-rank {
+        grid-row: span 2;
+      }
+
+      .an-product-name {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .an-product-purchases,
+      .an-product-revenue {
+        grid-column: 2;
+      }
+    }
+
+    .an-product-row img {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+  }
+}

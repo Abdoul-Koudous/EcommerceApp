@@ -202,7 +202,7 @@
 
     table.ptbl-table {
       width: 100%;
-      min-width: 720px; // ✅ force le scroll horizontal du wrapper plutôt que d'écraser les colonnes
+      min-width: 820px;
       border-collapse: collapse;
 
       th {
@@ -218,6 +218,7 @@
         &:first-child {
           width: 40px;
         }
+
       }
 
       td {
@@ -628,6 +629,212 @@
           color: var(--color-text-secondary);
           font-size: 0.9rem;
         }
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .ptbl-page {
+    .ptbl-header {
+      align-items: stretch;
+
+      .ptbl-header-actions {
+        width: 100%;
+
+        button {
+          flex: 1 1 auto;
+          justify-content: center;
+          min-height: 42px;
+        }
+      }
+    }
+
+    .ptbl-table-container {
+      padding: 0.75rem;
+      border-radius: 10px;
+
+      .ptbl-filters-actions {
+        gap: 0.75rem;
+
+        .ptbl-filters-left {
+          min-width: 0;
+          gap: 0.75rem;
+        }
+      }
+
+      .ptbl-form-group {
+        min-width: 100%;
+
+        select {
+          min-height: 42px;
+        }
+      }
+
+      .ptbl-table-wrapper {
+        overflow: visible;
+      }
+
+      table.ptbl-table {
+        display: block;
+        min-width: 0;
+
+        thead {
+          display: none;
+        }
+
+        tbody,
+        tr {
+          display: block;
+          width: 100%;
+        }
+
+        tbody {
+          display: grid;
+          gap: 0.75rem;
+        }
+
+        tr {
+          position: relative;
+          padding: 0.7rem;
+          border: 1px solid var(--color-border-light);
+          border-radius: 10px;
+          background: var(--color-surface);
+          box-shadow: var(--shadow-card);
+        }
+
+        td {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          min-height: 38px;
+          padding: 0.45rem 0;
+          border-bottom: 1px solid var(--color-border-light);
+          font-size: 0.82rem;
+          text-align: right;
+
+          &::before {
+            content: attr(data-label);
+            color: var(--color-text-secondary);
+            font-size: 0.76rem;
+            font-weight: 600;
+            text-align: left;
+          }
+
+          &:last-child {
+            border-bottom: 0;
+          }
+        }
+
+        .ptbl-select-cell {
+          position: absolute;
+          top: 0.7rem;
+          right: 0.7rem;
+          z-index: 1;
+          min-height: auto;
+          padding: 0;
+          border: 0;
+
+          &::before {
+            content: none;
+          }
+        }
+
+        .ptbl-product-info {
+          justify-content: flex-start;
+          min-width: 0;
+          padding-right: 2rem;
+          text-align: left;
+
+          &::before {
+            content: none;
+          }
+
+          img {
+            width: 44px;
+            height: 44px;
+          }
+
+          h4 {
+            overflow-wrap: anywhere;
+            font-size: 0.88rem;
+          }
+        }
+
+        .ptbl-price,
+        .ptbl-sales,
+        .ptbl-actions {
+          display: flex;
+        }
+
+        .ptbl-sales {
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          min-width: 0;
+
+          .progress-bar {
+            flex: 0 0 100%;
+            margin-left: 45%;
+          }
+        }
+
+        .ptbl-actions {
+          justify-content: flex-end;
+          gap: 0.75rem;
+
+          button {
+            min-width: 40px;
+            min-height: 40px;
+            font-size: 1.05rem;
+          }
+        }
+      }
+
+      .ptbl-table-footer {
+        align-items: stretch;
+        flex-direction: column;
+
+        .ptbl-items-selector {
+          justify-content: space-between;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .crc-page {
+    padding: 0.75rem;
+
+    .crc-header {
+      align-items: stretch;
+
+      .crc-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+
+        .crc-name-input {
+          width: 100%;
+          min-height: 44px;
+        }
+
+        .crc-add-btn,
+        .crc-delete-multiple-btn {
+          min-height: 44px;
+          justify-content: center;
+          flex: 1 1 auto;
+        }
+      }
+    }
+
+    .crc-table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0.75rem;
+
+      .crc-table {
+        min-width: 460px;
       }
     }
   }

@@ -152,7 +152,7 @@ const ContactMessages = () => {
         </div>
       </div>
 
-      <div className="messages-layout">
+      <div className={`messages-layout ${selected ? "has-selection" : ""}`}>
         {/* LISTE */}
         <div className="messages-list">
           {loading ? (

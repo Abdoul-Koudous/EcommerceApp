@@ -77,6 +77,14 @@
     box-shadow: var(--shadow-card);
     overflow: hidden;
 
+    .ctg-table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-primary) transparent;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -105,7 +113,12 @@
       }
 
       .ctg-icon {
-        margin-right: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        margin-right: 4px;
         cursor: pointer;
         font-size: 1rem;
         transition: var(--transition-fast);
@@ -186,5 +199,37 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+}
+
+@media (max-width: 640px) {
+  .ctg-page {
+    padding: 12px;
+
+    .ctg-header {
+      align-items: stretch;
+
+      .ctg-actions {
+        width: 100%;
+
+        button {
+          min-height: 44px;
+          flex: 1;
+          justify-content: center;
+        }
+      }
+    }
+
+    .ctg-table-container {
+      .ctg-table-scroll table {
+        min-width: 480px;
+      }
+
+      .ctg-table-footer {
+        padding: 0.75rem;
+        align-items: stretch;
+        flex-direction: column;
+      }
+    }
   }
 }

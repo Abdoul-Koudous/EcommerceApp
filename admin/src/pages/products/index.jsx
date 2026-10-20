@@ -230,6 +230,7 @@ const Product = () => {
                 <th>Catégorie</th>
                 <th>Sous-catégorie</th>
                 <th>Prix</th>
+                <th>Stock</th>
                 <th>Note</th>
                 <th>Ventes</th>
                 <th>Actions</th>
@@ -247,14 +248,14 @@ const Product = () => {
 
                 return (
                 <tr key={product._id}>
-                  <td>
+                  <td className="ptbl-select-cell">
                     <input
                       type="checkbox"
                       checked={selectedProducts.includes(product._id)}
                       onChange={() => handleSelectOne(product._id)}
                     />
                   </td>
-                  <td className="ptbl-product-info">
+                  <td className="ptbl-product-info" data-label="Produit">
                     <Link to={`/product/${product._id}`}> <img src={product.images?.[0]} alt={product.name} /> </Link>
                     <div>
                       <Link to={`/product/${product._id}`}><h4>{product.name}</h4></Link>
@@ -262,16 +263,19 @@ const Product = () => {
                     </div>
                   </td>
 
-                  <td>{product.catName}</td>
-                  <td>{product.subCat || "—"}</td>
-                  <td className="ptbl-price">
+                  <td data-label="Catégorie">{product.catName}</td>
+                  <td data-label="Sous-catégorie">{product.subCat || "—"}</td>
+                  <td className="ptbl-price" data-label="Prix">
                     {product.oldPrice > 0 && ( <div className="old-price">{product.oldPrice} FCFA</div> )}
                     <div className="current-price">{product.price} FCFA</div>
                   </td>
-                  <td className="ptbl-rating">
+                  <td className="ptbl-stock" data-label="Stock">
+                    {remaining}
+                  </td>
+                  <td className="ptbl-rating" data-label="Note">
                     <HoverRating rating={product.rating} />
                   </td>
-                  <td className="ptbl-sales">
+                  <td className="ptbl-sales" data-label="Ventes">
                     <span className="ptbl-sales-pct">{salePct}%</span>
                     <span className="ptbl-sales-count">({sold} ventes)</span>
                     <div className="progress-bar">
@@ -289,7 +293,7 @@ const Product = () => {
                       />
                     </div>
                   </td>
-                  <td className="ptbl-actions">
+                  <td className="ptbl-actions" data-label="Actions">
                     <Link to={`/product/${product._id}`}> <button className="ptbl-view-btn"> <FaEye /> </button> </Link>
                     <button
                       className="ptbl-edit-btn"

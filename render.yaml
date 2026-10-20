@@ -1,0 +1,73 @@
+services:
+  - type: web
+    name: ecommerce-demo
+    runtime: node
+    plan: free
+    buildCommand: npm ci --prefix server && npm ci --prefix client && npm ci --prefix admin && npm run build --prefix client && npm run build --prefix admin
+    startCommand: npm start --prefix server
+    healthCheckPath: /health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: /api
+      - key: VITE_BASE
+        value: /admin/
+      - key: VITE_KKIAPAY_SANDBOX
+        value: "true"
+      - key: KKIAPAY_SANDBOX
+        value: "true"
+      - key: FEDAPAY_ENVIRONMENT
+        value: sandbox
+      - key: MONGODB_URI
+        sync: false
+      - key: SECRET_KEY_ACCESS_TOKEN
+        generateValue: true
+      - key: SECRET_KEY_REFRESH_TOKEN
+        generateValue: true
+      - key: JSON_WEB_TOKEN_SECRET_KEY
+        generateValue: true
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "465"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: KKIAPAY_PUBLIC_KEY
+        sync: false
+      - key: KKIAPAY_PRIVATE_KEY
+        sync: false
+      - key: KKIAPAY_SECRET_KEY
+        sync: false
+      - key: KKIAPAY_WEBHOOK_SECRET
+        sync: false
+      - key: FEDAPAY_SECRET_KEY
+        sync: false
+      - key: FEDAPAY_WEBHOOK_SECRET
+        sync: false
+      - key: cloudinary_Config_Cloud_Name
+        sync: false
+      - key: cloudinary_Config_api_key
+        sync: false
+      - key: cloudinary_Config_api_secret
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: VITE_FEDAPAY_PUBLIC_KEY
+        sync: false
+      - key: VITE_KKIAPAY_PUBLIC_KEY
+        sync: false
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false

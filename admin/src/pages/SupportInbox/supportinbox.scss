@@ -253,6 +253,11 @@
   .support-inbox {
     padding: 14px;
 
+    &__header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
     &__layout {
       grid-template-columns: 1fr;
     }
@@ -270,6 +275,27 @@
     &__reply {
       align-items: stretch;
       flex-direction: column;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .support-inbox {
+    padding: 12px;
+
+    &__filters {
+      flex-wrap: wrap;
+    }
+
+    &__item-top,
+    &__item-bottom,
+    &__thread-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    &__bubble {
+      max-width: 100%;
     }
   }
 }

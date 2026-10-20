@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
+import mongoose from "mongoose";
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import connectDB from "./config/connectDb.js";
 import userRouter from './route/user.route.js'
 import categoryRouter from "./route/category.route.js";
@@ -36,6 +40,11 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
+const serverDir = dirname(fileURLToPath(import.meta.url));
+const clientBuildDir = resolve(serverDir, "../client/dist");
+const adminBuildDir = resolve(serverDir, "../admin/dist");
+const hasClientBuild = existsSync(resolve(clientBuildDir, "index.html"));
+const hasAdminBuild = existsSync(resolve(adminBuildDir, "index.html"));
 
 // ✅ derrière un reverse proxy (Nginx en prod) : nécessaire pour que req.secure,
 // les IP clientes réelles, et les cookies "secure" se comportent correctement
@@ -43,17 +52,22 @@ app.set("trust proxy", 1);
 
 // ✅ liste blanche d'origines — CLIENT_URL/ADMIN_URL à définir dans .env
 // (ex: "https://yeboushop.com,https://admin.yeboushop.com")
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
+const renderOrigin = process.env.RENDER_EXTERNAL_URL?.replace(/\/+$/, "");
+const allowedOrigins = new Set([
+  ...configuredOrigins,
+  ...(renderOrigin ? [renderOrigin] : []),
+]);
 
 const corsOptions = {
   origin: (origin, callback) => {
     // Autorise les requêtes sans origine (ex: Postman, requêtes serveur-à-serveur)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.has(origin)) {
       return callback(null, true);
     }
 
@@ -82,13 +96,28 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
+    // Existing storefront assets use third-party payment and media scripts.
+    contentSecurityPolicy: false,
   })
 );
 
-// ✅ Route test
+// En hébergement unifié (ex. Render), la boutique et l'API partagent une origine.
 app.get("/", (req, res) => {
+  if (hasClientBuild) {
+    return res.sendFile(resolve(clientBuildDir, "index.html"));
+  }
+
   res.json({
     message: `🚀 Le serveur est en cours d'exécution sur le port ${PORT}`,
+  });
+});
+
+app.get("/health/ready", (req, res) => {
+  const databaseReady = mongoose.connection.readyState === 1;
+
+  res.status(databaseReady ? 200 : 503).json({
+    status: databaseReady ? "ready" : "unavailable",
+    database: databaseReady ? "connected" : "disconnected",
   });
 });
 
@@ -115,6 +144,42 @@ app.use("/go", shortLinkRouter); // ex: yebou-shop.com/go/sld-aout-montre-wa
 app.use('/api/social-content', socialContentRouter);
 app.use('/api/help-faq', helpFaqRouter);
 app.use('/api/compare', compareRouter);
+
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    error: true,
+    success: false,
+    message: "Route introuvable",
+  });
+});
+
+app.use("/go", (req, res) => {
+  res.status(404).json({
+    error: true,
+    success: false,
+    message: "Lien introuvable",
+  });
+});
+
+if (hasAdminBuild) {
+  app.use("/admin", express.static(adminBuildDir, { index: false }));
+  app.get("/admin", (req, res) => {
+    res.redirect(308, "/admin/");
+  });
+  app.get(/^\/admin(?:\/.*)?$/, (req, res) => {
+    res.sendFile(resolve(adminBuildDir, "index.html"));
+  });
+}
+
+if (hasClientBuild) {
+  app.use(express.static(clientBuildDir, { index: false }));
+  app.get(/.*/, (req, res, next) => {
+    if (req.path.startsWith("/api/") || req.path.startsWith("/go/")) {
+      return next();
+    }
+    res.sendFile(resolve(clientBuildDir, "index.html"));
+  });
+}
 
 // ✅ 404 — route inconnue
 app.use((req, res) => {

@@ -1,4 +1,5 @@
-import nodemailer from "nodemailer";
+import sendEmail from "../config/sendEmail.js";
+import { getClientBaseUrl } from "./publicUrl.js";
 import {
   getOrCreateSettings,
   normalizeStoreIdentity,
@@ -46,22 +47,6 @@ const buildStoreContactHtml = (identity) => {
     ? `<p style="font-size:12px;color:#999;">${contactDetails.join(" · ")}</p>`
     : "";
 };
-
-// ✅ Configure via .env : EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS
-// Pour Gmail : EMAIL_HOST=smtp.gmail.com, EMAIL_PORT=465,
-// EMAIL_USER=ton-adresse@gmail.com, EMAIL_PASS=un "mot de passe d'application" Google
-// (pas ton mot de passe normal — à générer dans les paramètres de sécurité Google)
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT) || 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-
 
 // ✅ Construit un joli corps HTML avec le texte + aperçus images/liens vidéo
 const isImage = (url) => /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
@@ -129,19 +114,26 @@ export const sendReplyEmail = async ({ to, subject, text, attachments = [] }) =>
   const { identity } = await getStoreSettings();
   const html = buildHtmlBody(text, attachments, identity);
 
-  return transporter.sendMail({
-    from: { name: identity.name, address: process.env.EMAIL_USER },
-    ...(identity.email ? { replyTo: identity.email } : {}),
+  const result = await sendEmail(
     to,
-    subject: subject ? `Re: ${subject}` : "Réponse à votre message",
+    subject ? `Re: ${subject}` : "Réponse à votre message",
+    text || "Vous avez reçu une réponse avec une pièce jointe.",
     html,
-  });
+    identity.name,
+    identity.email,
+  );
+
+  if (!result) {
+    throw new Error("Le service e-mail n'a pas pu envoyer la réponse.");
+  }
+
+  return result;
 };
 
 // 📁 utils/mail.js — buildOrderReceiptHtml remplacé par une version courte
 
 const buildOrderReceiptHtml = (order, identity, currency) => {
-  const receiptUrl = `${process.env.CLIENT_URL}/account/orders/${order.orderId}`;
+  const receiptUrl = `${getClientBaseUrl()}/account/orders/${order.orderId}`;
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
@@ -168,11 +160,18 @@ export const sendOrderReceiptEmail = async (order, userEmail) => {
   const { identity, currency } = await getStoreSettings();
   const html = buildOrderReceiptHtml(order, identity, currency);
 
-  return transporter.sendMail({
-    from: { name: identity.name, address: process.env.EMAIL_USER },
-    ...(identity.email ? { replyTo: identity.email } : {}),
-    to: userEmail,
-    subject: `Confirmation de votre commande ${order.orderId}`,
+  const result = await sendEmail(
+    userEmail,
+    `Confirmation de votre commande ${order.orderId}`,
+    `Merci pour votre commande ${order.orderId}. Montant : ${(order.totalAmt || 0).toLocaleString()} ${currency}.`,
     html,
-  });
+    identity.name,
+    identity.email,
+  );
+
+  if (!result) {
+    throw new Error("Le service e-mail n'a pas pu envoyer le reçu.");
+  }
+
+  return result;
 };

@@ -9,6 +9,21 @@ services:
     env_file:
       - ./server/.env
     restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8000/health/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   client:
     build:
@@ -27,6 +42,11 @@ services:
         - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID:-}
     container_name: client
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   admin:
     build:
@@ -37,6 +57,11 @@ services:
         - VITE_BASE=/admin/
     container_name: admin
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   nginx:
     image: nginx:alpine
@@ -50,3 +75,8 @@ services:
       - admin
       - server
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

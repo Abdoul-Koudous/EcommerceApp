@@ -219,3 +219,29 @@
     transform: scale(1.05);
   }
 }
+
+@media (max-width: 640px) {
+  .admin-header {
+    padding: 0 0.65rem;
+
+    .menu-btn {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+    }
+
+    .part2 {
+      gap: 0.6rem;
+
+      .icon-wrapper {
+        font-size: 1.25rem;
+      }
+
+      .user-menu .user-profile {
+        width: 34px;
+        height: 34px;
+      }
+    }
+  }
+}

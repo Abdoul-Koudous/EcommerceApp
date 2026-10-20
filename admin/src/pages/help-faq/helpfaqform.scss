@@ -213,3 +213,34 @@
     cursor: not-allowed;
   }
 }
+
+@media (max-width: 640px) {
+  .hlpf-overlay {
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .hlpf-content {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .hlpf-header,
+  .hlpf-body {
+    padding: 1rem;
+  }
+
+  .hlpf-form-group {
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      min-height: 44px;
+      font-size: 16px;
+    }
+  }
+
+  .hlpf-publish-btn {
+    min-height: 48px;
+  }
+}

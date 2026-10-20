@@ -97,12 +97,14 @@
 
 .bladm-table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-light);
 }
 
 .bladm-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
   font-size: 13.5px;
 
@@ -199,5 +201,36 @@
     padding: 6px 10px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 640px) {
+  .bladm-page {
+    padding: 12px;
+  }
+
+  .bladm-header {
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .bladm-add-btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .bladm-toolbar {
+    align-items: stretch;
+  }
+
+  .bladm-search-bar {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .bladm-table-footer {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

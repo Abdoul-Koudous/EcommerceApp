@@ -161,3 +161,52 @@
     }
   }
 }
+
+@media (max-width: 640px) {
+  .sct-page {
+    padding: 12px;
+
+    .sct-header {
+      align-items: stretch;
+
+      .sct-actions {
+        width: 100%;
+
+        .sct-btn {
+          min-height: 44px;
+          flex: 1;
+        }
+      }
+    }
+
+    .sct-tree-table {
+      .sct-row {
+        align-items: flex-start;
+        padding: 10px;
+      }
+
+      .sct-cell.sct-name {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .sct-cell.sct-actions-cell {
+        flex-shrink: 0;
+        gap: 16px;
+      }
+
+      .sct-edit-btn {
+        min-height: 40px;
+      }
+
+      .sct-icon,
+      .sct-toggle {
+        display: inline-grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        margin: -8px;
+      }
+    }
+  }
+}

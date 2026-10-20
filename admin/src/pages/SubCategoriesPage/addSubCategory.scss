@@ -51,6 +51,56 @@
         &:hover { color: var(--color-primary); }
       }
     }
+
+    @media (max-width: 640px) {
+      .asc-overlay {
+        .asc-content {
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          border-radius: 0;
+        }
+
+        .asc-header {
+          padding: 1rem;
+
+          .asc-header-left {
+            gap: 0.65rem;
+
+            h2 {
+              font-size: 1.2rem;
+            }
+
+            .asc-close-btn {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 44px;
+              height: 44px;
+              flex-shrink: 0;
+            }
+          }
+        }
+
+        .asc-body {
+          padding: 1rem;
+
+          .asc-form {
+            gap: 1rem;
+
+            .asc-block-left,
+            .asc-block-right {
+              flex-basis: 100%;
+              padding: 1rem;
+            }
+
+            .asc-publish-btn {
+              min-height: 48px;
+            }
+          }
+        }
+      }
+    }
   }
 
   .asc-body {

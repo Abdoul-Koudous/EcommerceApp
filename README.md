@@ -156,6 +156,127 @@ boutique. N'activez le mode réel qu'après avoir installé les clés de product
 du même compte marchand dans les configurations serveur et client décrites
 ci-dessus.
 
+## Déploiement de démonstration sur Render
+
+Le fichier `render.yaml` prépare un service web Node unique qui construit les
+deux interfaces et les sert avec l'API Express sur la même origine. La route
+`/admin/` ouvre l'administration et `/api/` reste l'API ; ce montage conserve
+les cookies d'authentification sans partage entre domaines.
+
+1. Dans Render, créez un Blueprint depuis le dépôt et sélectionnez
+   `render.yaml`.
+2. Dans l'écran Render, renseignez les secrets demandés depuis vos propres
+   fichiers/configurations privées. Ne les ajoutez pas à Git et ne les envoyez
+   pas dans une conversation. `MONGODB_URI` doit désigner la base MongoDB de
+   démonstration. Les clés de paiement doivent rester en Sandbox.
+3. Si Atlas refuse la connexion, récupérez les plages d'adresses sortantes
+   affichées dans Render sous **Connect → Outbound**, puis ajoutez-les à la
+   liste d'accès réseau Atlas. N'ouvrez pas l'accès réseau à toutes les
+   adresses sans comprendre et accepter ce risque.
+4. Attendez le déploiement, puis ouvrez l'URL `onrender.com` fournie par
+   Render. Le site s'ouvre à la racine ; l'admin se trouve à `/admin/`.
+   Vérifiez `/health/ready`, les connexions client/admin, l'accès MongoDB et
+   les journaux avant d'envoyer cette URL aux testeurs.
+5. Si la connexion Google/Firebase est utilisée, ajoutez le domaine
+   `onrender.com` attribué au service parmi les domaines autorisés dans Firebase
+   Authentication.
+6. Render fournit le domaine HTTPS. Configurez ensuite chaque webhook Sandbox
+   à l'URL `/api/payment/webhook/...` de cette même origine, conformément à la
+   section « Notifications de paiement ».
+
+Le service web de démonstration peut s'endormir après une période sans trafic ;
+le premier accès suivant peut donc prendre environ une minute. Son système de
+fichiers n'est pas persistant : le catalogue, les images et les documents
+doivent rester dans MongoDB/Cloudinary, jamais sur le disque local du service.
+Les fonctions et ressources d'un forfait de démonstration ne conviennent pas
+à des commandes réelles sans une nouvelle vérification de l'hébergement, des
+sauvegardes, du domaine, de l'e-mail et des paiements.
+
+## Préparer l'exploitation
+
+### Sauvegardes MongoDB et test de restauration
+
+Pour l'environnement de démonstration, faites un export ponctuel avec
+[MongoDB Database Tools](https://www.mongodb.com/docs/database-tools/installation/)
+avant les changements importants. Cela n'est pas une sauvegarde automatique :
+conservez l'archive dans un emplacement sûr, distinct du serveur, idéalement
+chiffré. Les archives contiennent des données personnelles. Les médias stockés
+sur Cloudinary nécessitent une stratégie de sauvegarde distincte.
+
+Sur une machine de confiance, installez les outils MongoDB `mongodump`,
+`mongorestore` et `mongosh`. Depuis la racine du dépôt, chargez l'URI déjà
+défini dans `server/.env` dans la session PowerShell sans l'afficher, puis
+créez l'archive :
+
+```powershell
+$uriLine = Get-Content .\server\.env | Where-Object { $_ -match '^MONGODB_URI=' } | Select-Object -First 1
+if (-not $uriLine) { throw "MONGODB_URI est absent de server/.env." }
+$env:MONGODB_URI = $uriLine.Substring('MONGODB_URI='.Length).Trim().Trim('"').Trim("'")
+$backupDir = Join-Path $PWD "backups"
+New-Item -ItemType Directory -Force $backupDir | Out-Null
+$archive = Join-Path $backupDir ("ecommerceApp-{0}.archive.gz" -f (Get-Date -Format "yyyyMMdd-HHmmss"))
+mongodump "--uri=$env:MONGODB_URI" --db=ecommerceApp --gzip "--archive=$archive"
+if ($LASTEXITCODE -ne 0) { throw "La sauvegarde MongoDB a échoué." }
+```
+
+L'archive reste dans le dossier local `backups/`, ignoré par Git. Ne la
+téléversez pas sans chiffrement. Pour tester la restauration sans toucher à
+`ecommerceApp`, restaurez-la dans une base temporaire distincte :
+
+```powershell
+$restoreDb = "ecommerceApp_restore_test_{0}" -f (Get-Date -Format "yyyyMMddHHmmss")
+mongorestore "--uri=$env:MONGODB_URI" --gzip "--archive=$archive" --nsFrom="ecommerceApp.*" --nsTo="${restoreDb}.*"
+if ($LASTEXITCODE -ne 0) { throw "La restauration de test a échoué." }
+mongosh "$env:MONGODB_URI" --quiet --eval "const a=db.getSiblingDB('ecommerceApp'); const b=db.getSiblingDB('$restoreDb'); const names=a.getCollectionNames(); const restored=b.getCollectionNames(); const mismatches=names.filter(n=>!restored.includes(n)||a.getCollection(n).countDocuments({})!==b.getCollection(n).countDocuments({})); const unexpected=restored.filter(n=>!names.includes(n)); printjson({database:b.getName(),collections:names.length,mismatches,unexpected}); if(names.length===0||mismatches.length||unexpected.length) quit(2)"
+if ($LASTEXITCODE -ne 0) { throw "La vérification des données restaurées a échoué." }
+```
+
+Après avoir vérifié le résultat, supprimez uniquement la base temporaire :
+
+```powershell
+mongosh "$env:MONGODB_URI" --quiet --eval "db.getSiblingDB('$restoreDb').dropDatabase()"
+```
+
+Ne lancez jamais la restauration de test sans `--nsFrom`/`--nsTo` vers une base
+distincte. Les exports ponctuels limitent le risque de perte entre deux
+sauvegardes, mais n'offrent ni automatisation ni restauration à un instant
+précis. Avant la mise en production, définissez une politique de sauvegarde et
+de rétention adaptée à l'hébergement retenu.
+
+### E-mails et journaux
+
+Tous les e-mails applicatifs utilisent le même SMTP. Configurez dans
+`server/.env` `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER` et `EMAIL_PASS`. Pour
+Gmail, utilisez un mot de passe d'application ; ne mettez jamais le mot de
+passe normal du compte. `EMAIL` reste accepté temporairement comme ancien nom
+de `EMAIL_USER`. Vérifiez au démarrage que le journal indique « SMTP prêt à
+envoyer des emails », puis testez un e-mail de vérification, un reçu et une
+réponse au formulaire de contact avant l'ouverture.
+
+Le serveur expose `/health/ready` en interne : il renvoie `200` uniquement
+lorsque MongoDB est connecté. Compose vérifie cette route et fait tourner les
+journaux de conteneurs pour limiter leur taille. Consultez-les avec :
+
+```powershell
+docker compose -f docker-compose.prod.yml logs --since 24h server nginx
+```
+
+Configurez aussi une alerte côté hébergeur pour les conteneurs arrêtés, le
+disque presque plein, les erreurs répétées et l'échec des sauvegardes. Les
+journaux Docker locaux ne constituent pas une sauvegarde ni une supervision
+centralisée.
+
+### Domaine et HTTPS
+
+Le Nginx du dépôt ne configure actuellement que HTTP (`listen 80`) et Compose
+publie le port `3000`. Le domaine, le DNS et le certificat TLS doivent donc
+être configurés chez l'hébergeur ou par un reverse proxy TLS placé devant
+Compose. Avant le lancement, vérifier que le domaine et `www` pointent vers le
+serveur, que HTTP redirige vers HTTPS, que le certificat est valide et
+renouvelable automatiquement, et que seuls les ports publics nécessaires sont
+exposés. Les origines HTTPS exactes doivent aussi figurer dans
+`server/.env` (`ALLOWED_ORIGINS`).
+
 ## Prérequis
 - Node.js
 - npm 

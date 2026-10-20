@@ -281,10 +281,12 @@
 
   .settings-zone-table-wrapper {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .settings-zone-table {
     width: 100%;
+    min-width: 680px;
     border-collapse: collapse;
 
     th {
@@ -328,10 +330,62 @@
           background: var(--color-surface-alt);
         }
       }
+
     }
 
     tr:hover {
       background: var(--color-surface-alt);
+    }
+  }
+
+}
+
+@media (max-width: 640px) {
+  .settings-page {
+    .settings-title {
+      margin-bottom: 1rem;
+    }
+
+    .settings-card {
+      padding: 1rem;
+      border-radius: 10px;
+    }
+
+    .settings-form-grid,
+    .settings-logo-grid {
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .settings-form-group,
+    .settings-logo-field {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .settings-input-suffix {
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+
+    .settings-zone-form {
+      align-items: stretch;
+      flex-direction: column;
+
+      .settings-form-group {
+        min-width: 0;
+      }
+
+      button {
+        justify-content: center;
+        min-height: 44px;
+      }
+    }
+
+    .settings-save-btn,
+    .settings-delete-multiple-btn {
+      justify-content: center;
+      min-height: 44px;
     }
   }
 }

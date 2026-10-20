@@ -17,8 +17,7 @@
     margin-bottom: 1.25rem;
 
     @include bp.respond("tablet") {
-      .otb-form-group,
-      .otb-search-bar {
+      .otb-form-group {
         flex: 1 1 100%; // ✅ un champ par ligne sous 768px plutôt que de dépendre du seul flex-wrap
       }
     }
@@ -116,6 +115,7 @@
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 
     scrollbar-width: thin;
     scrollbar-color: var(--color-primary) transparent;
@@ -132,8 +132,8 @@
 
   .otb-table {
     display: block;
-    width: 100%;        // ✅ occupe toute la largeur du conteneur au lieu de rester figée à min-width
-    min-width: 1100px;  // conservé : garantit un scroll horizontal propre sur petit écran
+    width: 100%;
+    min-width: 1100px;
   }
 
   // 9 colonnes : flèche, Commande, Client, Livraison, Total, Paiement, Date, Statut, Actions
@@ -403,4 +403,66 @@
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   margin-top: 2px;
+}
+
+@media (max-width: 960px) {
+  .orders-tab {
+    .otb-filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .otb-filters {
+      .otb-search-bar {
+        align-self: stretch;
+        box-sizing: border-box;
+        flex: 0 0 42px;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        min-height: 42px;
+        height: 42px;
+
+        input {
+          flex: 1;
+          min-width: 0;
+        }
+      }
+    }
+
+    .otb-table {
+      min-width: 980px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .orders-tab {
+    .otb-filters {
+      gap: 0.75rem;
+    }
+
+    .otb-table-header,
+    .otb-summary {
+      grid-template-columns: 28px 100px 1.2fr 1.2fr 96px 120px 90px 120px 40px;
+    }
+
+    .otb-cell-order-id,
+    .otb-cell-client strong,
+    .otb-cell-delivery strong,
+    .otb-cell-payment strong {
+      font-size: 0.72rem;
+    }
+
+    .otb-cell-client small,
+    .otb-cell-delivery small,
+    .otb-cell-payment small {
+      font-size: 0.68rem;
+    }
+
+    .otb-status-select,
+    .otb-payment-status {
+      max-width: 100%;
+    }
+  }
 }

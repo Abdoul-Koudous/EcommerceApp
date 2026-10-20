@@ -47,6 +47,48 @@
         color: var(--color-primary);
       }
     }
+
+    @media (max-width: 640px) {
+      .cap-panel {
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        height: 100dvh;
+
+        .cap-header {
+          padding: 1rem;
+
+          .cap-close-btn {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+          }
+        }
+
+        .cap-body {
+          padding: 1rem;
+        }
+
+        .cap-funnel-table {
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
+        }
+
+        .cap-funnel-bars {
+          .cap-funnel-bar-group {
+            gap: 0.5rem;
+
+            .cap-funnel-bar-label {
+              width: 76px;
+              font-size: 0.75rem;
+            }
+          }
+        }
+      }
+    }
   }
 
   .cap-body {

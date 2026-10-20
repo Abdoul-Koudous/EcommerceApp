@@ -124,7 +124,8 @@ const BannerV1List = () => {
         <CircularProgress />
       ) : (
         <div className="bnr-table-container">
-          <table>
+          <div className="bnr-table-scroll">
+            <table>
             <thead>
               <tr>
                 <th>
@@ -182,7 +183,8 @@ const BannerV1List = () => {
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
 
           {/* PAGINATION */}
           <div className="bnr-table-footer">

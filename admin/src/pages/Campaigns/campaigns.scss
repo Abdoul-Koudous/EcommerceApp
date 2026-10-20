@@ -491,3 +491,77 @@
     filter: brightness(0.9);
   }
 }
+
+@media (max-width: 640px) {
+  .cmp-page {
+    padding: 0.75rem;
+
+    .cmp-header {
+      flex-direction: column;
+      gap: 0.75rem;
+
+      .cmp-create-btn {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+      }
+    }
+
+    .cmp-card {
+      padding: 0.85rem;
+
+      .cmp-card-header {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .cmp-links-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+
+        .cmp-links-header,
+        .cmp-link-row {
+          min-width: 500px;
+        }
+      }
+    }
+
+    .cmp-overlay {
+      align-items: stretch;
+    }
+
+    .cmp-panel {
+      width: 100%;
+      max-width: none;
+      max-height: 100vh;
+      max-height: 100dvh;
+      height: 100vh;
+      height: 100dvh;
+      border-radius: 0;
+
+      .cmp-panel-header,
+      .cmp-panel-body {
+        padding: 0.9rem;
+      }
+
+      .cmp-panel-header button {
+        width: 44px;
+        height: 44px;
+        justify-content: center;
+      }
+
+      .cmp-content-controls {
+        flex-direction: column;
+
+        .cmp-generate-btn {
+          justify-content: center;
+          min-height: 44px;
+        }
+      }
+    }
+
+    .cmp-submit-btn {
+      min-height: 48px;
+    }
+  }
+}

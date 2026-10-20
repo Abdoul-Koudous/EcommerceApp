@@ -359,3 +359,24 @@
     cursor: not-allowed;
   }
 }
+
+@media (max-width: 640px) {
+  .blf-overlay {
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .blf-content {
+    max-height: 100%;
+  }
+
+  .blf-header,
+  .blf-body {
+    padding: 1rem;
+  }
+
+  .blf-publish-btn {
+    align-self: stretch;
+    min-height: 48px;
+  }
+}

@@ -199,3 +199,50 @@
     }
   }
 }
+
+@media (max-width: 768px) {
+  .ctf-overlay {
+    .ctf-content {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      border-radius: 0;
+    }
+
+    .ctf-header {
+      padding: 0.85rem 1rem;
+
+      .ctf-header-left {
+        h2 {
+          font-size: 1.15rem;
+        }
+
+        .ctf-close-btn {
+          display: grid;
+          place-items: center;
+          min-width: 44px;
+          min-height: 44px;
+        }
+      }
+    }
+
+    .ctf-body {
+      padding: 1rem;
+
+      .ctf-form {
+        max-width: none;
+
+        input,
+        select {
+          min-height: 44px;
+          font-size: 16px;
+        }
+
+        .ctf-publish-btn {
+          width: 100%;
+          min-height: 48px;
+        }
+      }
+    }
+  }
+}

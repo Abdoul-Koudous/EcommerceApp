@@ -119,10 +119,12 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .hlpadm-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
   font-size: 13.5px;
 
@@ -233,5 +235,41 @@
     font-family: var(--font-main);
     font-size: 13px;
     color: var(--color-text);
+  }
+}
+
+@media (max-width: 640px) {
+  .hlpadm-page {
+    padding: 12px;
+  }
+
+  .hlpadm-header {
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .hlpadm-add-btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .hlpadm-toolbar {
+    align-items: stretch;
+  }
+
+  .hlpadm-search-bar {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .hlpadm-table-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hlpadm-actions button {
+    width: 40px;
+    height: 40px;
   }
 }

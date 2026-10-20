@@ -2,12 +2,15 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const smtpUser = process.env.EMAIL_USER || process.env.EMAIL;
+const smtpPort = Number(process.env.EMAIL_PORT) || 465;
+
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: smtpPort,
+  secure: smtpPort === 465,
   auth: {
-    user: process.env.EMAIL,
+    user: smtpUser,
     pass: process.env.EMAIL_PASS,
   },
   // Échouer vite au lieu d'attendre indéfiniment
@@ -29,8 +32,8 @@ async function sendEmail(to, subject, text, html, fromName, replyTo) {
   try {
     const info = await transporter.sendMail({
       from: fromName
-        ? { name: fromName, address: process.env.EMAIL }
-        : process.env.EMAIL,
+        ? { name: fromName, address: smtpUser }
+        : smtpUser,
       ...(replyTo ? { replyTo } : {}),
       to,
       subject,

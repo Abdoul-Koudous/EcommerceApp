@@ -3,6 +3,7 @@ import crypto from "crypto";
 import CampaignModel from "../models/campaign.model.js";
 import CampaignLinkModel from "../models/campaignLink.model.js";
 import TrackingEventModel from "../models/trackingEvent.model.js";
+import { getClientBaseUrl } from "../utils/publicUrl.js";
 import ProductModel from "../models/product.model.js";
 import mongoose from "mongoose";
 
@@ -143,7 +144,7 @@ export async function resolveShortLink(request, response) {
     const link = await CampaignLinkModel.findOne({ slug, isActive: true });
 
     if (!link) {
-      return response.redirect(`${process.env.CLIENT_URL}/`);
+      return response.redirect(`${getClientBaseUrl()}/`);
     }
 
     await Promise.all([
@@ -159,11 +160,11 @@ export async function resolveShortLink(request, response) {
       }),
     ]);
 
-    const redirectUrl = `${process.env.CLIENT_URL}/product/${link.productId}?utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}&clid=${link._id}`;
+    const redirectUrl = `${getClientBaseUrl()}/product/${link.productId}?utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}&clid=${link._id}`;
 
     return response.redirect(302, redirectUrl);
   } catch (error) {
-    return response.redirect(`${process.env.CLIENT_URL}/`);
+    return response.redirect(`${getClientBaseUrl()}/`);
   }
 }
 

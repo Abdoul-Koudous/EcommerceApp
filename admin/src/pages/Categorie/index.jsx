@@ -133,7 +133,8 @@ const CategoriesPage = () => {
         <CircularProgress />
       ) : (
         <div className="ctg-table-container">
-          <table>
+          <div className="ctg-table-scroll">
+            <table>
             <thead>
               <tr>
                 <th>
@@ -178,7 +179,8 @@ const CategoriesPage = () => {
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
 
           <div className="ctg-table-footer">
             <div className="ctg-items-selector">

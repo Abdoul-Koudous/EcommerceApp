@@ -333,10 +333,39 @@
 @media (max-width: 640px) {
   .hsf-overlay .hsf-content {
     width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .hsf-overlay .hsf-header {
+    padding: 0.85rem 1rem;
+
+    .hsf-header-left {
+      h2 {
+        font-size: 1.15rem;
+      }
+
+      .hsf-close-btn {
+        display: grid;
+        place-items: center;
+        min-width: 44px;
+        min-height: 44px;
+      }
+    }
+  }
+
+  .hsf-overlay .hsf-body {
+    padding: 1rem;
   }
 
   .hsf-form .hsf-row {
     flex-direction: column;
     gap: 1.2rem;
+
+    .hsf-field {
+      width: 100%;
+      min-width: 0;
+    }
   }
 }
