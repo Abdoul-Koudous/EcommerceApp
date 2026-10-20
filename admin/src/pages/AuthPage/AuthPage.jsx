@@ -6,23 +6,41 @@ import LoginForm from "../login";
 import RegisterForm from "../register";
 import OTPPage from "../OTPPage/OTPPage";
 import ResetPassword from "../ResetPassword/ResetPassword";
+import { fetchDataFromApi } from "../utils/api";
 
 const AuthPage = ({ defaultForm = "login" }) => {
   const location = useLocation();
-  const [activeForm, setActiveForm] = useState(defaultForm);
+  const activeForm =
+    {
+      "/login": "login",
+      "/register": "register",
+      "/otp": "otp",
+      "/reset-password": "reset",
+    }[location.pathname] || defaultForm;
+  const [storeName, setStoreName] = useState("YebouShop");
 
   useEffect(() => {
-    // Met à jour le formulaire actif si la route change
-    if (location.pathname === "/login") setActiveForm("login");
-    else if (location.pathname === "/register") setActiveForm("register");
-    else if (location.pathname === "/otp") setActiveForm("otp");
-    else if (location.pathname === "/reset-password") setActiveForm("reset");
-  }, [location.pathname]);
+    let cancelled = false;
+    fetchDataFromApi("/api/settings").then((response) => {
+      if (cancelled) return;
+      if (response?.error) {
+        console.error(
+          "Impossible de charger le nom de la boutique:",
+          response.message,
+        );
+        return;
+      }
+      setStoreName(response?.settings?.storeIdentity?.name || "YebouShop");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="auth-page">
       <header className="auth-header">
-        <div className="logo">🛒 YebouShop</div>
+        <div className="logo">🛒 {storeName}</div>
         <div className="auth-buttons">
           <Link to="/login" className={activeForm === "login" ? "active" : ""}>
             <FaSignInAlt /> Login
@@ -37,10 +55,10 @@ const AuthPage = ({ defaultForm = "login" }) => {
       </header>
 
       <div className="auth-form-wrapper">
-        {activeForm === "login" && <LoginForm />}
-        {activeForm === "register" && <RegisterForm />}
+        {activeForm === "login" && <LoginForm storeName={storeName} />}
+        {activeForm === "register" && <RegisterForm storeName={storeName} />}
         {activeForm === "otp" && <OTPPage />}
-        {activeForm === "reset" && <ResetPassword/>}
+        {activeForm === "reset" && <ResetPassword storeName={storeName} />}
       </div>
     </div>
   );

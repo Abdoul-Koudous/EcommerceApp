@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { UserContext } from "../../UserContext/UserContext";
 
-const LoginForm = () => {
+const LoginForm = ({ storeName = "YebouShop" }) => {
   const { openToast } = useContext(ToastContext);
   const { loadUser } = useContext(UserContext);
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const LoginForm = () => {
   return (
     <div className="lgn-page">
       {/* Logo */}
-      <div className="lgn-logo">🛒 YebouShop</div>
+      <div className="lgn-logo">🛒 {storeName}</div>
 
       {/* Welcome text */}
       <h2>Bienvenue sur Login</h2>

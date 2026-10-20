@@ -1,5 +1,6 @@
 import React from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaBan, FaTimes } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { orderStatusInfo, paymentStatusInfo } from "../utils/orderStatus";
 import "./OrderDetailsPanel.scss";
 
@@ -15,7 +16,15 @@ const formatSelectedVariants = (selectedVariants) => {
     .join(" · ");
 };
 
-const OrderDetailsPanel = ({ order, userName, userEmail, userMobile, onClose }) => {
+const OrderDetailsPanel = ({
+  order,
+  userName,
+  userEmail,
+  userMobile,
+  onCancelOrder,
+  cancelling,
+  onClose,
+}) => {
   if (!order) return null;
 
   const addr = order.delivery_address;
@@ -50,6 +59,30 @@ const OrderDetailsPanel = ({ order, userName, userEmail, userMobile, onClose }) 
             {paymentStatus.label}
           </span>
         </div>
+
+        {order.order_status === "Reçue" &&
+          ["À payer à la livraison", "Échec"].includes(order.payment_status) && (
+            <div className="panel-section">
+              <button
+                className="panel-cancel-order"
+                type="button"
+                onClick={() => onCancelOrder(order)}
+                disabled={cancelling}
+              >
+                <FaBan />
+                {cancelling ? "Annulation..." : "Annuler cette commande"}
+              </button>
+            </div>
+          )}
+        {order.order_status === "Reçue" &&
+          ["Payée", "approved", "SUCCESS"].includes(order.payment_status) && (
+            <div className="panel-section">
+              <p className="panel-cancellation-note">
+                Cette commande a déjà été payée. Pour demander son annulation,
+                <Link to="/contact" onClick={onClose}> contactez le service client</Link>.
+              </p>
+            </div>
+          )}
 
         {/* Le compte connecté qui a passé la commande */}
         <div className="panel-section">
@@ -114,18 +147,24 @@ const OrderDetailsPanel = ({ order, userName, userEmail, userMobile, onClose }) 
 
         <div className="panel-section">
           <h4>Paiement</h4>
-          <div className="panel-summary-row">
-            <span>Sous-total</span>
-            <span>{order.subTotalAmt?.toLocaleString()} FCFA</span>
-          </div>
-          <div className="panel-summary-row">
-            <span>Livraison</span>
-            <span>{order.shippingAmt?.toLocaleString()} FCFA</span>
-          </div>
-          <div className="panel-summary-row">
-            <span>Taxes</span>
-            <span>{order.taxAmt?.toLocaleString()} FCFA</span>
-          </div>
+          {Number(order.subTotalAmt) > 0 && (
+            <div className="panel-summary-row">
+              <span>Sous-total</span>
+              <span>{order.subTotalAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
+          {Number(order.shippingAmt) > 0 && (
+            <div className="panel-summary-row">
+              <span>Livraison</span>
+              <span>{order.shippingAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
+          {Number(order.taxAmt) > 0 && (
+            <div className="panel-summary-row">
+              <span>Taxes</span>
+              <span>{order.taxAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
           <div className="panel-summary-row panel-summary-total">
             <span>Total</span>
             <span>{order.totalAmt?.toLocaleString()} FCFA</span>

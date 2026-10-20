@@ -25,6 +25,7 @@ import Settings from "./pages/Settings/Settings";
 import Campaigns from "./pages/Campaigns/Campaigns";
 import Analytics from "./pages/Analytics/Analytics";
 import HelpFaqList from "./pages/help-faq/HelpFaqList";
+import SupportInbox from "./pages/SupportInbox/SupportInbox";
 
 
 // ✅ AJOUT : import manquant — BlogList gère elle-même l'ouverture
@@ -33,7 +34,7 @@ import BlogList from "./pages/blog";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         {/* === Pages avec layout admin (protégées) === */}
         <Route
@@ -220,6 +221,16 @@ function App() {
             <ProtectedRoute>
               <AdminLayout>
                 <ContactMessages />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/support-inbox"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <SupportInbox />
               </AdminLayout>
             </ProtectedRoute>
           }

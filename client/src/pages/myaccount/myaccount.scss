@@ -102,10 +102,31 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            min-width: 0;
+            width: 100%;
 
             .al-icon {
               font-size: 1.1rem;
               color: var(--color-primary);
+            }
+
+            .al-menu-label {
+              min-width: 0;
+            }
+
+            .al-unread-badge {
+              display: inline-grid;
+              min-width: 21px;
+              height: 21px;
+              place-items: center;
+              margin-left: auto;
+              padding: 0 5px;
+              border-radius: 999px;
+              background: var(--color-primary);
+              color: var(--color-text-on-primary);
+              font-size: 0.72rem;
+              font-weight: 700;
+              line-height: 1;
             }
           }
 
@@ -225,7 +246,7 @@
               display: none;
             }
 
-            .al-menu-item span:last-child {
+            .al-menu-item .al-menu-label {
               font-size: 0.85rem;
             }
           }

@@ -19,13 +19,12 @@ function buildOwnerFilter(request) {
 }
 
 function resolveVariantCombination(product, selectedVariants) {
-  if (
-    !product.hasVariants ||
-    !product.useVariantStock ||
-    !selectedVariants ||
-    Object.keys(selectedVariants).length === 0
-  ) {
+  if (!product.hasVariants || !product.useVariantStock) {
     return null;
+  }
+
+  if (!selectedVariants || Object.keys(selectedVariants).length === 0) {
+    return undefined;
   }
 
   const matched = product.variantCombinations.find((combo) => {
@@ -67,7 +66,6 @@ export const addToCartItemController = async (req, res) => {
       productTitle,
       image,
       rating,
-      price,
       oldPrice,
       productId,
       quantity,
@@ -79,14 +77,20 @@ export const addToCartItemController = async (req, res) => {
       selectedVariants,
     } = req.body;
 
-    if (!productId || !quantity || !price) {
+    if (!productId || quantity === undefined) {
       return res.status(400).json({
-        message: "productId, quantity et price requis",
+        message: "productId et quantity sont requis",
         success: false,
       });
     }
 
     const qty = Number(quantity);
+    if (!Number.isInteger(qty) || qty < 1) {
+      return res.status(400).json({
+        message: "La quantité doit être un entier supérieur à zéro",
+        success: false,
+      });
+    }
 
     const product = await ProductModel.findById(productId);
 
@@ -98,8 +102,19 @@ export const addToCartItemController = async (req, res) => {
     }
 
     let countInStock = product.countIntStock;
-    let effectivePrice = price;
+    let effectivePrice = product.price;
     let selectedCombinationSku = "";
+
+    if (
+      product.hasVariants &&
+      product.useVariantStock &&
+      (!selectedVariants || Object.keys(selectedVariants).length === 0)
+    ) {
+      return res.status(400).json({
+        message: "Veuillez sélectionner une variante",
+        success: false,
+      });
+    }
 
     const matchedCombination = resolveVariantCombination(
       product,
@@ -264,6 +279,18 @@ export const updateCartItemController = async (req, res) => {
           ? Object.fromEntries(cartItem.selectedVariants)
           : {};
 
+    if (
+        product.hasVariants &&
+        product.useVariantStock &&
+        (!nextSelectedVariants ||
+          Object.keys(nextSelectedVariants).length === 0)
+    ) {
+        return res.status(400).json({
+          message: "Veuillez sélectionner une variante",
+          success: false,
+        });
+    }
+
     if (selectedVariants !== undefined) {
       const otherItems = await cartProductModel.find({
         ...ownerFilter,
@@ -322,7 +349,15 @@ export const updateCartItemController = async (req, res) => {
       });
     }
 
-    const newQty = Math.min(Math.max(1, Number(qty || cartItem.quantity)), maxStock);
+    const requestedQty = qty === undefined ? cartItem.quantity : Number(qty);
+    if (!Number.isInteger(requestedQty) || requestedQty < 1) {
+      return res.status(400).json({
+        message: "La quantité doit être un entier supérieur à zéro",
+        success: false,
+      });
+    }
+
+    const newQty = Math.min(requestedQty, maxStock);
 
     const updated = await cartProductModel.findOneAndUpdate(
       { _id, ...ownerFilter },

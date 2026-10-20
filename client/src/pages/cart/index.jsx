@@ -22,10 +22,7 @@ const CartPage = () => {
   }, []);
 
   useEffect(() => {
-    if (cartItems.length === 0) {
-      setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
-      return;
-    }
+    if (cartItems.length === 0) return;
 
     // ✅ MODIFIÉ : envoie guestSessionId si pas connecté, comme dans
     // CartPanel.jsx — sinon total bloqué à 0 pour un visiteur anonyme.
@@ -33,8 +30,9 @@ const CartPage = () => {
       ? "/api/payment/preview-total"
       : `/api/payment/preview-total?guestSessionId=${getSessionId()}`;
 
+    let isCurrent = true;
     fetchDataFromApi(url).then((res) => {
-      if (!res?.error) {
+      if (isCurrent && !res?.error) {
         setTotals({
           subTotalAmt: res.subTotalAmt || 0,
           shippingAmt: res.shippingAmt || 0,
@@ -43,7 +41,16 @@ const CartPage = () => {
         });
       }
     });
+
+    return () => {
+      isCurrent = false;
+    };
   }, [cartItems, user]);
+
+  const visibleTotals =
+    cartItems.length > 0
+      ? totals
+      : { subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 };
 
   const handleGoToCheckout = () => {
     if (cartItems.length === 0) return;
@@ -69,25 +76,37 @@ const CartPage = () => {
           <div className="cp-summary-box">
             <h3>Résumé du panier</h3>
 
-            <div className="cp-summary-row">
-              <span>Sous-total</span>
-              <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
-            </div>
+            {cartItems.length === 0 ? (
+              <p className="cp-empty-summary">Votre panier est vide.</p>
+            ) : (
+              <>
+                {visibleTotals.subTotalAmt > 0 && (
+                  <div className="cp-summary-row">
+                    <span>Sous-total</span>
+                    <span>{visibleTotals.subTotalAmt.toLocaleString()} FCFA</span>
+                  </div>
+                )}
 
-            <div className="cp-summary-row">
-              <span>Expédition</span>
-              <span>{totals.shippingAmt.toLocaleString()} FCFA</span>
-            </div>
+                {visibleTotals.shippingAmt > 0 && (
+                  <div className="cp-summary-row">
+                    <span>Expédition</span>
+                    <span>{visibleTotals.shippingAmt.toLocaleString()} FCFA</span>
+                  </div>
+                )}
 
-            <div className="cp-summary-row">
-              <span>Taxes</span>
-              <span>{totals.taxAmt.toLocaleString()} FCFA</span>
-            </div>
+                {visibleTotals.taxAmt > 0 && (
+                  <div className="cp-summary-row">
+                    <span>Taxes</span>
+                    <span>{visibleTotals.taxAmt.toLocaleString()} FCFA</span>
+                  </div>
+                )}
 
-            <div className="cp-summary-row cp-total">
-              <span>Total à payer</span>
-              <span>{totals.totalAmt.toLocaleString()} FCFA</span>
-            </div>
+                <div className="cp-summary-row cp-total">
+                  <span>Total à payer</span>
+                  <span>{visibleTotals.totalAmt.toLocaleString()} FCFA</span>
+                </div>
+              </>
+            )}
 
             <div className="cp-summary-buttons">
               <button className="cp-continue-btn" onClick={() => window.history.back()}>

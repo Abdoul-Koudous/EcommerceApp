@@ -1,4 +1,51 @@
 import nodemailer from "nodemailer";
+import {
+  getOrCreateSettings,
+  normalizeStoreIdentity,
+} from "../services/settings.service.js";
+
+const escapeHtml = (value = "") =>
+  String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]);
+
+const getStoreSettings = async () => {
+  const settings = await getOrCreateSettings();
+  return {
+    identity: normalizeStoreIdentity(settings.storeIdentity),
+    currency: settings.currency || "FCFA",
+  };
+};
+
+const buildStoreContactHtml = (identity) => {
+  const contactDetails = [];
+  if (identity.email) {
+    contactDetails.push(
+      `<a href="mailto:${escapeHtml(identity.email)}">${escapeHtml(identity.email)}</a>`,
+    );
+  }
+  if (identity.phone) {
+    contactDetails.push(
+      `<a href="tel:${escapeHtml(identity.phone)}">${escapeHtml(identity.phone)}</a>`,
+    );
+  }
+  const whatsappNumber = identity.whatsapp.replace(/\D/g, "");
+  if (whatsappNumber) {
+    contactDetails.push(
+      `<a href="https://wa.me/${whatsappNumber}">WhatsApp</a>`,
+    );
+  }
+  if (identity.address) {
+    contactDetails.push(escapeHtml(identity.address));
+  }
+  return contactDetails.length
+    ? `<p style="font-size:12px;color:#999;">${contactDetails.join(" · ")}</p>`
+    : "";
+};
 
 // ✅ Configure via .env : EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS
 // Pour Gmail : EMAIL_HOST=smtp.gmail.com, EMAIL_PORT=465,
@@ -28,7 +75,7 @@ const getVideoThumbnail = (videoUrl) => {
     .replace(/\.(mp4|mov|webm|avi)$/i, ".jpg");
 };
 
-const buildHtmlBody = (text, attachments = []) => {
+const buildHtmlBody = (text, attachments = [], identity) => {
   const paragraph = text
     ? `<p style="font-size:15px;line-height:1.6;color:#222;white-space:pre-wrap;">${text}</p>`
     : "";
@@ -72,16 +119,19 @@ const buildHtmlBody = (text, attachments = []) => {
       ${paragraph}
       ${mediaBlocks}
       <hr style="margin-top:24px;border:none;border-top:1px solid #eee;" />
-      <p style="font-size:12px;color:#999;">Cette réponse vous a été envoyée depuis YebouShop.</p>
+      <p style="font-size:12px;color:#999;">Cette réponse vous a été envoyée depuis ${escapeHtml(identity.name)}.</p>
+      ${buildStoreContactHtml(identity)}
     </div>
   `;
 };
 
 export const sendReplyEmail = async ({ to, subject, text, attachments = [] }) => {
-  const html = buildHtmlBody(text, attachments);
+  const { identity } = await getStoreSettings();
+  const html = buildHtmlBody(text, attachments, identity);
 
   return transporter.sendMail({
-    from: `"YebouShop" <${process.env.EMAIL_USER}>`,
+    from: { name: identity.name, address: process.env.EMAIL_USER },
+    ...(identity.email ? { replyTo: identity.email } : {}),
     to,
     subject: subject ? `Re: ${subject}` : "Réponse à votre message",
     html,
@@ -90,7 +140,7 @@ export const sendReplyEmail = async ({ to, subject, text, attachments = [] }) =>
 
 // 📁 utils/mail.js — buildOrderReceiptHtml remplacé par une version courte
 
-const buildOrderReceiptHtml = (order) => {
+const buildOrderReceiptHtml = (order, identity, currency) => {
   const receiptUrl = `${process.env.CLIENT_URL}/account/orders/${order.orderId}`;
 
   return `
@@ -98,7 +148,7 @@ const buildOrderReceiptHtml = (order) => {
       <h2 style="color:#222;margin-bottom:4px;">Merci pour votre commande !</h2>
       <p style="font-size:14px;color:#555;">
         Votre commande <strong>${order.orderId}</strong> d'un montant de
-        <strong>${(order.totalAmt || 0).toLocaleString()} FCFA</strong> a bien été enregistrée.
+        <strong>${(order.totalAmt || 0).toLocaleString()} ${escapeHtml(currency)}</strong> a bien été enregistrée.
       </p>
       <p style="text-align:center;margin:28px 0;">
         <a href="${receiptUrl}" target="_blank"
@@ -108,16 +158,19 @@ const buildOrderReceiptHtml = (order) => {
         </a>
       </p>
       <hr style="margin-top:24px;border:none;border-top:1px solid #eee;" />
-      <p style="font-size:12px;color:#999;">Cette confirmation vous a été envoyée depuis YebouShop.</p>
+      <p style="font-size:12px;color:#999;">Cette confirmation vous a été envoyée depuis ${escapeHtml(identity.name)}.</p>
+      ${buildStoreContactHtml(identity)}
     </div>
   `;
 };
 
 export const sendOrderReceiptEmail = async (order, userEmail) => {
-  const html = buildOrderReceiptHtml(order);
+  const { identity, currency } = await getStoreSettings();
+  const html = buildOrderReceiptHtml(order, identity, currency);
 
   return transporter.sendMail({
-    from: `"YebouShop" <${process.env.EMAIL_USER}>`,
+    from: { name: identity.name, address: process.env.EMAIL_USER },
+    ...(identity.email ? { replyTo: identity.email } : {}),
     to: userEmail,
     subject: `Confirmation de votre commande ${order.orderId}`,
     html,

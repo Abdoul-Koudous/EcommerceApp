@@ -9,7 +9,7 @@ const k = kkiapay({
   privatekey: process.env.KKIAPAY_PRIVATE_KEY,
   publickey: process.env.KKIAPAY_PUBLIC_KEY,
   secretkey: process.env.KKIAPAY_SECRET_KEY,
-  sandbox: true,
+  sandbox: process.env.KKIAPAY_SANDBOX?.trim().toLowerCase() !== "false",
 });
 
 export default k;

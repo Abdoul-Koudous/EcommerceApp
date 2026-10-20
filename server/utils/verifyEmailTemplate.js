@@ -1,4 +1,40 @@
-const  VerificationEmail = (username, otp)=>{
+const escapeHtml = (value = "") =>
+    String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    })[character]);
+
+const VerificationEmail = (username, otp, storeIdentity = {}) => {
+    const identity =
+        typeof storeIdentity === "string"
+            ? { name: storeIdentity }
+            : storeIdentity;
+    const storeName = identity?.name || "YebouShop";
+    const contactDetails = [];
+    if (identity?.email) {
+        contactDetails.push(
+            `<a href="mailto:${escapeHtml(identity.email)}">${escapeHtml(identity.email)}</a>`
+        );
+    }
+    if (identity?.phone) {
+        contactDetails.push(
+            `<a href="tel:${escapeHtml(identity.phone)}">${escapeHtml(identity.phone)}</a>`
+        );
+    }
+    if (identity?.whatsapp) {
+        const whatsappNumber = identity.whatsapp.replace(/\D/g, "");
+        if (whatsappNumber) {
+            contactDetails.push(
+                `<a href="https://wa.me/${whatsappNumber}">WhatsApp</a>`
+            );
+        }
+    }
+    if (identity?.address) {
+        contactDetails.push(escapeHtml(identity.address));
+    }
     return `<!DOCTYPE html>
     <html lang="fr">
     <head>
@@ -67,7 +103,8 @@ const  VerificationEmail = (username, otp)=>{
                 <p>Si vous n'avez fais aucune inscription, veuillez ignorer ce email.</p>
             </div>
             <div class="footer">
-                <p>&copy; 2025 YebouShop. Tout droit reserver.</p>
+                <p>&copy; ${new Date().getFullYear()} ${escapeHtml(storeName)}. Tous droits réservés.</p>
+                ${contactDetails.length ? `<p>${contactDetails.join(" · ")}</p>` : ""}
             </div>
         </div>
     </body>

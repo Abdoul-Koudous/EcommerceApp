@@ -39,6 +39,7 @@ import TrackOrder from "./pages/trackorder";
 import HelpCenter from "./pages/helpcenter";
 import ComparePage from "./pages/myaccount/comparepage";
 import OrderDetail from "./pages/myaccount/orders/OrderDetail";
+import SupportPage from "./pages/myaccount/supportpage";
 
 function App() {
   return (
@@ -96,6 +97,7 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/:orderId" element={<OrderDetail/>} /> {/* ✅ AJOUT */}
+            <Route path="support" element={<SupportPage />} />
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="compare" element={<ComparePage />} />
             <Route path="address" element={<AddressPage />} />

@@ -377,9 +377,26 @@
   padding: 1rem 0;
 }
 
+.co-payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.co-no-payment {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-sm);
+}
+
 .co-btn-pay-kkiapay {
   background: var(--color-info);
-  margin-top: 0.75rem;
+  margin-top: 0;
 
   &:hover {
     filter: brightness(0.9); // ✅ variante hover sans ajouter de token bleu
@@ -388,7 +405,7 @@
 
 .co-btn-pay-cod {
   background: var(--color-success);
-  margin-top: 0.75rem;
+  margin-top: 0;
 
   &:hover:not(:disabled) {
     filter: brightness(0.85); // ✅ variante hover sans ajouter de token vert

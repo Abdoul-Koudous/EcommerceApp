@@ -36,6 +36,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    paymentProvider: {
+      type: String,
+      enum: ["fedapay", "kkiapay"],
+    },
     payment_status: {
       type: String,
       enum: ["Payée", "À payer à la livraison", "Échec"],
@@ -99,6 +103,17 @@ const orderSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
+);
+
+orderSchema.index(
+  { paymentProvider: 1, paymentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      paymentProvider: { $type: "string" },
+      paymentId: { $type: "string" },
+    },
+  },
 );
 
 const OrderModel = mongoose.model("Commande", orderSchema);

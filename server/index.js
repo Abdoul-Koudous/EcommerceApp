@@ -20,6 +20,7 @@ import dashboardRouter from "./route/dashboard.route.js";
 import aboutPageRouter from "./route/aboutPage.route.js";
 import contactPageRouter from "./route/contactPage.route.js";
 import contactMessageRouter from "./route/contactMessage.route.js";
+import supportConversationRouter from "./route/supportConversation.route.js";
 import settingsRouter from "./route/settings.route.js";
 import shippingZoneRouter from "./route/shippingZone.route.js";
 import campaignRouter from "./route/campaign.route.js";
@@ -63,7 +64,15 @@ const corsOptions = {
 
 // 🧩 Middlewares globaux
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req, res, buffer) => {
+      if (req.originalUrl.startsWith("/api/payment/webhook/fedapay")) {
+        req.rawBody = Buffer.from(buffer);
+      }
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true })); // ✅ ajouté par sécurité, en plus de json()
 app.use(cookieParser());
 
@@ -98,6 +107,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/about', aboutPageRouter);
 app.use('/api/contact-page', contactPageRouter);
 app.use('/api/contact-message', contactMessageRouter);
+app.use("/api/support-conversations", supportConversationRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/shipping-zone', shippingZoneRouter);
 app.use("/api/campaign", campaignRouter);

@@ -10,12 +10,28 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL,
     pass: process.env.EMAIL_PASS,
   },
+  // Échouer vite au lieu d'attendre indéfiniment
+  connectionTimeout: 10000, // 10 s pour établir la connexion
+  greetingTimeout: 10000,   // 10 s pour la réponse du serveur SMTP
+  socketTimeout: 20000,     // 20 s d'inactivité maximum
 });
 
-async function sendEmail(to, subject, text, html) {
+// Vérifie la config SMTP au démarrage du serveur (visible dans les logs)
+transporter.verify((error) => {
+  if (error) {
+    console.error('❌ SMTP non utilisable:', error.message);
+  } else {
+    console.log('✅ SMTP prêt à envoyer des emails');
+  }
+});
+
+async function sendEmail(to, subject, text, html, fromName, replyTo) {
   try {
     const info = await transporter.sendMail({
-      from: process.env.EMAIL,
+      from: fromName
+        ? { name: fromName, address: process.env.EMAIL }
+        : process.env.EMAIL,
+      ...(replyTo ? { replyTo } : {}),
       to,
       subject,
       text,

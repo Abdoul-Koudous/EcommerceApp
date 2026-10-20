@@ -16,6 +16,7 @@ import {
   FaBullhorn,
   FaChartBar,
   FaQuestionCircle,
+  FaComments,
 } from "react-icons/fa";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import "./adminsidebar.scss";
@@ -55,6 +56,7 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
       ],
     },
     { to: "/orders", label: "Commandes", icon: <FaShoppingCart /> },
+    { to: "/support-inbox", label: "Service client", icon: <FaComments /> },
     { to: "/campaigns", label: "Campagnes", icon: <FaBullhorn /> },
     { to: "/analytics", label: "Analytics", icon: <FaChartBar /> }, // ✅ NOUVEAU
     {

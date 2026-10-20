@@ -15,7 +15,16 @@ services:
       context: ./client
       dockerfile: Dockerfile.prod
       args:
-        - VITE_API_URL=
+        - VITE_API_URL=${VITE_API_URL:-/api}
+        - VITE_FEDAPAY_PUBLIC_KEY=${VITE_FEDAPAY_PUBLIC_KEY:-}
+        - VITE_KKIAPAY_PUBLIC_KEY=${VITE_KKIAPAY_PUBLIC_KEY:-}
+        - VITE_KKIAPAY_SANDBOX=${VITE_KKIAPAY_SANDBOX:-true}
+        - VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY:-}
+        - VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN:-}
+        - VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID:-}
+        - VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET:-}
+        - VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID:-}
+        - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID:-}
     container_name: client
     restart: unless-stopped
 
@@ -24,7 +33,8 @@ services:
       context: ./admin
       dockerfile: Dockerfile.prod
       args:
-        - VITE_API_URL=
+        - VITE_API_URL=${VITE_API_URL:-/api}
+        - VITE_BASE=/admin/
     container_name: admin
     restart: unless-stopped
 

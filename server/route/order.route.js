@@ -7,8 +7,10 @@ import {
   getOrderDetailsController,
   getAllOrdersAdminController,
   updateOrderStatusController,
+  cancelOwnOrderController,
   trackOrderController,
   getOrderByIdController,
+  resendOrderReceiptController,
 } from "../controllers/order.controller.js";
 
 const orderRouter = Router();
@@ -22,6 +24,7 @@ orderRouter.get("/get-all", auth, adminAuth, getAllOrdersAdminController);
 // Route admin : met à jour le statut logistique d'une commande
 // Réservée aux comptes ayant role === 'ADMIN' (voir middleware adminAuth)
 orderRouter.put("/update-status/:id", auth, adminAuth, updateOrderStatusController);
+orderRouter.post("/cancel/:orderId", auth, cancelOwnOrderController);
 
 // ✅ AJOUT : suivi public par numéro de commande — pas d'authentification.
 // Voir note sécurité : n'importe qui connaissant le numéro de commande
@@ -31,5 +34,10 @@ orderRouter.get("/track/:orderId", trackOrderController);
 // ✅ AJOUT : détail d'une commande précise, réservé au propriétaire
 // (contrairement à /track/:orderId qui est public)
 orderRouter.get("/detail/:orderId", auth, getOrderByIdController);
+orderRouter.post(
+  "/resend-receipt/:orderId",
+  auth,
+  resendOrderReceiptController,
+);
 
 export default orderRouter;

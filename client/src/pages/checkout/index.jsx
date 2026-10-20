@@ -21,8 +21,12 @@ const formatSelectedVariants = (selectedVariants) => {
     .join(" · ");
 };
 
+const KKIAPAY_SANDBOX_SUCCESS_PHONE = "22961000000";
+const KKIAPAY_SANDBOX =
+  import.meta.env.VITE_KKIAPAY_SANDBOX?.trim().toLowerCase() !== "false";
+
 const Checkout = () => {
-  const { user, cartItems, loadCartItems, loading } = useContext(UserContext);
+  const { user, cartItems, setCartItems, loading } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
   const navigate = useNavigate();
 
@@ -34,6 +38,7 @@ const Checkout = () => {
   const [editingAddress, setEditingAddress] = useState(null);
 
   const selectedAddressIdRef = useRef(selectedAddressId);
+  const paymentAttemptReferenceRef = useRef(null);
   useEffect(() => {
     selectedAddressIdRef.current = selectedAddressId;
   }, [selectedAddressId]);
@@ -69,6 +74,23 @@ const Checkout = () => {
     taxAmt: 0,
     totalAmt: 0,
   });
+  const [paymentMethods, setPaymentMethods] = useState({
+    fedapay: true,
+    kkiapay: true,
+    cashOnDelivery: true,
+  });
+
+  useEffect(() => {
+    fetchDataFromApi("/api/settings").then((res) => {
+      if (!res?.error && res?.settings?.paymentMethods) {
+        setPaymentMethods({
+          fedapay: res.settings.paymentMethods.fedapay !== false,
+          kkiapay: res.settings.paymentMethods.kkiapay !== false,
+          cashOnDelivery: res.settings.paymentMethods.cashOnDelivery !== false,
+        });
+      }
+    });
+  }, []);
 
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
 
@@ -78,12 +100,13 @@ const Checkout = () => {
       return;
     }
 
+    let isCurrent = true;
     const city = selectedAddress?.city || "";
 
     fetchDataFromApi(
       `/api/payment/preview-total?city=${encodeURIComponent(city)}`,
     ).then((res) => {
-      if (!res?.error) {
+      if (isCurrent && !res?.error) {
         setTotals({
           subTotalAmt: res.subTotalAmt || 0,
           shippingAmt: res.shippingAmt || 0,
@@ -92,6 +115,10 @@ const Checkout = () => {
         });
       }
     });
+
+    return () => {
+      isCurrent = false;
+    };
   }, [cartItems, selectedAddress?.city]);
 
   const loadAddresses = () => {
@@ -199,7 +226,34 @@ const Checkout = () => {
     });
   };
 
-  const handlePay = () => {
+  const createPaymentAttempt = async (provider) => {
+    try {
+      const res = await postData("/api/payment/attempt", {
+        provider,
+        addressId: selectedAddressId,
+      });
+      const amount = Number(res?.data?.amount);
+      if (
+        !res?.success ||
+        !res?.data?.reference ||
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+        openToast("error", res?.message || "Impossible de préparer le paiement");
+        return null;
+      }
+      return { ...res.data, amount };
+    } catch {
+      openToast("error", "Erreur serveur lors de la préparation du paiement");
+      return null;
+    }
+  };
+
+  const handlePay = async () => {
+    if (!paymentMethods.fedapay) {
+      openToast("error", "FedaPay n'est pas disponible sur cette boutique");
+      return;
+    }
     if (!selectedAddressId) {
       openToast("error", "Veuillez sélectionner une adresse de livraison");
       return;
@@ -215,14 +269,17 @@ const Checkout = () => {
       return;
     }
 
+    const attempt = await createPaymentAttempt("fedapay");
+    if (!attempt) return;
+
     const [firstname, ...rest] = (user?.name || "Client").split(" ");
     const lastname = rest.join(" ") || "N/A";
 
     FedaPay.init({
       public_key: import.meta.env.VITE_FEDAPAY_PUBLIC_KEY,
       transaction: {
-        amount: Math.round(totals.totalAmt),
-        description: `Commande - ${cartItems.length} article(s)`,
+        amount: attempt.amount,
+        description: `Commande #${attempt.reference}`,
       },
       currency: { iso: "XOF" },
       customer: {
@@ -240,7 +297,7 @@ const Checkout = () => {
           return;
         }
         if (resp.transaction.status === "approved") {
-          verifyPayment(resp.transaction.id);
+          verifyPayment(resp.transaction.id, attempt.reference);
         } else {
           openToast("error", "Le paiement n'a pas été approuvé");
         }
@@ -248,17 +305,18 @@ const Checkout = () => {
     }).open();
   };
 
-  const verifyPayment = async (transactionId) => {
+  const verifyPayment = async (transactionId, attemptReference) => {
     try {
       const res = await postData("/api/payment/verify", {
         transactionId,
-        addressId: selectedAddressIdRef.current,
+        attemptReference,
       });
 
       if (res?.success) {
         openToast("success", "Paiement confirmé, commande créée avec succès !");
         trackPurchase(res.data); // confirmed: true (paiement en ligne)
-        loadCartItems();
+        setCartItems([]);
+        setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
         navigate("/order/success", { state: { order: res.data } });
       } else {
         openToast(
@@ -285,11 +343,19 @@ const Checkout = () => {
         return;
       }
 
-      verifyKkiapayPayment(transactionId);
+      verifyKkiapayPayment(
+        transactionId,
+        response?.stateData?.checkoutReference ||
+          paymentAttemptReferenceRef.current,
+      );
     });
   }, [addSuccessListener]);
 
-  const handlePayKkiapay = () => {
+  const handlePayKkiapay = async () => {
+    if (!paymentMethods.kkiapay) {
+      openToast("error", "KkiaPay n'est pas disponible sur cette boutique");
+      return;
+    }
     if (!selectedAddressId) {
       openToast("error", "Veuillez sélectionner une adresse de livraison");
       return;
@@ -299,32 +365,44 @@ const Checkout = () => {
       return;
     }
 
+    const attempt = await createPaymentAttempt("kkiapay");
+    if (!attempt) return;
+    paymentAttemptReferenceRef.current = attempt.reference;
+
     const widgetConfig = {
-      amount: Math.round(totals.totalAmt),
+      amount: attempt.amount,
       key: import.meta.env.VITE_KKIAPAY_PUBLIC_KEY,
-      sandbox: true,
-      phone: (selectedAddress?.mobile || "").replace(/\D/g, ""),
+      sandbox: KKIAPAY_SANDBOX,
+      ...(KKIAPAY_SANDBOX ? { phone: KKIAPAY_SANDBOX_SUCCESS_PHONE } : {}),
       email: user?.email,
       name: user?.name || "Client",
       reason: `Commande - ${cartItems.length} article(s)`,
+      data: { checkoutReference: attempt.reference },
     };
 
     openKkiapayWidget(widgetConfig);
   };
 
-  const verifyKkiapayPayment = async (transactionId) => {
-    const addressId = selectedAddressIdRef.current;
+  const verifyKkiapayPayment = async (transactionId, attemptReference) => {
+    if (!attemptReference) {
+      openToast(
+        "error",
+        "Référence de paiement introuvable. Votre paiement sera vérifié par le serveur.",
+      );
+      return;
+    }
 
     try {
       const res = await postData("/api/payment/verify-kkiapay", {
         transactionId,
-        addressId,
+        attemptReference,
       });
 
       if (res?.success) {
         openToast("success", "Paiement confirmé, commande créée avec succès !");
         trackPurchase(res.data); // confirmed: true (paiement en ligne)
-        loadCartItems();
+        setCartItems([]);
+        setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
         navigate("/order/success", { state: { order: res.data } });
       } else {
         openToast(
@@ -340,6 +418,13 @@ const Checkout = () => {
   const [loadingCod, setLoadingCod] = useState(false);
 
   const handlePayCashOnDelivery = async () => {
+    if (!paymentMethods.cashOnDelivery) {
+      openToast(
+        "error",
+        "Le paiement à la livraison n'est pas disponible sur cette boutique",
+      );
+      return;
+    }
     if (!selectedAddressId) {
       openToast("error", "Veuillez sélectionner une adresse de livraison");
       return;
@@ -362,7 +447,8 @@ const Checkout = () => {
         // le serveur confirmera l'event automatiquement quand la commande
         // sera marquée "Livrée" côté admin.
         trackPurchase(res.data, false);
-        loadCartItems();
+        setCartItems([]);
+        setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
         navigate("/order/success", { state: { order: res.data } });
       } else {
         openToast(
@@ -489,39 +575,61 @@ const Checkout = () => {
             )}
           </div>
 
-          <div className="co-total-row">
-            <span>Sous-total</span>
-            <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
-          </div>
-          <div className="co-total-row">
-            <span>Expédition</span>
-            <span>{totals.shippingAmt.toLocaleString()} FCFA</span>
-          </div>
-          <div className="co-total-row">
-            <span>Taxes</span>
-            <span>{totals.taxAmt.toLocaleString()} FCFA</span>
-          </div>
+          {totals.subTotalAmt > 0 && (
+            <div className="co-total-row">
+              <span>Sous-total</span>
+              <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
+          {totals.shippingAmt > 0 && (
+            <div className="co-total-row">
+              <span>Expédition</span>
+              <span>{totals.shippingAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
+          {totals.taxAmt > 0 && (
+            <div className="co-total-row">
+              <span>Taxes</span>
+              <span>{totals.taxAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
           <div className="co-total-row co-grand-total">
             <span>Total</span>
             <span>{totals.totalAmt.toLocaleString()} FCFA</span>
           </div>
 
-          <button className="co-btn-pay" onClick={handlePay}>
-            Payer avec FedaPay
-          </button>
-          <button
-            className="co-btn-pay co-btn-pay-kkiapay"
-            onClick={handlePayKkiapay}
-          >
-            Payer avec KkiaPay
-          </button>
-          <button
-            className="co-btn-pay co-btn-pay-cod"
-            onClick={handlePayCashOnDelivery}
-            disabled={loadingCod}
-          >
-            {loadingCod ? "Traitement..." : "Payer à la livraison"}
-          </button>
+          <div className="co-payment-methods">
+            {paymentMethods.fedapay && (
+              <button className="co-btn-pay" onClick={handlePay}>
+                Payer avec FedaPay
+              </button>
+            )}
+            {paymentMethods.kkiapay && (
+              <button
+                className="co-btn-pay co-btn-pay-kkiapay"
+                onClick={handlePayKkiapay}
+              >
+                Payer avec KkiaPay
+              </button>
+            )}
+            {paymentMethods.cashOnDelivery && (
+              <button
+                className="co-btn-pay co-btn-pay-cod"
+                onClick={handlePayCashOnDelivery}
+                disabled={loadingCod}
+              >
+                {loadingCod ? "Traitement..." : "Payer à la livraison"}
+              </button>
+            )}
+            {!paymentMethods.fedapay &&
+              !paymentMethods.kkiapay &&
+              !paymentMethods.cashOnDelivery && (
+                <p className="co-no-payment">
+                  Aucun moyen de paiement n&apos;est disponible pour le moment.
+                  Contactez le vendeur.
+                </p>
+              )}
+          </div>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import { postData } from "../utils/api";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { useNavigate } from "react-router";
 
-const RegisterForm = () => {
+const RegisterForm = ({ storeName = "YebouShop" }) => {
   const { openToast } = useContext(ToastContext);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +58,7 @@ const RegisterForm = () => {
 
   return (
     <div className="rgs-page">
-      <div className="rgs-logo">🛒 YebouShop</div>
+      <div className="rgs-logo">🛒 {storeName}</div>
       <h2>Bienvenue sur Register</h2>
 
       {/* Social Register */}

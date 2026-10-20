@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { NavLink, Outlet } from "react-router-dom";
 import {
   FaUser,
@@ -10,17 +10,57 @@ import {
   FaBars,
   FaTimes,
   FaBalanceScale,
+  FaComments,
 } from "react-icons/fa";
 import "./myaccount.scss";
 import { UserContext } from "../../UserContext/UserContext";
+import { fetchDataFromApi } from "../utils/api";
 
 const AccountLayout = () => {
   const { user } = useContext(UserContext);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
+  const supportPollRef = useRef(false);
+
+  useEffect(() => {
+    if (!user?._id) {
+      setUnreadSupportCount(0);
+      return undefined;
+    }
+
+    let isCurrent = true;
+    const refreshUnreadSupportCount = async () => {
+      if (document.visibilityState !== "visible" || supportPollRef.current) return;
+      supportPollRef.current = true;
+      try {
+        const response = await fetchDataFromApi(
+          "/api/support-conversations/mine",
+        );
+        if (isCurrent && response?.success && Array.isArray(response.data)) {
+          const unreadCount = response.data.reduce(
+            (total, conversation) =>
+              total + Number(conversation.unreadByCustomer || 0),
+            0,
+          );
+          setUnreadSupportCount(unreadCount);
+        }
+      } finally {
+        supportPollRef.current = false;
+      }
+    };
+
+    refreshUnreadSupportCount();
+    const intervalId = window.setInterval(refreshUnreadSupportCount, 4000);
+    return () => {
+      isCurrent = false;
+      window.clearInterval(intervalId);
+    };
+  }, [user?._id]);
 
   const tabs = [
     { id: "profile", label: "Mon Profil", icon: <FaUser /> },
     { id: "orders", label: "Mes Commandes", icon: <FaBoxOpen /> },
+    { id: "support", label: "Service client", icon: <FaComments /> },
     { id: "wishlist", label: "Ma Liste", icon: <FaHeart /> },
     { id: "compare", label: "Comparateur", icon: <FaBalanceScale /> },
     { id: "address", label: "Mes Adresses", icon: <FaMapMarkerAlt /> },
@@ -71,7 +111,15 @@ const AccountLayout = () => {
                 <span className="al-marker"></span>
                 <div className="al-menu-item">
                   <span className="al-icon">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="al-menu-label">{tab.label}</span>
+                  {tab.id === "support" && unreadSupportCount > 0 && (
+                    <span
+                      className="al-unread-badge"
+                      aria-label={`${unreadSupportCount} message(s) non lu(s)`}
+                    >
+                      {unreadSupportCount > 99 ? "99+" : unreadSupportCount}
+                    </span>
+                  )}
                 </div>
               </NavLink>
             </li>

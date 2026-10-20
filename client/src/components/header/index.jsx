@@ -20,6 +20,7 @@ import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import ThemeToggle from "../themetoggle";
 import { ThemeContext } from "../../context/ThemeContext";
+import { useStoreIdentity } from "../../context/useStoreIdentity";
 
 const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
@@ -33,6 +34,7 @@ const Header = () => {
   const mobileUserRef = useRef(null);
 
   const { theme } = useContext(ThemeContext);
+  const storeIdentity = useStoreIdentity();
   const { user, setUser, cartItems, myListItems, compareItems } =
     useContext(UserContext);
   const { openToast } = useContext(ToastContext);
@@ -128,7 +130,10 @@ const Header = () => {
           <div className="site-header__top-strip">
             <div className="site-header__top-container">
               <div className="site-header__top-left">
-                <p>Obtenez 25% de réduction sur vos achats cette semaine !!!</p>
+                <p>
+                  {storeIdentity.promoBanner ||
+                    "Bienvenue dans notre boutique ! Découvrez nos nouveautés."}
+                </p>
               </div>
               <div className="site-header__top-right">
                 <ul>
@@ -160,9 +165,15 @@ const Header = () => {
 
           <Link to="/" className="site-header__mobile-logo">
             {theme === "dark" ? (
-              <img src="/logo-dark.png" alt="logo" />
+              <img
+                src={storeIdentity.logoDark || "/logo-dark.png"}
+                alt={storeIdentity.name}
+              />
             ) : (
-              <img src="/logo-light.png" alt="logo" />
+              <img
+                src={storeIdentity.logoLight || "/logo-light.png"}
+                alt={storeIdentity.name}
+              />
             )}
           </Link>
 
@@ -275,9 +286,15 @@ const Header = () => {
             <div className="site-header__logo">
               <Link to={"/"}>
                 {theme === "dark" ? (
-                  <img src="/logo-dark.png" alt="logo dark" />
+                  <img
+                    src={storeIdentity.logoDark || "/logo-dark.png"}
+                    alt={storeIdentity.name}
+                  />
                 ) : (
-                  <img src="/logo-light.png" alt="logo light" />
+                  <img
+                    src={storeIdentity.logoLight || "/logo-light.png"}
+                    alt={storeIdentity.name}
+                  />
                 )}
               </Link>
             </div>

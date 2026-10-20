@@ -59,18 +59,24 @@ const OrderReceipt = ({ order }) => {
       </div>
 
       <div className="or-totals">
-        <div className="or-total-row">
-          <span>Sous-total</span>
-          <span>{(order.subTotalAmt || 0).toLocaleString()} FCFA</span>
-        </div>
-        <div className="or-total-row">
-          <span>Expédition</span>
-          <span>{(order.shippingAmt || 0).toLocaleString()} FCFA</span>
-        </div>
-        <div className="or-total-row">
-          <span>Taxes</span>
-          <span>{(order.taxAmt || 0).toLocaleString()} FCFA</span>
-        </div>
+        {Number(order.subTotalAmt) > 0 && (
+          <div className="or-total-row">
+            <span>Sous-total</span>
+            <span>{order.subTotalAmt.toLocaleString()} FCFA</span>
+          </div>
+        )}
+        {Number(order.shippingAmt) > 0 && (
+          <div className="or-total-row">
+            <span>Expédition</span>
+            <span>{order.shippingAmt.toLocaleString()} FCFA</span>
+          </div>
+        )}
+        {Number(order.taxAmt) > 0 && (
+          <div className="or-total-row">
+            <span>Taxes</span>
+            <span>{order.taxAmt.toLocaleString()} FCFA</span>
+          </div>
+        )}
         <div className="or-total-row or-grand-total">
           <span>Total</span>
           <span>{(order.totalAmt || 0).toLocaleString()} FCFA</span>

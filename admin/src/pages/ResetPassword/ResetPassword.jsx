@@ -6,7 +6,7 @@ import { ToastContext } from "../../context/ToastContext";
 import { postData } from "../utils/api";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 
-const ResetPassword = () => {
+const ResetPassword = ({ storeName = "YebouShop" }) => {
   const navigate = useNavigate();
   const { openToast } = useContext(ToastContext);
 
@@ -68,7 +68,7 @@ const ResetPassword = () => {
 
   return (
     <div className="resetpass-page">
-      <div className="logo">🛒 YebouShop</div>
+      <div className="logo">🛒 {storeName}</div>
 
       <h2>Changer votre mot de passe</h2>
       <p className="subtitle">Définissez un nouveau mot de passe sécurisé</p>

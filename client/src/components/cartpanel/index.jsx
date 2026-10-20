@@ -38,7 +38,9 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
       ? "/api/payment/preview-total"
       : `/api/payment/preview-total?guestSessionId=${getSessionId()}`;
 
+    let isCurrent = true;
     fetchDataFromApi(url).then((res) => {
+      if (!isCurrent) return;
       if (!res?.error) {
         setTotals({
           subTotalAmt: res.subTotalAmt || 0,
@@ -47,8 +49,19 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
           totalAmt: res.totalAmt || 0,
         });
       }
+    }).catch((error) => {
+      console.error("Impossible de calculer le total du panier:", error);
     });
+
+    return () => {
+      isCurrent = false;
+    };
   }, [isOpen, cartItems, user]);
+
+  const visibleTotals =
+    cartItems.length > 0
+      ? totals
+      : { subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 };
 
   const handleRemoveItem = (id) => {
     if (!id) return;
@@ -70,12 +83,6 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
         openToast("error", "Erreur serveur lors de la suppression");
         console.log("Erreur suppression:", err);
       });
-  };
-
-  const goToCartPage = () => {
-    console.log("CLICK OK");
-    navigate("/cart");
-    onClose();
   };
 
   return (
@@ -138,43 +145,45 @@ const CartPanel = ({ isOpen, onClose, openToast }) => {
         )}
       </div>
 
-      <div className="cart-footer">
-        <div className="footer-row">
-          <span>{cartItems.length} produits</span>
-          <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
-        </div>
-        <div className="footer-row">
-          <span>Expédition</span>
-          <span>{totals.shippingAmt.toLocaleString()} FCFA</span>
-        </div>
-        <div className="footer-row">
-          <span>Total (hors taxes)</span>
-          <span>{totals.subTotalAmt.toLocaleString()} FCFA</span>
-        </div>
-        <div className="footer-row">
-          <span>Taxes</span>
-          <span>{totals.taxAmt.toLocaleString()} FCFA</span>
-        </div>
-        <div className="footer-row">
-          <span>Total (TTC)</span>
-          <span>{totals.totalAmt.toLocaleString()} FCFA</span>
-        </div>
+      {cartItems.length > 0 && (
+        <div className="cart-footer">
+          <div className="footer-row">
+            <span>Sous-total</span>
+            <span>{visibleTotals.subTotalAmt.toLocaleString()} FCFA</span>
+          </div>
+          {visibleTotals.shippingAmt > 0 && (
+            <div className="footer-row">
+              <span>Expédition</span>
+              <span>{visibleTotals.shippingAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
+          {visibleTotals.taxAmt > 0 && (
+            <div className="footer-row">
+              <span>Taxes</span>
+              <span>{visibleTotals.taxAmt.toLocaleString()} FCFA</span>
+            </div>
+          )}
+          <div className="footer-row">
+            <span>Total à payer</span>
+            <span>{visibleTotals.totalAmt.toLocaleString()} FCFA</span>
+          </div>
 
-        <div className="footer-buttons">
-          <Link className="view-cart-btn" to="/cart" onClick={onClose}>
-            Voir le panier
-          </Link>
-          <button
-            className="checkout-btn"
-            onClick={() => {
-              navigate("/checkout");
-              onClose();
-            }}
-          >
-            Passer à la caisse
-          </button>
+          <div className="footer-buttons">
+            <Link className="view-cart-btn" to="/cart" onClick={onClose}>
+              Voir le panier
+            </Link>
+            <button
+              className="checkout-btn"
+              onClick={() => {
+                navigate("/checkout");
+                onClose();
+              }}
+            >
+              Passer à la caisse
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

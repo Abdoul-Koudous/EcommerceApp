@@ -25,6 +25,31 @@ const settingsSchema = mongoose.Schema(
       type: String,
       default: "FCFA",
     },
+
+    storeIdentity: {
+      name: { type: String, default: "YebouShop", trim: true },
+      logoLight: { type: String, default: "" },
+      logoDark: { type: String, default: "" },
+      email: { type: String, default: "", trim: true },
+      phone: { type: String, default: "", trim: true },
+      whatsapp: { type: String, default: "", trim: true },
+      address: { type: String, default: "", trim: true },
+      promoBanner: { type: String, default: "", trim: true },
+      socialLinks: {
+        facebook: { type: String, default: "" },
+        instagram: { type: String, default: "" },
+        tiktok: { type: String, default: "" },
+        linkedin: { type: String, default: "" },
+      },
+    },
+
+    // Chaque boutique choisit sa combinaison. Les clés API restent dans
+    // le .env du déploiement ; ici on n'active / désactive que l'offre.
+    paymentMethods: {
+      fedapay: { type: Boolean, default: true },
+      kkiapay: { type: Boolean, default: true },
+      cashOnDelivery: { type: Boolean, default: true },
+    },
   },
   { timestamps: true },
 );

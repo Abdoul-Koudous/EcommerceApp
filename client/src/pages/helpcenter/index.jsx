@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { getFaqCategories, getFaqs } from "./data";
 import { getIconComponent } from "../utils/iconMap";
 import "./helpcenter.scss";
+import { useStoreIdentity } from "../../context/useStoreIdentity";
 
 function CategoryIcon({ name }) {
   const Icon = getIconComponent(name);
@@ -38,6 +39,7 @@ function IconFor({ name }) {
 }
 
 export default function HelpCenter() {
+  const storeIdentity = useStoreIdentity();
   const [categories, setCategories] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -292,10 +294,15 @@ export default function HelpCenter() {
             <p>Notre équipe vous répond en général sous 24h ouvrées.</p>
           </div>
           <div className="help-contact__actions">
-            <a href="mailto:support@yeboushop.com" className="help-contact__btn">
-              <IconFor name="mail" />
-              Écrire un e-mail
-            </a>
+            {storeIdentity.email && (
+              <a
+                href={`mailto:${storeIdentity.email}`}
+                className="help-contact__btn"
+              >
+                <IconFor name="mail" />
+                Écrire un e-mail
+              </a>
+            )}
             <Link to="/contact" className="help-contact__btn help-contact__btn--primary">
               <IconFor name="chat" />
               Contacter le support

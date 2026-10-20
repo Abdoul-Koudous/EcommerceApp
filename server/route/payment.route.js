@@ -2,6 +2,9 @@ import { Router } from "express";
 import auth from "../middlewares/auth.js";
 import optionalAuth from "../middlewares/optionalAuth.js"; // ✅ NOUVEAU
 import {
+  createPaymentAttemptController,
+  fedapayWebhookController,
+  kkiapayWebhookController,
   verifyPaymentController,
   verifyKkiapayPaymentController,
   createCashOnDeliveryOrder,
@@ -10,6 +13,9 @@ import {
 
 const paymentRouter = Router();
 
+paymentRouter.post("/attempt", auth, createPaymentAttemptController);
+paymentRouter.post("/webhook/fedapay", fedapayWebhookController);
+paymentRouter.post("/webhook/kkiapay", kkiapayWebhookController);
 paymentRouter.post("/verify", auth, verifyPaymentController);
 paymentRouter.post("/verify-kkiapay", auth, verifyKkiapayPaymentController);
 paymentRouter.post("/cash-on-delivery", auth, createCashOnDeliveryOrder);

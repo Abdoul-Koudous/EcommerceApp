@@ -1,9 +1,28 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaShippingFast, FaUndoAlt, FaGift, FaHeadset, FaFacebookF, FaInstagram, FaTwitter, FaLinkedinIn } from "react-icons/fa";
+import {
+  FaShippingFast,
+  FaUndoAlt,
+  FaGift,
+  FaHeadset,
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+} from "react-icons/fa";
+import { FaTiktok } from "react-icons/fa6";
 import "./footer.scss";
+import { useStoreIdentity } from "../../context/useStoreIdentity";
 
 const Footer = () => {
+  const storeIdentity = useStoreIdentity();
+  const whatsappNumber = storeIdentity.whatsapp.replace(/\D/g, "");
+  const socialItems = [
+    ["facebook", FaFacebookF, "Facebook"],
+    ["instagram", FaInstagram, "Instagram"],
+    ["tiktok", FaTiktok, "TikTok"],
+    ["linkedin", FaLinkedinIn, "LinkedIn"],
+  ].filter(([network]) => storeIdentity.socialLinks?.[network]);
+
   return (
     <footer className="ft-footer">
       {/* Section des icônes en haut */}
@@ -36,9 +55,25 @@ const Footer = () => {
       <div className="ft-bottom">
         <div className="ft-column">
           <h4>Nous contacter</h4>
-          <p>Email : contact@monsite.com</p>
-          <p>Téléphone : +229 123 456 78</p>
-          <p>Adresse : Cotonou, Bénin</p>
+          {storeIdentity.email && (
+            <p>Email : <a href={`mailto:${storeIdentity.email}`}>{storeIdentity.email}</a></p>
+          )}
+          {storeIdentity.phone && (
+            <p>Téléphone : <a href={`tel:${storeIdentity.phone}`}>{storeIdentity.phone}</a></p>
+          )}
+          {storeIdentity.whatsapp && whatsappNumber && (
+            <p>
+              WhatsApp :{" "}
+              <a
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {storeIdentity.whatsapp}
+              </a>
+            </p>
+          )}
+          {storeIdentity.address && <p>Adresse : {storeIdentity.address}</p>}
         </div>
 
         <div className="ft-column">
@@ -65,14 +100,24 @@ const Footer = () => {
       {/* Section finale : réseaux sociaux, copyright, paiement */}
       <div className="ft-end">
         <div className="ft-socials">
-          <a href="#" className="ft-social"><FaFacebookF /></a>
-          <a href="#" className="ft-social"><FaInstagram /></a>
-          <a href="#" className="ft-social"><FaTwitter /></a>
-          <a href="#" className="ft-social"><FaLinkedinIn /></a>
+          {socialItems.map(([network, Icon, label]) =>
+            React.createElement(
+              "a",
+              {
+                key: network,
+                href: storeIdentity.socialLinks[network],
+                className: "ft-social",
+                "aria-label": label,
+                target: "_blank",
+                rel: "noreferrer",
+              },
+              React.createElement(Icon),
+            ),
+          )}
         </div>
 
         <p className="ft-copy">
-          © {new Date().getFullYear()} <strong>YebouShop</strong> — Tous droits réservés.
+          © {new Date().getFullYear()} <strong>{storeIdentity.name}</strong> — Tous droits réservés.
         </p>
 
         <div className="ft-payments">

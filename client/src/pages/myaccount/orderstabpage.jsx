@@ -1,18 +1,59 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaEye, FaReceipt } from "react-icons/fa";
+import { FaBan, FaEye, FaReceipt } from "react-icons/fa";
 import { UserContext } from "../../UserContext/UserContext";
-import { fetchDataFromApi } from "../utils/api";
+import { fetchDataFromApi, postDataFromApi } from "../utils/api";
 import { orderStatusInfo, paymentStatusInfo } from "../utils/orderStatus";
 import OrderDetailsPanel from "./OrderDetailsPanel";
+import { ToastContext } from "../../context/ToastContext";
 import "./orderstab.scss";
 
 const OrdersTabPage = () => {
   const { user } = useContext(UserContext);
+  const { openToast } = useContext(ToastContext);
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
+
+  const cancelOrder = async (order) => {
+    if (
+      !window.confirm(
+        `Voulez-vous vraiment annuler la commande ${order.orderId} ? Cette action rétablira les articles en stock.`,
+      )
+    ) {
+      return;
+    }
+
+    setCancellingOrderId(order.orderId);
+    try {
+      const response = await postDataFromApi(
+        `/api/order/cancel/${encodeURIComponent(order.orderId)}`,
+        {},
+      );
+      if (!response?.success) {
+        openToast("error", response?.message || "Impossible d'annuler la commande");
+        return;
+      }
+
+      setOrders((currentOrders) =>
+        currentOrders.map((currentOrder) =>
+          currentOrder.orderId === order.orderId
+            ? response.data
+            : currentOrder,
+        ),
+      );
+      setSelectedOrder((currentOrder) =>
+        currentOrder?.orderId === order.orderId ? response.data : currentOrder,
+      );
+      openToast("success", response.message);
+    } catch {
+      openToast("error", "Erreur réseau lors de l'annulation de la commande");
+    } finally {
+      setCancellingOrderId(null);
+    }
+  };
 
   useEffect(() => {
     if (!user?._id) return;
@@ -80,6 +121,20 @@ const OrdersTabPage = () => {
                   </span>
 
                   <span className="order-actions">
+                    {order.order_status === "Reçue" &&
+                      ["À payer à la livraison", "Échec"].includes(
+                        order.payment_status,
+                      ) && (
+                        <button
+                          className="btn-cancel-order"
+                          onClick={() => cancelOrder(order)}
+                          title="Annuler la commande"
+                          aria-label={`Annuler la commande ${order.orderId}`}
+                          disabled={cancellingOrderId === order.orderId}
+                        >
+                          <FaBan />
+                        </button>
+                      )}
                     <button
                       className="btn-view-order"
                       onClick={() => setSelectedOrder(order)}
@@ -108,6 +163,8 @@ const OrdersTabPage = () => {
           userName={user?.name}
           userEmail={user?.email}
           userMobile={user?.mobile}
+          onCancelOrder={cancelOrder}
+          cancelling={cancellingOrderId === selectedOrder.orderId}
           onClose={() => setSelectedOrder(null)}
         />
       )}

@@ -30,7 +30,10 @@ const OBJECTIVE_OPTIONS = [
   { value: "premium", label: "💎 Produit premium" },
 ];
 
-const SHORTLINK_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const SHORTLINK_BASE = API_BASE_URL.startsWith("http")
+  ? API_BASE_URL.replace(/\/api\/?$/, "")
+  : window.location.origin;
 
 const Campaigns = () => {
   const { openToast } = useContext(ToastContext);

@@ -13,12 +13,27 @@ import { text } from "stream/consumers";
 import { error } from "console";
 import ReviewsModel from "../models/reviews.model.js";
 import { mergeGuestCart } from "./cart.controller.js";
+import { getOrCreateSettings } from "../services/settings.service.js";
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
     api_key: process.env.cloudinary_Config_api_key,
     api_secret: process.env.cloudinary_Config_api_secret,
     secure: true,
 })
+
+async function sendStoreVerificationEmail(to, username, otp, purpose) {
+    const settings = await getOrCreateSettings();
+    const storeName = settings.storeIdentity?.name || "YebouShop";
+
+    return sendEmailFun(
+        to,
+        `${purpose} - ${storeName}`,
+        "",
+        VerificationEmail(username, otp, settings.storeIdentity || {}),
+        storeName,
+        settings.storeIdentity?.email
+    );
+}
 
 export async function registerUserController(request, response) {
     try {
@@ -61,11 +76,11 @@ export async function registerUserController(request, response) {
         await newUser.save();
 
         // Envoyer l'email de vérification
-        await sendEmailFun(
+        await sendStoreVerificationEmail(
             email,
-            "Vérification de votre email sur YebouShop",
-            "",
-            VerificationEmail(name, verifyCode)
+            name,
+            verifyCode,
+            "Vérification de votre adresse e-mail"
         );
 
         // Générer le token JWT
@@ -504,11 +519,11 @@ export async function updateUserDetails(request, response) {
 
         // Envoyer l’email avec le code si email changé
         if (verifyCode !== "") {
-            const emailSent = await sendEmailFun(
+            const emailSent = await sendStoreVerificationEmail(
                 email,
-                "Vérification d'email Yeboushop",
-                "",
-                VerificationEmail(name || userExist.name, verifyCode)
+                name || userExist.name,
+                verifyCode,
+                "Vérification de votre adresse e-mail"
             );
 
             if (!emailSent) {
@@ -582,11 +597,11 @@ export async function forgotPasswordController(request, response) {
         await user.save();
 
         // Envoyer email
-        const emailSent = await sendEmailFun(
+        const emailSent = await sendStoreVerificationEmail(
             email,
-            "Réinitialisation de mot de passe - Yeboushop",
-            "",
-            VerificationEmail(user.name, verifyCode)
+            user.name,
+            verifyCode,
+            "Réinitialisation de mot de passe"
         );
 
         if (!emailSent) {
@@ -738,11 +753,11 @@ export async function resendOtpController(request, response) {
         user.otpExpires = Date.now() + 600000; // 10 minutes
         await user.save();
 
-        const emailSent = await sendEmailFun(
+        const emailSent = await sendStoreVerificationEmail(
             email,
-            "Vérification de votre email sur YebouShop",
-            "",
-            VerificationEmail(user.name, verifyCode)
+            user.name,
+            verifyCode,
+            "Vérification de votre adresse e-mail"
         );
 
         if (!emailSent) {
@@ -876,11 +891,11 @@ export async function resendForgotPasswordOtpController(request, response) {
         user.resetPasswordTokenExpires = null;
         await user.save();
 
-        const emailSent = await sendEmailFun(
+        const emailSent = await sendStoreVerificationEmail(
             email,
-            "Réinitialisation de mot de passe - Yeboushop",
-            "",
-            VerificationEmail(user.name, verifyCode)
+            user.name,
+            verifyCode,
+            "Réinitialisation de mot de passe"
         );
 
         if (!emailSent) {
