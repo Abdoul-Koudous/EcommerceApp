@@ -35,6 +35,8 @@ const Header = () => {
 
   const { theme } = useContext(ThemeContext);
   const storeIdentity = useStoreIdentity();
+  const storeLogo =
+    theme === "dark" ? storeIdentity.logoDark : storeIdentity.logoLight;
   const { user, setUser, cartItems, myListItems, compareItems } =
     useContext(UserContext);
   const { openToast } = useContext(ToastContext);
@@ -164,16 +166,13 @@ const Header = () => {
           </button>
 
           <Link to="/" className="site-header__mobile-logo">
-            {theme === "dark" ? (
+            {storeLogo ? (
               <img
-                src={storeIdentity.logoDark || "/logo-dark.png"}
+                src={storeLogo}
                 alt={storeIdentity.name}
               />
             ) : (
-              <img
-                src={storeIdentity.logoLight || "/logo-light.png"}
-                alt={storeIdentity.name}
-              />
+              <span className="site-header__brand-name">{storeIdentity.name}</span>
             )}
           </Link>
 
@@ -285,16 +284,13 @@ const Header = () => {
           <div className="site-header__main-container">
             <div className="site-header__logo">
               <Link to={"/"}>
-                {theme === "dark" ? (
+                {storeLogo ? (
                   <img
-                    src={storeIdentity.logoDark || "/logo-dark.png"}
+                    src={storeLogo}
                     alt={storeIdentity.name}
                   />
                 ) : (
-                  <img
-                    src={storeIdentity.logoLight || "/logo-light.png"}
-                    alt={storeIdentity.name}
-                  />
+                  <span className="site-header__brand-name">{storeIdentity.name}</span>
                 )}
               </Link>
             </div>

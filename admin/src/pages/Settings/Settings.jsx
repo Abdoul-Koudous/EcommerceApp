@@ -11,9 +11,12 @@ import {
 import { ToastContext } from "../../context/ToastContext";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
+import { DEFAULT_STORE_IDENTITY } from "../../context/storeIdentity";
+import { useStoreIdentity } from "../../context/useStoreIdentity";
 
 const Settings = () => {
   const { openToast } = useContext(ToastContext);
+  const { setIdentity: setSharedIdentity } = useStoreIdentity();
 
   // === Paramètres généraux ===
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -28,20 +31,8 @@ const Settings = () => {
   });
   const [savingPayments, setSavingPayments] = useState(false);
   const [storeIdentity, setStoreIdentity] = useState({
-    name: "YebouShop",
-    logoLight: "",
-    logoDark: "",
-    email: "",
-    phone: "",
-    whatsapp: "",
-    address: "",
-    promoBanner: "",
-    socialLinks: {
-      facebook: "",
-      instagram: "",
-      tiktok: "",
-      linkedin: "",
-    },
+    ...DEFAULT_STORE_IDENTITY,
+    socialLinks: { ...DEFAULT_STORE_IDENTITY.socialLinks },
   });
   const [savingIdentity, setSavingIdentity] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState("");
@@ -58,19 +49,28 @@ const Settings = () => {
         kkiapay: res.settings.paymentMethods?.kkiapay !== false,
         cashOnDelivery: res.settings.paymentMethods?.cashOnDelivery !== false,
       });
-      setStoreIdentity((current) => ({
-        ...current,
+      const loadedIdentity = {
+        ...DEFAULT_STORE_IDENTITY,
         ...res.settings.storeIdentity,
         socialLinks: {
-          ...current.socialLinks,
+          ...DEFAULT_STORE_IDENTITY.socialLinks,
           ...res.settings.storeIdentity?.socialLinks,
+        },
+      };
+      setStoreIdentity(loadedIdentity);
+      setSharedIdentity((current) => ({
+        ...current,
+        ...loadedIdentity,
+        socialLinks: {
+          ...current.socialLinks,
+          ...loadedIdentity.socialLinks,
         },
       }));
     } else {
       openToast("error", "Impossible de charger les paramètres");
     }
     setLoadingSettings(false);
-  }, [openToast]);
+  }, [openToast, setSharedIdentity]);
 
   useEffect(() => {
     loadSettings();
@@ -101,12 +101,21 @@ const Settings = () => {
     try {
       const res = await editData("/api/settings", { storeIdentity });
       if (!res?.error) {
-        setStoreIdentity((current) => ({
-          ...current,
+        const savedIdentity = {
+          ...storeIdentity,
           ...res.settings?.storeIdentity,
           socialLinks: {
-            ...current.socialLinks,
+            ...storeIdentity.socialLinks,
             ...res.settings?.storeIdentity?.socialLinks,
+          },
+        };
+        setStoreIdentity(savedIdentity);
+        setSharedIdentity((current) => ({
+          ...current,
+          ...savedIdentity,
+          socialLinks: {
+            ...current.socialLinks,
+            ...savedIdentity.socialLinks,
           },
         }));
         openToast("success", "Identité de la boutique mise à jour");
@@ -130,7 +139,12 @@ const Settings = () => {
     try {
       const res = await uploadImages(`/api/settings/logo/${variant}`, formData);
       if (!res?.error && res?.logoUrl) {
-        setStoreIdentity((current) => ({
+        const updatedIdentity = {
+          ...storeIdentity,
+          [variant]: res.logoUrl,
+        };
+        setStoreIdentity(updatedIdentity);
+        setSharedIdentity((current) => ({
           ...current,
           [variant]: res.logoUrl,
         }));

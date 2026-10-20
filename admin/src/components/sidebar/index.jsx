@@ -1,6 +1,8 @@
 // src/components/sidebar/index.jsx
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { ThemeContext } from "../../context/ThemeContext";
+import { useStoreIdentity } from "../../context/useStoreIdentity";
 import {
   FaTachometerAlt,
   FaBoxOpen,
@@ -23,6 +25,9 @@ import "./adminsidebar.scss";
 
 const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
   const [openMenus, setOpenMenus] = useState({});
+  const { identity } = useStoreIdentity();
+  const { theme } = useContext(ThemeContext);
+  const storeLogo = theme === "dark" ? identity.logoDark : identity.logoLight;
 
   const toggleMenu = (menu) => {
     if (collapsed) return; // ✅ pas de sous-menu déroulant en mode replié
@@ -80,9 +85,11 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
     <>
       <aside className={`sidebar ${isOpen ? "open" : ""} ${collapsed ? "collapsed" : ""}`}>
         <div className="sidebar-logo">
-          <h2>
-            Yebou<span>Shop</span>
-          </h2>
+          {storeLogo ? (
+            <img src={storeLogo} alt={identity.name} />
+          ) : (
+            <h2>{identity.name}</h2>
+          )}
         </div>
 
         <div className="sidebar-links">

@@ -22,6 +22,12 @@
     white-space: nowrap;
     overflow: hidden;
 
+    img {
+      max-width: 100%;
+      max-height: 48px;
+      object-fit: contain;
+    }
+
     h2 {
       font-size: 1.4rem;
       font-weight: 800;

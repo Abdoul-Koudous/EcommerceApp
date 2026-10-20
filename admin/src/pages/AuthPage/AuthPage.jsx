@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { FaSignInAlt, FaUserPlus } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import "./authpage.scss";
@@ -6,7 +6,7 @@ import LoginForm from "../login";
 import RegisterForm from "../register";
 import OTPPage from "../OTPPage/OTPPage";
 import ResetPassword from "../ResetPassword/ResetPassword";
-import { fetchDataFromApi } from "../utils/api";
+import { useStoreIdentity } from "../../context/useStoreIdentity";
 
 const AuthPage = ({ defaultForm = "login" }) => {
   const location = useLocation();
@@ -17,25 +17,8 @@ const AuthPage = ({ defaultForm = "login" }) => {
       "/otp": "otp",
       "/reset-password": "reset",
     }[location.pathname] || defaultForm;
-  const [storeName, setStoreName] = useState("YebouShop");
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchDataFromApi("/api/settings").then((response) => {
-      if (cancelled) return;
-      if (response?.error) {
-        console.error(
-          "Impossible de charger le nom de la boutique:",
-          response.message,
-        );
-        return;
-      }
-      setStoreName(response?.settings?.storeIdentity?.name || "YebouShop");
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { identity } = useStoreIdentity();
+  const storeName = identity.name || "YebouShop";
 
   return (
     <div className="auth-page">

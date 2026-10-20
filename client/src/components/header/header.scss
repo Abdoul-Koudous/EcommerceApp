@@ -103,6 +103,13 @@
         width: 100px;
       }
     }
+
+    .site-header__brand-name {
+      color: var(--color-text);
+      font-size: 1.5rem;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
   }
 
   .site-header__search {
@@ -334,10 +341,20 @@
   flex: 1;
   display: flex;
   justify-content: center;
+  min-width: 0;
 
   img {
     height: 30px;
     width: auto;
+  }
+
+  .site-header__brand-name {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
