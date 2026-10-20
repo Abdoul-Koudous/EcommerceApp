@@ -162,7 +162,7 @@ app.use("/go", (req, res) => {
 });
 
 if (hasAdminBuild) {
-  app.use("/admin", express.static(adminBuildDir, { index: false }));
+  app.use("/admin", express.static(adminBuildDir, { index: false, redirect: false }));
   app.get("/admin", (req, res) => {
     res.redirect(308, "/admin/");
   });

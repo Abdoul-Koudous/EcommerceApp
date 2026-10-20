@@ -10,7 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: VITE_API_URL
-        value: /api
+        value: ""
       - key: VITE_BASE
         value: /admin/
       - key: VITE_KKIAPAY_SANDBOX
