@@ -9,6 +9,7 @@ import CircularProgress from "../../components/CircularProgress/CircularProgress
 import { UserContext } from "../../UserContext/UserContext";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { firebaseApp } from "../../firebase";
+import { getFirebaseAuthErrorMessage } from "../../firebaseAuthError";
 import { getSessionId } from "../utils/tracking";
 import { useEffect } from "react";
 const auth = getAuth(firebaseApp);
@@ -96,49 +97,46 @@ const Login = () => {
       .finally(() => setLoading(false));
   };
 
-  const authWithGoogle = () => {
-    signInWithPopup(auth, googleProvider)
-      .then((result) => {
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential.accessToken;
-        const user = result.user;
-        const fields = {
-          name: user.providerData[0].displayName,
-          email: user.providerData[0].email,
-          password: null,
-          avatar: user.providerData[0].photoURL,
-          mobile: user.providerData[0].phoneNumber,
-          role: "UTILISATEUR",
-          // ✅ NOUVEAU
-          guestSessionId: getSessionId(),
-        };
+  const authWithGoogle = async () => {
+  if (isLoading) return;
+  setIsLoading(true);
 
-        postData("/api/users/authWithGoogle", fields)
-          .then(async (res) => {
-            if (res.error) {
-              openToast("error", res.message);
-            } else {
-              openToast("success", res.message);
-              localStorage.setItem("userEmail", fields.email);
-              localStorage.setItem("accesstoken", res?.data?.accesstoken);
-              localStorage.setItem("refreshToken", res?.data?.refreshToken);
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const fields = {
+      name: user.displayName || user.email,
+      email: user.email,
+      password: null,
+      avatar: user.photoURL,
+      mobile: user.phoneNumber,
+      role: "UTILISATEUR",
+      guestSessionId: getSessionId(),
+    };
 
-              // ✅ on attend vraiment que le contexte soit à jour, plus de setTimeout arbitraire
-              await loadUser();
+    if (!fields.email) {
+      openToast("error", "Google n'a pas fourni d'adresse e-mail pour ce compte.");
+      return;
+    }
 
-              navigate(redirectTo);
-            }
-          })
-          .finally(() => setIsLoading(false));
+    const res = await postData("/api/users/authWithGoogle", fields);
+    if (res?.error || !res?.success) {
+      openToast("error", res?.message || "Le serveur a refusé la connexion Google.");
+      return;
+    }
 
-        console.log("Google user:", user);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        const email = error.customData.email;
-        const credential = GoogleAuthProvider.credentialFromError(error);
-      });
+    openToast("success", res.message);
+    localStorage.setItem("userEmail", fields.email);
+    localStorage.setItem("accesstoken", res?.data?.accesstoken);
+    localStorage.setItem("refreshToken", res?.data?.refreshToken);
+    await loadUser();
+    navigate(redirectTo);
+  } catch (error) {
+    console.error("Échec de la connexion Google:", error?.code, error?.message);
+    openToast("error", getFirebaseAuthErrorMessage(error));
+  } finally {
+    setIsLoading(false);
+  }
   };
 
   return (
@@ -206,9 +204,10 @@ const Login = () => {
               type="button"
               className="lg-btn-google"
               onClick={authWithGoogle}
+              disabled={isLoading || loading}
             >
               <FcGoogle className="lg-google-icon" />
-              Se connecter avec Google
+              {isLoading ? <CircularProgress /> : "Se connecter avec Google"}
             </button>
           </div>
 
