@@ -6,14 +6,13 @@ import { ToastContext } from "../../context/ToastContext";
 import { postData } from "../utils/api";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { useNavigate, Link } from "react-router";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { firebaseApp } from "../../firebase";
 import { getFirebaseAuthErrorMessage } from "../../firebaseAuthError";
+import {
+  completeGoogleSignIn,
+  startGoogleSignIn,
+} from "../../googleAuth";
 import { UserContext } from "../../UserContext/UserContext";
-import { getSessionId } from "../utils/tracking";
 import { useEffect } from "react";
-const auth = getAuth(firebaseApp);
-const googleProvider = new GoogleAuthProvider();
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +33,40 @@ const Register = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    completeGoogleSignIn()
+      .then(async (result) => {
+        if (!result || cancelled) return;
+        setIsLoading(true);
+        await loadUser();
+        if (cancelled) return;
+        openToast("success", result.message);
+        navigate("/");
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error(
+          "Échec de l'inscription Google:",
+          error?.code,
+          error?.message,
+        );
+        openToast(
+          "error",
+          error?.code
+            ? getFirebaseAuthErrorMessage(error)
+            : error.message || "L'inscription Google a échoué.",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadUser, navigate, openToast]);
 
   // ⚠️ INCHANGÉ : l'inscription classique ne connecte pas directement
   // (redirection vers /verify pour l'OTP), donc pas de fusion de panier
@@ -61,35 +94,7 @@ const Register = () => {
   setIsLoading(true);
 
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    const fields = {
-      name: user.displayName || user.email,
-      email: user.email,
-      password: null,
-      avatar: user.photoURL,
-      mobile: user.phoneNumber,
-      role: "UTILISATEUR",
-      guestSessionId: getSessionId(),
-    };
-
-    if (!fields.email) {
-      openToast("error", "Google n'a pas fourni d'adresse e-mail pour ce compte.");
-      return;
-    }
-
-    const res = await postData("/api/users/authWithGoogle", fields);
-    if (res?.error || !res?.success) {
-      openToast("error", res?.message || "Le serveur a refusé la connexion Google.");
-      return;
-    }
-
-    openToast("success", res.message);
-    localStorage.setItem("userEmail", fields.email);
-    localStorage.setItem("accesstoken", res?.data?.accesstoken);
-    localStorage.setItem("refreshToken", res?.data?.refreshToken);
-    await loadUser();
-    navigate("/");
+    await startGoogleSignIn();
   } catch (error) {
     console.error("Échec de l'inscription Google:", error?.code, error?.message);
     openToast("error", getFirebaseAuthErrorMessage(error));

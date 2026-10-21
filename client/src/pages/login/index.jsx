@@ -7,13 +7,13 @@ import { ToastContext } from "../../context/ToastContext";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { UserContext } from "../../UserContext/UserContext";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { firebaseApp } from "../../firebase";
 import { getFirebaseAuthErrorMessage } from "../../firebaseAuthError";
+import {
+  completeGoogleSignIn,
+  startGoogleSignIn,
+} from "../../googleAuth";
 import { getSessionId } from "../utils/tracking";
 import { useEffect } from "react";
-const auth = getAuth(firebaseApp);
-const googleProvider = new GoogleAuthProvider();
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -70,6 +70,40 @@ const Login = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    completeGoogleSignIn()
+      .then(async (result) => {
+        if (!result || cancelled) return;
+        setIsLoading(true);
+        await loadUser();
+        if (cancelled) return;
+        openToast("success", result.message);
+        navigate(redirectTo);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error(
+          "Échec de la connexion Google:",
+          error?.code,
+          error?.message,
+        );
+        openToast(
+          "error",
+          error?.code
+            ? getFirebaseAuthErrorMessage(error)
+            : error.message || "La connexion Google a échoué.",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadUser, navigate, openToast, redirectTo]);
+
   const forgotPassword = () => {
     if (email === "") {
       openToast("error", "Veuillez s'il vous plaît entrer votre email");
@@ -102,35 +136,7 @@ const Login = () => {
   setIsLoading(true);
 
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    const fields = {
-      name: user.displayName || user.email,
-      email: user.email,
-      password: null,
-      avatar: user.photoURL,
-      mobile: user.phoneNumber,
-      role: "UTILISATEUR",
-      guestSessionId: getSessionId(),
-    };
-
-    if (!fields.email) {
-      openToast("error", "Google n'a pas fourni d'adresse e-mail pour ce compte.");
-      return;
-    }
-
-    const res = await postData("/api/users/authWithGoogle", fields);
-    if (res?.error || !res?.success) {
-      openToast("error", res?.message || "Le serveur a refusé la connexion Google.");
-      return;
-    }
-
-    openToast("success", res.message);
-    localStorage.setItem("userEmail", fields.email);
-    localStorage.setItem("accesstoken", res?.data?.accesstoken);
-    localStorage.setItem("refreshToken", res?.data?.refreshToken);
-    await loadUser();
-    navigate(redirectTo);
+    await startGoogleSignIn();
   } catch (error) {
     console.error("Échec de la connexion Google:", error?.code, error?.message);
     openToast("error", getFirebaseAuthErrorMessage(error));
