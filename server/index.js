@@ -33,6 +33,7 @@ import socialContentRouter from "./route/socialContent.route.js";
 import helpFaqRouter from "./route/helpFaq.route.js";
 import compareRouter from "./route/compare.route.js"; 
 
+import firebaseAuthProxy from "./middleware/firebaseAuthProxy.js";
 
 
 
@@ -78,6 +79,7 @@ const corsOptions = {
 
 // 🧩 Middlewares globaux
 app.use(cors(corsOptions));
+app.use("/__/auth", firebaseAuthProxy);
 app.use(
   express.json({
     verify: (req, res, buffer) => {
