@@ -84,15 +84,18 @@ serveur de confirmer la commande même si le client ferme la page de paiement.
    `VITE_KKIAPAY_SANDBOX=true` dans le `.env` racine. Le client doit être
    reconstruit après une modification de ses variables `VITE_*`.
 3. Dans le tableau de bord Sandbox de chaque prestataire, créez un webhook vers
-   l'URL correspondante :
+   l'URL correspondante. Sélectionnez au minimum `transaction.approved` chez
+   FedaPay et `transaction.success` chez KkiaPay :
    - FedaPay : `https://votre-domaine.example/api/payment/webhook/fedapay`
    - KkiaPay : `https://votre-domaine.example/api/payment/webhook/kkiapay`
 
-4. Copiez le secret indiqué pour chaque webhook dans `server/.env` :
-   `FEDAPAY_WEBHOOK_SECRET` pour le secret de cet endpoint FedaPay et
-   `KKIAPAY_WEBHOOK_SECRET` pour le secret webhook configuré chez KkiaPay.
-   Redémarrez le serveur après modification. Ces secrets ne vont jamais dans le
-   `.env` racine ni dans une variable `VITE_*`.
+4. Configurez les secrets de vérification du webhook dans `server/.env` :
+   `FEDAPAY_WEBHOOK_SECRET` reçoit le secret `wh_...` propre au webhook FedaPay
+   (pas la clé API FedaPay) ; `KKIAPAY_WEBHOOK_SECRET` reçoit le hash secret
+   choisi dans la configuration du webhook KkiaPay. Pour KkiaPay, la valeur
+   saisie dans Render doit être identique au hash secret configuré dans le
+   tableau de bord. Redémarrez le serveur après modification. Ces secrets ne
+   vont jamais dans le `.env` racine ni dans une variable `VITE_*`.
 5. Effectuez une commande de test avec chaque prestataire. Vérifiez que la
    commande apparaît dans l'administration, que le stock ne baisse qu'une fois
    et qu'un seul reçu est envoyé. Répétez la notification depuis le tableau de
@@ -162,6 +165,10 @@ Le fichier `render.yaml` prépare un service web Node unique qui construit les
 deux interfaces et les sert avec l'API Express sur la même origine. La route
 `/admin/` ouvre l'administration et `/api/` reste l'API ; ce montage conserve
 les cookies d'authentification sans partage entre domaines.
+
+Pour créer une instance séparée pour un commerçant, les paramètres Firebase et
+Google OAuth, le domaine personnalisé, les secrets, les webhooks et la recette
+complète, suivre le [guide de déploiement client](docs/DEPLOIEMENT_CLIENT.md).
 
 1. Dans Render, créez un Blueprint depuis le dépôt et sélectionnez
    `render.yaml`.

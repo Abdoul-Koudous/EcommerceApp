@@ -62,7 +62,7 @@ services:
       - key: VITE_FIREBASE_API_KEY
         sync: false
       - key: VITE_FIREBASE_AUTH_DOMAIN
-        value: ecommerce-demo-dsvj.onrender.com
+        sync: false
       - key: VITE_FIREBASE_PROJECT_ID
         sync: false
       - key: VITE_FIREBASE_STORAGE_BUCKET
@@ -72,4 +72,4 @@ services:
       - key: VITE_FIREBASE_APP_ID
         sync: false
       - key: FIREBASE_AUTH_PROXY_HOST
-        value: ecommerceapp-3cd87.firebaseapp.com
+        sync: false
