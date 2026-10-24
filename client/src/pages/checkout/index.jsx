@@ -9,6 +9,7 @@ import { editData, fetchDataFromApi, postData } from "../utils/api";
 import AddressPanel from "../myaccount/addresspanel";
 import { ToastContext } from "../../context/ToastContext";
 import { trackEvent } from "../utils/tracking";
+import CircularProgress from "../../components/CircularProgress/CircularProgress";
 
 const formatSelectedVariants = (selectedVariants) => {
   if (!selectedVariants) return "";
@@ -42,6 +43,15 @@ const Checkout = () => {
   // 🔒 Verrou : évite de traiter deux fois la même transaction KkiaPay
   // (par exemple si le listener du widget se déclenche en double).
   const processedTransactionsRef = useRef(new Set());
+
+  // ⏳ État du paiement KkiaPay, pour l'indicateur de chargement du bouton :
+  //  - "idle"      : rien en cours, le bouton est utilisable
+  //  - "preparing" : on crée la tentative de paiement avant d'ouvrir le widget
+  //  - "verifying" : paiement fait dans le widget, le serveur vérifie auprès
+  //                  de KkiaPay (jusqu'à ~8 s en Sandbox)
+  const [kkiapayStatus, setKkiapayStatus] = useState("idle");
+  const kkiapayBusy = kkiapayStatus !== "idle";
+
   useEffect(() => {
     selectedAddressIdRef.current = selectedAddressId;
   }, [selectedAddressId]);
@@ -361,6 +371,9 @@ const Checkout = () => {
   }, [addSuccessListener]);
 
   const handlePayKkiapay = async () => {
+    // Un paiement KkiaPay est déjà en préparation ou en vérification
+    if (kkiapayBusy) return;
+
     if (!paymentMethods.kkiapay) {
       openToast("error", "KkiaPay n'est pas disponible sur cette boutique");
       return;
@@ -374,8 +387,14 @@ const Checkout = () => {
       return;
     }
 
+    // ⏳ Phase 1 : préparation de la tentative de paiement
+    setKkiapayStatus("preparing");
+
     const attempt = await createPaymentAttempt("kkiapay");
-    if (!attempt) return;
+    if (!attempt) {
+      setKkiapayStatus("idle");
+      return;
+    }
     paymentAttemptReferenceRef.current = attempt.reference;
 
     const widgetConfig = {
@@ -389,7 +408,16 @@ const Checkout = () => {
       data: { checkoutReference: attempt.reference },
     };
 
-    openKkiapayWidget(widgetConfig);
+    try {
+      openKkiapayWidget(widgetConfig);
+    } catch (err) {
+      console.error("Ouverture du widget KkiaPay impossible:", err);
+      openToast("error", "Impossible d'ouvrir le module de paiement");
+    } finally {
+      // Le widget est ouvert (ou a échoué) : le bouton redevient disponible
+      // tant que le paiement n'a pas été effectué dans le widget.
+      setKkiapayStatus("idle");
+    }
   };
 
   // 💳 Vérification KkiaPay. L'appel API est séparé du nettoyage qui suit :
@@ -407,6 +435,9 @@ const Checkout = () => {
     if (processedTransactionsRef.current.has(txKey)) return;
     processedTransactionsRef.current.add(txKey);
 
+    // ⏳ Phase 2 : le serveur vérifie le paiement auprès de KkiaPay
+    setKkiapayStatus("verifying");
+
     let res;
     try {
       res = await postData("/api/payment/verify-kkiapay", {
@@ -415,6 +446,7 @@ const Checkout = () => {
       });
     } catch (err) {
       processedTransactionsRef.current.delete(txKey);
+      setKkiapayStatus("idle");
       console.error("verify-kkiapay a échoué:", err);
       openToast("error", "Erreur serveur lors de la vérification du paiement");
       return;
@@ -422,6 +454,7 @@ const Checkout = () => {
 
     if (!res?.success) {
       processedTransactionsRef.current.delete(txKey);
+      setKkiapayStatus("idle");
       openToast(
         "error",
         res?.message || "Erreur lors de la confirmation du paiement",
@@ -429,6 +462,7 @@ const Checkout = () => {
       return;
     }
 
+    // Succès : on garde le chargement affiché jusqu'à la redirection
     openToast("success", "Paiement confirmé, commande créée avec succès !");
     setCartItems([]);
     setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
@@ -621,7 +655,11 @@ const Checkout = () => {
 
           <div className="co-payment-methods">
             {paymentMethods.fedapay && (
-              <button className="co-btn-pay" onClick={handlePay}>
+              <button
+                className="co-btn-pay"
+                onClick={handlePay}
+                disabled={kkiapayBusy}
+              >
                 Payer avec FedaPay
               </button>
             )}
@@ -629,15 +667,30 @@ const Checkout = () => {
               <button
                 className="co-btn-pay co-btn-pay-kkiapay"
                 onClick={handlePayKkiapay}
+                disabled={kkiapayBusy}
               >
-                Payer avec KkiaPay
+                {kkiapayStatus === "preparing" && <CircularProgress />}
+                {kkiapayStatus === "verifying" && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    <CircularProgress />
+                    Vérification du paiement…
+                  </span>
+                )}
+                {kkiapayStatus === "idle" && "Payer avec KkiaPay"}
               </button>
             )}
             {paymentMethods.cashOnDelivery && (
               <button
                 className="co-btn-pay co-btn-pay-cod"
                 onClick={handlePayCashOnDelivery}
-                disabled={loadingCod}
+                disabled={loadingCod || kkiapayBusy}
               >
                 {loadingCod ? "Traitement..." : "Payer à la livraison"}
               </button>
