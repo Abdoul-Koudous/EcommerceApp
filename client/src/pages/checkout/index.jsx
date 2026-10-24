@@ -39,6 +39,9 @@ const Checkout = () => {
 
   const selectedAddressIdRef = useRef(selectedAddressId);
   const paymentAttemptReferenceRef = useRef(null);
+  // 🔒 Verrou : évite de traiter deux fois la même transaction KkiaPay
+  // (par exemple si le listener du widget se déclenche en double).
+  const processedTransactionsRef = useRef(new Set());
   useEffect(() => {
     selectedAddressIdRef.current = selectedAddressId;
   }, [selectedAddressId]);
@@ -215,15 +218,21 @@ const Checkout = () => {
   // ligne déjà encaissé (FedaPay/KkiaPay), false pour un paiement à la
   // livraison (pas encore d'argent réellement reçu). Le serveur confirmera
   // l'event lui-même une fois la commande marquée "Livrée".
+  // 🛡️ Le suivi ne doit JAMAIS faire échouer le flux de paiement : toute
+  // erreur est avalée et loggée en console.
   const trackPurchase = (order, confirmed = true) => {
-    (order?.products || []).forEach((item) => {
-      trackEvent("PURCHASE", {
-        productId: item.productId,
-        orderId: order.orderId,
-        amount: item.price * item.quantity,
-        confirmed,
+    try {
+      (order?.products || []).forEach((item) => {
+        trackEvent("PURCHASE", {
+          productId: item.productId,
+          orderId: order.orderId,
+          amount: item.price * item.quantity,
+          confirmed,
+        });
       });
-    });
+    } catch (err) {
+      console.error("trackPurchase a échoué:", err);
+    }
   };
 
   const createPaymentAttempt = async (provider) => {
@@ -383,6 +392,8 @@ const Checkout = () => {
     openKkiapayWidget(widgetConfig);
   };
 
+  // 💳 Vérification KkiaPay. L'appel API est séparé du nettoyage qui suit :
+  // une exception APRÈS un succès serveur n'affiche plus de toast d'erreur.
   const verifyKkiapayPayment = async (transactionId, attemptReference) => {
     if (!attemptReference) {
       openToast(
@@ -392,27 +403,37 @@ const Checkout = () => {
       return;
     }
 
+    const txKey = String(transactionId);
+    if (processedTransactionsRef.current.has(txKey)) return;
+    processedTransactionsRef.current.add(txKey);
+
+    let res;
     try {
-      const res = await postData("/api/payment/verify-kkiapay", {
+      res = await postData("/api/payment/verify-kkiapay", {
         transactionId,
         attemptReference,
       });
-
-      if (res?.success) {
-        openToast("success", "Paiement confirmé, commande créée avec succès !");
-        trackPurchase(res.data); // confirmed: true (paiement en ligne)
-        setCartItems([]);
-        setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
-        navigate("/order/success", { state: { order: res.data } });
-      } else {
-        openToast(
-          "error",
-          res?.message || "Erreur lors de la confirmation du paiement",
-        );
-      }
     } catch (err) {
+      processedTransactionsRef.current.delete(txKey);
+      console.error("verify-kkiapay a échoué:", err);
       openToast("error", "Erreur serveur lors de la vérification du paiement");
+      return;
     }
+
+    if (!res?.success) {
+      processedTransactionsRef.current.delete(txKey);
+      openToast(
+        "error",
+        res?.message || "Erreur lors de la confirmation du paiement",
+      );
+      return;
+    }
+
+    openToast("success", "Paiement confirmé, commande créée avec succès !");
+    setCartItems([]);
+    setTotals({ subTotalAmt: 0, shippingAmt: 0, taxAmt: 0, totalAmt: 0 });
+    trackPurchase(res.data); // confirmed: true (paiement en ligne)
+    navigate("/order/success", { state: { order: res.data } });
   };
 
   const [loadingCod, setLoadingCod] = useState(false);
