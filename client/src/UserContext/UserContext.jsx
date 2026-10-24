@@ -219,6 +219,7 @@ export const UserProvider = ({ children }) => {
         loadCategories,
 
         cartItems,
+        setCartItems, // ✅ AJOUT : requis par le checkout pour vider le panier après paiement
         loadCartItems,
         myListItems,
         loadMyListItems,
