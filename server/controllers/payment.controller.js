@@ -91,10 +91,17 @@ const retrieveKkiapayTransaction = async (transactionId) => {
   const maxAttempts = 6;
   const retryDelayMs = 2000;
   let transaction;
+  const startTime = Date.now();
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const attemptStart = Date.now();
     transaction = await kkiapayClient.verify(transactionId);
-    if (getKkiapayTransactionStatus(transaction) !== "PENDING") {
+    const attemptDuration = Date.now() - attemptStart;
+    const status = getKkiapayTransactionStatus(transaction);
+    console.log(`[KkiaPay] Attempt ${attempt}/${maxAttempts} took ${attemptDuration}ms with status: ${status}`);
+
+    if (status !== "PENDING") {
+      console.log(`[KkiaPay] retrieveKkiapayTransaction succeeded after ${attempt} attempts in ${Date.now() - startTime}ms`);
       return transaction;
     }
     if (attempt < maxAttempts) {
@@ -102,8 +109,10 @@ const retrieveKkiapayTransaction = async (transactionId) => {
     }
   }
 
+  const totalDurationMs = Date.now() - startTime;
   console.warn("KkiaPay transaction status remained pending after retries:", {
     attempts: maxAttempts,
+    totalDurationMs,
   });
   return transaction;
 };
@@ -538,6 +547,7 @@ export const fedapayWebhookController = async (req, res) => {
 };
 
 export const kkiapayWebhookController = async (req, res) => {
+  const webhookStartTime = Date.now();
   const webhookSecret = process.env.KKIAPAY_WEBHOOK_SECRET;
   if (!webhookSecret) {
     console.error("KKIAPAY_WEBHOOK_SECRET n'est pas configuré");
@@ -579,8 +589,11 @@ export const kkiapayWebhookController = async (req, res) => {
     return res.status(200).json({ received: true });
   }
 
+  console.log(`[KkiaPay webhook] received for transactionId: ${transactionId}`);
+
   try {
     const transaction = await retrieveKkiapayTransaction(String(transactionId));
+    console.log(`[KkiaPay webhook] transaction fetched in ${Date.now() - webhookStartTime}ms`);
     const verifiedTransactionId =
       transaction?.transactionId ?? transaction?.id;
     if (
@@ -609,7 +622,12 @@ export const kkiapayWebhookController = async (req, res) => {
 
     return res.status(200).json({ received: true });
   } catch (error) {
-    console.error("Échec du traitement du webhook KkiaPay:", error.message);
+    console.error(
+      `[KkiaPay webhook] failed in ${Date.now() - webhookStartTime}ms:`,
+      error.message,
+      error.code,
+      error.stack,
+    );
     if ([400, 404, 409, 410].includes(error.status)) {
       return res.status(200).json({ received: true });
     }
@@ -745,11 +763,14 @@ export const verifyPaymentController = async (req, res) => {
 };
 
 export const verifyKkiapayPaymentController = async (req, res) => {
+  const controllerStartTime = Date.now();
   try {
     await assertPaymentMethodEnabled(PAYMENT_METHODS.KKIAPAY);
 
     const userId = req.userId;
     const { transactionId, addressId, attemptReference } = req.body;
+
+    console.log(`[KkiaPay] verify started for transactionId: ${transactionId}`);
 
     if (!transactionId || (!addressId && !attemptReference)) {
       return res.status(400).json({
@@ -868,6 +889,13 @@ export const verifyKkiapayPaymentController = async (req, res) => {
       !alreadyCreated,
     );
   } catch (error) {
+    console.error(
+      `[KkiaPay] verify failed in ${Date.now() - controllerStartTime}ms:`,
+      error.message,
+      error.code,
+      error.stack,
+    );
+
     return res.status(error.status || 500).json({
       error: true,
       success: false,
