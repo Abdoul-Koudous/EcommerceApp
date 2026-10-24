@@ -24,12 +24,14 @@ cloudinary.config({
 async function sendStoreVerificationEmail(to, username, otp, purpose) {
     const settings = await getOrCreateSettings();
     const storeName = settings.storeIdentity?.name || "YebouShop";
+    // "reset" si le sujet parle de mot de passe, "verify" sinon (inscription, changement d'e-mail)
+    const type = /mot de passe/i.test(purpose) ? "reset" : "verify";
 
     return sendEmailFun(
         to,
         `${purpose} - ${storeName}`,
-        "",
-        VerificationEmail(username, otp, settings.storeIdentity || {}),
+        `Votre code de vérification : ${otp}. Il est valable 10 minutes.`,
+        VerificationEmail(username, otp, settings.storeIdentity || {}, type),
         storeName,
         settings.storeIdentity?.email
     );

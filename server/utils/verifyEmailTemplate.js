@@ -7,12 +7,35 @@ const escapeHtml = (value = "") =>
         "'": "&#39;",
     })[character]);
 
-const VerificationEmail = (username, otp, storeIdentity = {}) => {
+// 📝 Textes selon le type d'e-mail :
+//  - "verify" : inscription ou changement d'adresse e-mail
+//  - "reset"  : mot de passe oublié
+const EMAIL_CONTENT = {
+    verify: {
+        pageTitle: "Vérification de l'e-mail",
+        heading: "Vérifiez votre adresse e-mail",
+        intro:
+            "Merci de votre inscription, veuillez utiliser le code OTP ci-dessous pour la vérification de votre e-mail :",
+        outro:
+            "Si vous n'avez fait aucune inscription, veuillez ignorer cet e-mail.",
+    },
+    reset: {
+        pageTitle: "Réinitialisation du mot de passe",
+        heading: "Réinitialisez votre mot de passe",
+        intro:
+            "Vous avez demandé à réinitialiser votre mot de passe. Veuillez utiliser le code OTP ci-dessous pour continuer :",
+        outro:
+            "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe ne sera pas modifié.",
+    },
+};
+
+const VerificationEmail = (username, otp, storeIdentity = {}, type = "verify") => {
     const identity =
         typeof storeIdentity === "string"
             ? { name: storeIdentity }
             : storeIdentity;
     const storeName = identity?.name || "YebouShop";
+    const content = EMAIL_CONTENT[type] || EMAIL_CONTENT.verify;
     const contactDetails = [];
     if (identity?.email) {
         contactDetails.push(
@@ -40,7 +63,7 @@ const VerificationEmail = (username, otp, storeIdentity = {}) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" >
-        <title>Verification d'Email</title>
+        <title>${content.pageTitle}</title>
         <style>
             body{
                 font-family: Arial, sans-serif;
@@ -92,15 +115,13 @@ const VerificationEmail = (username, otp, storeIdentity = {}) => {
     <body>
         <div class="container">
             <div class="header">
-                <h1>Verifier votre address email</h1>
+                <h1>${content.heading}</h1>
             </div>
             <div class="content">
-                <p>Merci de votre inscription, veuillez s'il vous plais utiliser 
-                    le code otp pour la verification de votre email: 
-                </p>
+                <p>${content.intro}</p>
                 <div class="otp" style="background:#e6ffe6; padding:10px 15px; border-radius:6px;">${otp}</div>
 
-                <p>Si vous n'avez fais aucune inscription, veuillez ignorer ce email.</p>
+                <p>${content.outro}</p>
             </div>
             <div class="footer">
                 <p>&copy; ${new Date().getFullYear()} ${escapeHtml(storeName)}. Tous droits réservés.</p>
