@@ -628,6 +628,43 @@ du dépôt, vérifiez qu'ils sont présents :
   `GMAIL_*` existent et retombe sur le SMTP sinon ; le texte des e-mails à code
   s'adapte à l'inscription ou à la réinitialisation du mot de passe.
 
+## Revue de sécurité du dépôt
+
+Revue statique effectuée le **2026-11-05** sur le dépôt et la configuration
+Render. Elle a confirmé les deux vulnérabilités ci-dessous. **Ne remettez pas
+l'instance à un client et ne l'ouvrez pas à des utilisateurs tant que ces
+problèmes ne sont pas corrigés et redéployés.** Cette revue statique ne remplace
+pas un test d'intrusion ni une vérification des comptes et des secrets de
+l'environnement.
+
+| Sévérité | Fichiers et lignes | Constat confirmé | Impact |
+| --- | --- | --- | --- |
+| **CRITIQUE** | `server/route/user.route.js:37`, `server/controllers/user.controller.js:171-216`, `server/models/user.model.js:74-77` | L'endpoint public Google ne vérifie pas de jeton Firebase signé ; il accepte l'e-mail et le rôle envoyés par le navigateur et crée des jetons serveur. Le modèle autorise le rôle `ADMIN`. | Un appelant non connecté peut tenter de créer un compte administrateur ou d'obtenir une session pour un compte existant en fournissant seulement son e-mail. |
+| **ÉLEVÉE** | `server/route/product.route.js:12-14,36-51`, `server/route/category.route.js:10,15,17` | Plusieurs mutations du catalogue acceptent tout utilisateur connecté sans contrôle admin ; plusieurs suppressions de produits/variantes sont exposées sans authentification. | Modification ou suppression non autorisée du catalogue et des catégories. |
+
+### Correctifs requis avant toute ouverture
+
+1. Pour Google Auth, vérifier côté serveur un Firebase ID token avec les
+   bibliothèques Admin Firebase et une identité de service propre à
+   l'environnement. Lire l'identifiant/e-mail exclusivement dans les claims
+   vérifiés ; ignorer le rôle et l'e-mail fournis séparément par le client ;
+   attribuer toujours `UTILISATEUR` à un nouvel utilisateur. Une identité
+   existante ne doit pas obtenir de session sans preuve du compte Firebase.
+2. Ajouter `auth` puis `adminAuth` à toutes les routes de création, modification
+   et suppression des produits, variantes, catégories et images qui sont
+   réservées à l'administration. Vérifier également les autres routes
+   mutatrices au-delà des lignes citées.
+3. Ajouter des tests de non-régression : jeton Firebase absent/invalide,
+   tentative de rôle `ADMIN`, jeton valide d'un autre e-mail, utilisateur
+   standard refusé sur chaque mutation admin, administrateur autorisé.
+4. Après correction, lancer les tests, reconstruire et redéployer ; vérifier
+   ensuite que la connexion Google et les fonctions d'administration légitimes
+   continuent de fonctionner.
+
+La revue n'a pas signalé d'autre vulnérabilité confirmée dans la configuration
+Render lors de ce passage. Cela ne signifie pas que l'application est exempte
+d'autres risques.
+
 ## Fiche de déploiement à compléter pour chaque client
 
 Ne stockez pas les secrets dans cette fiche. Conservez-la dans l'espace privé
@@ -654,3 +691,70 @@ de suivi du client.
 | Recette client/admin/panier terminée | |
 | Clés Live et webhooks Live validés | |
 | Date de remise et procédure de support | |
+
+## État de reprise de l'instance de démonstration
+
+Dernière mise à jour documentaire : **2026-11-05**. Cette section concerne
+uniquement l'instance de démonstration ; elle ne remplace pas les vérifications
+de l'instance d'un nouveau client.
+
+### Déjà confirmé
+
+- L'inscription et la connexion Google fonctionnent ; le compte est visible
+  dans l'administration.
+- Le panier invité est conservé après la connexion Google.
+- Le proxy Firebase Auth et l'URI OAuth Render ont été configurés et déployés.
+- Le test de livraison du webhook KkiaPay a répondu HTTP `200` dans les logs
+  Render le 2026-10-22.
+- Le 2026-10-22, une capture montrait un toast de succès suivi d'un toast
+  d'erreur lors de la vérification KkiaPay. Le développeur a ensuite indiqué,
+  le 2026-11-05, avoir corrigé le problème. **Ne pas traiter cette ancienne
+  capture comme un bug encore présent** ; noter le résultat actuel si un
+  nouveau test est effectué.
+
+### À vérifier avant la première boutique cliente
+
+- Refaire une seule commande KkiaPay Sandbox et confirmer : un seul message de
+  succès, page de confirmation, commande dans l'admin, panier vidé, stock
+  décrémenté une fois et un seul reçu.
+- Vérifier FedaPay Sandbox séparément (clés, URL, signature webhook, commande,
+  stock, reçu et répétition d'événement).
+- Vérifier que la méthode d'envoi d'e-mails configurée sur Render est l'API
+  Gmail (les ports SMTP sont bloqués sur le plan gratuit), puis tester OTP,
+  réinitialisation et reçu ; confirmer les liens vers l'origine attendue.
+- Faire une sauvegarde MongoDB, restaurer dans une base de test distincte et
+  vérifier les collections principales.
+- **Bloquant : corriger les vulnérabilités de la section « Revue de sécurité
+  du dépôt » avant d'ouvrir l'instance à des utilisateurs ou à un client.**
+- Pour chaque nouveau client : ressources, comptes et secrets séparés ; domaine
+  et DNS ; OAuth/Firebase ; variables Render ; paiements Sandbox ; recette et
+  sauvegardes. Suivre la checklist rapide ci-dessus.
+
+### Reprendre dans une nouvelle conversation
+
+Ouvre le dépôt dans VS Code, puis colle le message suivant dans un nouveau
+chat. Le guide est la source de vérité pour le processus détaillé ; la nouvelle
+conversation doit d'abord contrôler l'état réel du dépôt et du déploiement.
+
+> Nous reprenons le projet EcommerceApp, dépôt `Abdoul-Koudous/EcommerceApp`,
+> branche de travail actuelle `deploy`. Commence par lire
+> `docs/DEPLOIEMENT_CLIENT.md`, surtout « État de reprise de l'instance de
+> démonstration », « Dépannage » et la checklist de déploiement ; consulte aussi
+> `README.md`. Vérifie `git status`, le commit courant et les derniers
+> changements sans écraser les modifications existantes. L'objectif est de
+> finir la préparation du premier client, puis d'avoir une procédure répétable
+> pour les suivants : valider le paiement KkiaPay Sandbox après le correctif
+> que j'ai indiqué avoir fait, tester FedaPay Sandbox, vérifier les e-mails et
+> leurs liens, faire une sauvegarde/restauration MongoDB et terminer une revue
+> de sécurité du dépôt. La revue statique du 2026-11-05 a déjà signalé un
+> endpoint Google Auth qui ne vérifie pas l'identité Firebase et peut accepter
+> un rôle fourni par le client, ainsi que des routes de mutation catalogue
+> sans contrôle admin suffisant. Lis la section « Revue de sécurité du dépôt »,
+> traite ces correctifs comme bloquants avant tout client, et ajoute des tests
+> de non-régression. Sépare les faits observés des éléments que je dois
+> confirmer ; ne suppose pas que l'ancienne capture paiement d'octobre décrit
+> encore le comportement actuel. Ne demande et n'affiche aucun mot de passe,
+> code OTP, clé privée, secret webhook, token Gmail, URI MongoDB ni autre secret.
+> N'effectue aucun paiement réel, déploiement, push ou changement de production
+> sans mon accord explicite. À chaque résultat, mets à jour ce guide, lance les
+> validations appropriées et indique clairement ce qui reste à faire.
