@@ -641,26 +641,26 @@ du dépôt, vérifiez qu'ils sont présents :
 ## Revue de sécurité du dépôt
 
 Revue statique effectuée le **2026-11-05** sur le dépôt et la configuration
-Render. Elle a confirmé les deux vulnérabilités ci-dessous. Les correctifs
-applicatifs sont maintenant présents localement, mais ne sont pas encore
-déployés ; configurez d'abord Firebase Admin sur Render et redéployez avant
-d'ouvrir l'instance à des utilisateurs. Cette revue statique ne remplace pas un
-test d'intrusion ni une vérification des comptes et des secrets de
-l'environnement.
+Render. Les correctifs applicatifs ont été poussés sur
+`security/firebase-auth-and-access` et `deploy` dans le commit `bfb6199`, puis
+leur déploiement a été vérifié le **2026-11-07**. Cette revue statique ne
+remplace pas un test d'intrusion ni une vérification des comptes et des secrets
+de l'environnement.
 
 | Sévérité | Fichiers et lignes | Constat confirmé | Impact |
 | --- | --- | --- | --- |
-| **CRITIQUE** | `server/route/user.route.js`, `server/controllers/user.controller.js`, `server/services/firebaseAuth.service.js` | L'endpoint Google acceptait auparavant l'e-mail et le rôle envoyés par le navigateur sans vérifier de jeton Firebase. Il vérifie maintenant le jeton, impose Google et un e-mail confirmé, et ne donne que le rôle `UTILISATEUR` aux nouveaux comptes. | Corrigé dans le code local ; la connexion Google échouera tant que les deux secrets Firebase Admin ne seront pas configurés et déployés. |
-| **ÉLEVÉE** | `server/route/product.route.js`, `server/route/category.route.js`, `server/route/bannerV1.route.js`, `server/route/campaign.route.js` | Les mutations produits, variantes, catégories, bannières et campagnes, ainsi que les vues de gestion de campagnes, exigent maintenant `auth` et `adminAuth`. | Corrigé dans le code local ; à valider sur l'instance après déploiement. |
-| **Dépendances serveur** | `server/package.json` et `server/package-lock.json` | Des overrides ciblés imposent Axios `1.21.0` pour les SDK de paiement, et `@google-cloud/firestore-api` `0.7.1` avec `google-gax` `6.16.0` pour Firebase Admin. | `npm audit` est à zéro ; les SDK chargent et exposent leurs méthodes. Les paiements Sandbox restent à retester avant le déploiement. |
-| **ÉLEVÉE** | `server/package.json` | Nodemailer a été mis à niveau de la branche 7 à 10.3.1, version corrigée annoncée par npm. | Mise à niveau locale ; valider l'envoi d'e-mail API Gmail et SMTP avant le déploiement. |
-| **Dépendances boutique** | `client/package.json` et `client/package-lock.json` | Overrides ciblés vers `@grpc/grpc-js` `1.14.7` et `serialize-javascript` `7.1.4` dans la chaîne de build KkiaPay. | `npm audit --omit=dev` est à zéro et le build réussit. La Sandbox KkiaPay doit encore être testée. |
-| **Dépendances admin** | `admin/package-lock.json` | Mises à jour compatibles du lockfile. | `npm audit --omit=dev` est à zéro et le build réussit. |
+| **CRITIQUE** | `server/route/user.route.js`, `server/controllers/user.controller.js`, `server/services/firebaseAuth.service.js` | L'endpoint Google acceptait auparavant l'e-mail et le rôle envoyés par le navigateur sans vérifier de jeton Firebase. Il vérifie maintenant le jeton, impose Google et un e-mail confirmé, et ne donne que le rôle `UTILISATEUR` aux nouveaux comptes. | Déployé dans `bfb6199`. Render a répondu `401` au test sans jeton. L'utilisateur indique avoir configuré les variables Firebase Admin ; une connexion Google réelle reste à tester. |
+| **ÉLEVÉE** | `server/route/product.route.js`, `server/route/category.route.js`, `server/route/bannerV1.route.js`, `server/route/campaign.route.js` | Les mutations produits, variantes, catégories, bannières et campagnes, ainsi que les vues de gestion de campagnes, exigent maintenant `auth` et `adminAuth`. | Déployé dans `bfb6199`. Les créations produit/catégorie sans jeton répondent `401` ; vérifier encore `403` pour un utilisateur connecté non admin et l'accès normal d'un admin. |
+| **Dépendances serveur** | `server/package.json` et `server/package-lock.json` | Des overrides ciblés imposent Axios `1.21.0` pour les SDK de paiement, et `@google-cloud/firestore-api` `0.7.1` avec `google-gax` `6.16.0` pour Firebase Admin. | `npm audit` complet à zéro ; les SDK chargent et exposent leurs méthodes. Les paiements Sandbox restent à retester. |
+| **Dépendances e-mail** | `server/package.json` | Nodemailer a été mis à niveau vers 10.3.1. | Le test local de rendu d'e-mail passe ; tester la livraison réelle Gmail/SMTP avant remise. |
+| **Dépendances boutique** | `client/package.json` et `client/package-lock.json` | Overrides ciblés vers `@grpc/grpc-js` `1.14.7` et `serialize-javascript` `7.1.4` dans les dépendances Firebase et KkiaPay. | `npm audit` complet à zéro et build réussi ; retester KkiaPay Sandbox. |
+| **Dépendances admin** | `admin/package-lock.json` | Mises à jour compatibles du lockfile. | `npm audit` complet à zéro et build réussi. |
 
-### Configuration et validation requises avant toute ouverture
+### Validations restantes avant toute ouverture
 
-1. Ajouter `FIREBASE_PROJECT_ID` et `FIREBASE_SERVICE_ACCOUNT_JSON` comme
-   variables sécurisées Render avant le déploiement des correctifs.
+1. L'utilisateur indique avoir configuré `FIREBASE_PROJECT_ID` et
+   `FIREBASE_SERVICE_ACCOUNT_JSON` sur Render. Ne pas demander ni afficher le
+   JSON ; confirmer la connexion Google via le navigateur.
 2. Les trois audits npm signalent actuellement zéro vulnérabilité. Les overrides
    remplacent des versions de dépendances transitives hors des plages prévues
    par leurs paquets parents : conserver ces règles documentées et refaire les
@@ -669,11 +669,12 @@ l'environnement.
    test de rendu de message Nodemailer 10 passent localement. Les SDK KkiaPay et
    FedaPay chargent avec Axios 1.21.0. Les builds affichent encore un
    avertissement de gros bundle.
-4. Avant déploiement, refaire les recettes KkiaPay/FedaPay Sandbox, tester
-   l'envoi d'e-mails, configurer Firebase Admin sur Render, puis vérifier Google
-   Auth et le refus `403` des mutations admin pour un compte standard.
-5. Les correctifs sont uniquement locaux pour le moment : pousser et déployer
-   seulement après validation et accord explicite.
+4. Tester avec une session navigateur les connexions Google valides ; valider
+   les droits `403` pour un utilisateur standard et l'accès admin légitime.
+5. Refaire les recettes KkiaPay/FedaPay Sandbox, tester l'envoi d'e-mails,
+   puis réaliser et restaurer une sauvegarde MongoDB de test.
+6. Le code est déjà poussé sur la branche dédiée et `deploy`. Ne pas effectuer
+   d'autre push ou changement de production sans accord explicite.
 
 La revue n'a pas signalé d'autre vulnérabilité confirmée dans la configuration
 Render lors de ce passage. Cela ne signifie pas que l'application est exempte
@@ -708,7 +709,7 @@ de suivi du client.
 
 ## État de reprise de l'instance de démonstration
 
-Dernière mise à jour documentaire : **2026-11-05**. Cette section concerne
+Dernière mise à jour documentaire : **2026-11-07**. Cette section concerne
 uniquement l'instance de démonstration ; elle ne remplace pas les vérifications
 de l'instance d'un nouveau client.
 
@@ -718,6 +719,11 @@ de l'instance d'un nouveau client.
   dans l'administration.
 - Le panier invité est conservé après la connexion Google.
 - Le proxy Firebase Auth et l'URI OAuth Render ont été configurés et déployés.
+- Les correctifs de sécurité ont été poussés sur `security/firebase-auth-and-access`
+  et `deploy` (commit `bfb6199`). Render `/health/ready` répond `200`.
+- L'endpoint Google sans jeton répond `401` et les créations produit/catégorie
+  sans jeton répondent `401`. La connexion Google valide et le refus `403` d'un
+  utilisateur authentifié non admin restent à confirmer.
 - Le test de livraison du webhook KkiaPay a répondu HTTP `200` dans les logs
   Render le 2026-10-22.
 - Le 2026-10-22, une capture montrait un toast de succès suivi d'un toast
@@ -738,9 +744,8 @@ de l'instance d'un nouveau client.
   réinitialisation et reçu ; confirmer les liens vers l'origine attendue.
 - Faire une sauvegarde MongoDB, restaurer dans une base de test distincte et
   vérifier les collections principales.
-- **Bloquant : déployer les correctifs de la section « Revue de sécurité du
-  dépôt » et configurer Firebase Admin avant l'ouverture. Les audits npm locaux
-  sont à zéro ; refaire les paiements Sandbox avant lancement.**
+- **Bloquant : terminer les vérifications réelles Google Auth, permissions
+  admin, e-mails, paiements Sandbox et sauvegarde/restauration avant l'ouverture.**
 - Pour chaque nouveau client : ressources, comptes et secrets séparés ; domaine
   et DNS ; OAuth/Firebase ; variables Render ; paiements Sandbox ; recette et
   sauvegardes. Suivre la checklist rapide ci-dessus.
@@ -763,10 +768,12 @@ conversation doit d'abord contrôler l'état réel du dépôt et du déploiement
 > leurs liens, faire une sauvegarde/restauration MongoDB et terminer une revue
 > de sécurité du dépôt. La revue statique du 2026-11-05 a déjà signalé un
 > endpoint Google Auth qui ne vérifiait pas l'identité Firebase et des routes
-> catalogue sans contrôle admin suffisant ; les correctifs sont maintenant
-> locaux avec tests, pas encore déployés. Lis la section « Revue de sécurité du
-> dépôt », vérifie les changements et traite les alertes npm qui restent avant
-> tout client. Sépare les faits observés des éléments que je dois
+> catalogue sans contrôle admin suffisant ; les corrections ont été poussées
+> dans le commit `bfb6199` sur `deploy` et Render répond maintenant 401 aux
+> demandes sans jeton. Lis l'état actualisé dans « Revue de sécurité du dépôt »,
+> puis accompagne-moi pour tester Google Auth et les permissions admin en
+> direct, les paiements Sandbox, les e-mails et la sauvegarde/restauration.
+> Sépare les faits vérifiés des éléments que je dois confirmer.
 > confirmer ; ne suppose pas que l'ancienne capture paiement d'octobre décrit
 > encore le comportement actuel. Ne demande et n'affiche aucun mot de passe,
 > code OTP, clé privée, secret webhook, token Gmail, URI MongoDB ni autre secret.
