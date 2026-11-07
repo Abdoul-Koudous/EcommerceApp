@@ -14,6 +14,7 @@ import { error } from "console";
 import ReviewsModel from "../models/reviews.model.js";
 import { mergeGuestCart } from "./cart.controller.js";
 import { getOrCreateSettings } from "../services/settings.service.js";
+import { verifyGoogleIdToken } from "../services/firebaseAuth.service.js";
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
     api_key: process.env.cloudinary_Config_api_key,
@@ -168,102 +169,107 @@ export async function verifyEmailController(request, response) {
 }
 
 
-export async function authWithGoogle(request, response){
-    const {name, email, password,avatar, mobile, role} = request.body;
+export async function authWithGoogle(request, response) {
+    const { idToken, guestSessionId } = request.body || {};
+    let identity;
 
     try {
-        const existingUser = await UserModel.findOne({ email });
-
-        if (!existingUser) {
-            const user = await UserModel.create({
-                name: name,
-                mobile: mobile,
-                email: email,
-                password: "null",
-                avatar: avatar,
-                role: role,
-                verify_email: true,
-                signUpWithGoogle:true,
-            });
-            await user.save();
-            const accesstoken = await generatedAccessToken(user._id);
-            const refreshToken = await generatedRefreshToken(user._id);
-            await UserModel.findByIdAndUpdate(user?._id,{
-                last_login_date : new Date()
-            })
-
-            const cookiesOption = {
-                httpOnly : true,
-                secure : true,
-                sameSite : "None"
-            }
-            response.cookie('accessToken',accesstoken,cookiesOption)
-            response.cookie('refreshToken',refreshToken,cookiesOption)
-
-            // ✅ NOUVEAU : fusionne le panier invité pour un tout nouveau
-            // compte créé via Google (manquait auparavant).
-            if (request.body.guestSessionId) {
-                await mergeGuestCart(user._id, request.body.guestSessionId);
-            }
-
-            return response.json({
-                message : "La connexion faite avec succès",
-                error: false,
-                success : true,
-                data : {
-                    accesstoken,
-                    refreshToken,
-                    role: user.role
-                }
-            })
-            
-        }else{
-            // ✅ met à jour l'avatar à chaque connexion Google si l'utilisateur existant n'en a pas
-            // (évite un avatar figé/vide pour toujours sur un compte déjà créé sans avatar)
-            const updateFields = { last_login_date: new Date() };
-            if (avatar && !existingUser.avatar) {
-                updateFields.avatar = avatar;
-            }
-
-            await UserModel.findByIdAndUpdate(existingUser?._id, updateFields);
-
-            const accesstoken = await generatedAccessToken(existingUser._id);
-            const refreshToken = await generatedRefreshToken(existingUser._id);
-
-            const cookiesOption = {
-                httpOnly : true,
-                secure : true,
-                sameSite : "None"
-            }
-            response.cookie('accessToken',accesstoken,cookiesOption)
-            response.cookie('refreshToken',refreshToken,cookiesOption)
-
-            // ✅ CORRIGÉ : utilisait "user" (undefined dans cette branche),
-            // remplacé par "existingUser" — sinon ReferenceError à chaque
-            // connexion Google d'un compte déjà existant.
-            if (request.body.guestSessionId) {
-                await mergeGuestCart(existingUser._id, request.body.guestSessionId);
-            }
-
-            return response.json({
-                message : "La connexion faite avec succès",
-                error: false,
-                success : true,
-                data : {
-                    accesstoken,
-                    refreshToken,
-                    role: existingUser.role
-                }
-            })
-        }
-        
+        identity = await verifyGoogleIdToken(idToken);
     } catch (error) {
-         return response.status(500).json({
-            message: error.message || error,
+        const statusCode = error.statusCode || 401;
+        if (statusCode >= 500) {
+            console.error("Google authentication unavailable:", error.code);
+        } else {
+            console.warn("Google authentication rejected:", error.code);
+        }
+        return response.status(statusCode).json({
+            message: statusCode >= 500
+                ? "La connexion Google est temporairement indisponible."
+                : "La connexion Google a été refusée.",
             error: true,
-            success: false
+            success: false,
         });
-        
+    }
+
+    if (
+        guestSessionId !== undefined &&
+        (typeof guestSessionId !== "string" || guestSessionId.length > 128)
+    ) {
+        return response.status(400).json({
+            message: "Identifiant de session invité invalide.",
+            error: true,
+            success: false,
+        });
+    }
+
+    try {
+        const emailPattern = identity.email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        let user = await UserModel.findOne({
+            email: { $regex: `^${emailPattern}$`, $options: "i" },
+        });
+
+        if (user && user.status !== "Active") {
+            return response.status(403).json({
+                message: "Contactez l'administrateur.",
+                error: true,
+                success: false,
+            });
+        }
+
+        if (!user) {
+            const randomPassword = crypto.randomBytes(32).toString("hex");
+            const salt = await bcryptjs.genSalt(10);
+            user = await UserModel.create({
+                name: identity.name || identity.email.split("@")[0],
+                mobile: identity.mobile,
+                email: identity.email,
+                password: await bcryptjs.hash(randomPassword, salt),
+                avatar: identity.avatar,
+                role: "UTILISATEUR",
+                verify_email: true,
+                signUpWithGoogle: true,
+            });
+        } else {
+            user.last_login_date = new Date();
+            user.verify_email = true;
+            if (identity.avatar && !user.avatar) {
+                user.avatar = identity.avatar;
+            }
+            await user.save();
+        }
+
+        const accesstoken = await generatedAccessToken(user._id);
+        const refreshToken = await generatedRefreshToken(user._id);
+        const cookiesOption = {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None",
+        };
+        response.cookie("accessToken", accesstoken, cookiesOption);
+        response.cookie("refreshToken", refreshToken, cookiesOption);
+
+        if (guestSessionId) {
+            await mergeGuestCart(user._id, guestSessionId);
+        }
+
+        return response.json({
+            message: "La connexion faite avec succès",
+            error: false,
+            success: true,
+            data: {
+                accesstoken,
+                refreshToken,
+                email: user.email,
+                role: user.role,
+            },
+        });
+    } catch (error) {
+        console.error("Google sign-in failed after token verification:", error);
+        return response.status(500).json({
+            message: "Impossible de terminer la connexion Google.",
+            error: true,
+            success: false,
+        });
     }
 }
 

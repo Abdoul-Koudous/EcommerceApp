@@ -9,6 +9,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 22.12.0
       - key: VITE_API_URL
         value: ""
       - key: VITE_BASE
@@ -72,6 +74,10 @@ services:
       - key: VITE_FIREBASE_APP_ID
         sync: false
       - key: FIREBASE_AUTH_PROXY_HOST
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: GMAIL_CLIENT_ID
         sync: false

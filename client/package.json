@@ -3,6 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "overrides": {
+    "@grpc/grpc-js": "1.14.7",
+    "kkiapay": {
+      "rollup-plugin-terser": {
+        "serialize-javascript": "7.1.4"
+      }
+    }
+  },
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",

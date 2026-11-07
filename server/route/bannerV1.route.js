@@ -1,5 +1,6 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
+import adminAuth from "../middlewares/adminAuth.js";
 import upload from "../middlewares/multer.js";
 
 import {
@@ -14,14 +15,14 @@ import {
 
 const bannerV1Router = Router();
 
-bannerV1Router.post("/uploadImages", auth, upload.array("images"), uploadImages);
-bannerV1Router.post("/create", auth, addBanner);
-bannerV1Router.delete("/deleteImage", auth, removeImageFromCloudinary);
+bannerV1Router.post("/uploadImages", auth, adminAuth, upload.array("images"), uploadImages);
+bannerV1Router.post("/create", auth, adminAuth, addBanner);
+bannerV1Router.delete("/deleteImage", auth, adminAuth, removeImageFromCloudinary);
 bannerV1Router.get("/", getBanners);
 bannerV1Router.get("/:id", getBanner);
 
-bannerV1Router.put("/:id", auth, updatedBanner);
-bannerV1Router.delete("/:id", auth, deleteBanner);
+bannerV1Router.put("/:id", auth, adminAuth, updatedBanner);
+bannerV1Router.delete("/:id", auth, adminAuth, deleteBanner);
 
 
 

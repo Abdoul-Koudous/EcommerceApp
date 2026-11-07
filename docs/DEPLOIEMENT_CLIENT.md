@@ -140,6 +140,14 @@ doit aussi être autorisé dans Firebase Authentication. Il n'est pas nécessair
 d'activer Google Maps ou de configurer une facturation Maps pour la connexion
 Google.
 
+Le serveur vérifie maintenant le Firebase ID token avant de créer une session.
+Créez une clé de compte de service Firebase Admin dédiée à l'environnement,
+puis ajoutez son JSON complet comme secret Render `FIREBASE_SERVICE_ACCOUNT_JSON`
+et le même identifiant de projet comme `FIREBASE_PROJECT_ID`. Ne mettez jamais
+le JSON dans Git, dans le client ou dans une variable `VITE_*`. Une clé absente
+ou invalide rend la connexion Google indisponible plutôt que de contourner la
+vérification.
+
 ### E-mails
 
 La boutique envoie des e-mails transactionnels : codes d'inscription (OTP),
@@ -315,8 +323,8 @@ réputation de l'expéditeur et du lien, pas de configuration.
    HTTPS exacte et ajoutez son origine à `ALLOWED_ORIGINS`. Cette dernière
    accepte une liste séparée par des virgules ; Render ajoute automatiquement
    l'origine `RENDER_EXTERNAL_URL`.
-8. Utilisez une version de Node.js 18 ou plus récente : le module d'envoi par
-   l'API Gmail s'appuie sur `fetch`, disponible nativement depuis cette version.
+8. Utilisez Node.js 22.x : Firebase Admin le requiert. Le Blueprint fixe
+   `NODE_VERSION=22.12.0`.
 
 ### Variables Render
 
@@ -332,6 +340,8 @@ réputation de l'expéditeur et du lien, pas de configuration.
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_PASS` | Render (mot de passe secret) | SMTP (option B) ou repli si les variables `GMAIL_*` sont absentes. |
 | `cloudinary_Config_Cloud_Name`, `cloudinary_Config_api_key`, `cloudinary_Config_api_secret` | Render (secret API) | Téléversements d'images depuis l'administration. |
 | `FIREBASE_AUTH_PROXY_HOST` | Render (valeur `sync: false` dans le Blueprint) | Hôte Firebase `*.firebaseapp.com` vers lequel relayer `/__/auth/`. |
+| `FIREBASE_PROJECT_ID` | Render (`sync: false`) | Identifiant du projet Firebase Admin utilisé pour vérifier les jetons Google. |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Secret Render (`sync: false`) | JSON complet du compte de service Firebase Admin ; ne jamais le committer ni le placer dans une variable `VITE_*`. |
 | `KKIAPAY_SANDBOX=true`, `KKIAPAY_PUBLIC_KEY`, `KKIAPAY_PRIVATE_KEY`, `KKIAPAY_SECRET_KEY`, `KKIAPAY_WEBHOOK_SECRET` | Render | Compte KkiaPay Sandbox ; clés privées et secrets restent côté serveur. |
 | `FEDAPAY_ENVIRONMENT=sandbox`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET` | Render | Compte FedaPay Sandbox et signature du webhook. |
 | `VITE_API_URL` vide, `VITE_BASE=/admin/` | Render/build | API même origine et chemin de l'administration. |
@@ -631,35 +641,39 @@ du dépôt, vérifiez qu'ils sont présents :
 ## Revue de sécurité du dépôt
 
 Revue statique effectuée le **2026-11-05** sur le dépôt et la configuration
-Render. Elle a confirmé les deux vulnérabilités ci-dessous. **Ne remettez pas
-l'instance à un client et ne l'ouvrez pas à des utilisateurs tant que ces
-problèmes ne sont pas corrigés et redéployés.** Cette revue statique ne remplace
-pas un test d'intrusion ni une vérification des comptes et des secrets de
+Render. Elle a confirmé les deux vulnérabilités ci-dessous. Les correctifs
+applicatifs sont maintenant présents localement, mais ne sont pas encore
+déployés ; configurez d'abord Firebase Admin sur Render et redéployez avant
+d'ouvrir l'instance à des utilisateurs. Cette revue statique ne remplace pas un
+test d'intrusion ni une vérification des comptes et des secrets de
 l'environnement.
 
 | Sévérité | Fichiers et lignes | Constat confirmé | Impact |
 | --- | --- | --- | --- |
-| **CRITIQUE** | `server/route/user.route.js:37`, `server/controllers/user.controller.js:171-216`, `server/models/user.model.js:74-77` | L'endpoint public Google ne vérifie pas de jeton Firebase signé ; il accepte l'e-mail et le rôle envoyés par le navigateur et crée des jetons serveur. Le modèle autorise le rôle `ADMIN`. | Un appelant non connecté peut tenter de créer un compte administrateur ou d'obtenir une session pour un compte existant en fournissant seulement son e-mail. |
-| **ÉLEVÉE** | `server/route/product.route.js:12-14,36-51`, `server/route/category.route.js:10,15,17` | Plusieurs mutations du catalogue acceptent tout utilisateur connecté sans contrôle admin ; plusieurs suppressions de produits/variantes sont exposées sans authentification. | Modification ou suppression non autorisée du catalogue et des catégories. |
+| **CRITIQUE** | `server/route/user.route.js`, `server/controllers/user.controller.js`, `server/services/firebaseAuth.service.js` | L'endpoint Google acceptait auparavant l'e-mail et le rôle envoyés par le navigateur sans vérifier de jeton Firebase. Il vérifie maintenant le jeton, impose Google et un e-mail confirmé, et ne donne que le rôle `UTILISATEUR` aux nouveaux comptes. | Corrigé dans le code local ; la connexion Google échouera tant que les deux secrets Firebase Admin ne seront pas configurés et déployés. |
+| **ÉLEVÉE** | `server/route/product.route.js`, `server/route/category.route.js`, `server/route/bannerV1.route.js`, `server/route/campaign.route.js` | Les mutations produits, variantes, catégories, bannières et campagnes, ainsi que les vues de gestion de campagnes, exigent maintenant `auth` et `adminAuth`. | Corrigé dans le code local ; à valider sur l'instance après déploiement. |
+| **Dépendances serveur** | `server/package.json` et `server/package-lock.json` | Des overrides ciblés imposent Axios `1.21.0` pour les SDK de paiement, et `@google-cloud/firestore-api` `0.7.1` avec `google-gax` `6.16.0` pour Firebase Admin. | `npm audit` est à zéro ; les SDK chargent et exposent leurs méthodes. Les paiements Sandbox restent à retester avant le déploiement. |
+| **ÉLEVÉE** | `server/package.json` | Nodemailer a été mis à niveau de la branche 7 à 10.3.1, version corrigée annoncée par npm. | Mise à niveau locale ; valider l'envoi d'e-mail API Gmail et SMTP avant le déploiement. |
+| **Dépendances boutique** | `client/package.json` et `client/package-lock.json` | Overrides ciblés vers `@grpc/grpc-js` `1.14.7` et `serialize-javascript` `7.1.4` dans la chaîne de build KkiaPay. | `npm audit --omit=dev` est à zéro et le build réussit. La Sandbox KkiaPay doit encore être testée. |
+| **Dépendances admin** | `admin/package-lock.json` | Mises à jour compatibles du lockfile. | `npm audit --omit=dev` est à zéro et le build réussit. |
 
-### Correctifs requis avant toute ouverture
+### Configuration et validation requises avant toute ouverture
 
-1. Pour Google Auth, vérifier côté serveur un Firebase ID token avec les
-   bibliothèques Admin Firebase et une identité de service propre à
-   l'environnement. Lire l'identifiant/e-mail exclusivement dans les claims
-   vérifiés ; ignorer le rôle et l'e-mail fournis séparément par le client ;
-   attribuer toujours `UTILISATEUR` à un nouvel utilisateur. Une identité
-   existante ne doit pas obtenir de session sans preuve du compte Firebase.
-2. Ajouter `auth` puis `adminAuth` à toutes les routes de création, modification
-   et suppression des produits, variantes, catégories et images qui sont
-   réservées à l'administration. Vérifier également les autres routes
-   mutatrices au-delà des lignes citées.
-3. Ajouter des tests de non-régression : jeton Firebase absent/invalide,
-   tentative de rôle `ADMIN`, jeton valide d'un autre e-mail, utilisateur
-   standard refusé sur chaque mutation admin, administrateur autorisé.
-4. Après correction, lancer les tests, reconstruire et redéployer ; vérifier
-   ensuite que la connexion Google et les fonctions d'administration légitimes
-   continuent de fonctionner.
+1. Ajouter `FIREBASE_PROJECT_ID` et `FIREBASE_SERVICE_ACCOUNT_JSON` comme
+   variables sécurisées Render avant le déploiement des correctifs.
+2. Les trois audits npm signalent actuellement zéro vulnérabilité. Les overrides
+   remplacent des versions de dépendances transitives hors des plages prévues
+   par leurs paquets parents : conserver ces règles documentées et refaire les
+   audits à chaque mise à jour des SDK.
+3. Les tests serveur (16 tests), les builds boutique et administration et le
+   test de rendu de message Nodemailer 10 passent localement. Les SDK KkiaPay et
+   FedaPay chargent avec Axios 1.21.0. Les builds affichent encore un
+   avertissement de gros bundle.
+4. Avant déploiement, refaire les recettes KkiaPay/FedaPay Sandbox, tester
+   l'envoi d'e-mails, configurer Firebase Admin sur Render, puis vérifier Google
+   Auth et le refus `403` des mutations admin pour un compte standard.
+5. Les correctifs sont uniquement locaux pour le moment : pousser et déployer
+   seulement après validation et accord explicite.
 
 La revue n'a pas signalé d'autre vulnérabilité confirmée dans la configuration
 Render lors de ce passage. Cela ne signifie pas que l'application est exempte
@@ -724,8 +738,9 @@ de l'instance d'un nouveau client.
   réinitialisation et reçu ; confirmer les liens vers l'origine attendue.
 - Faire une sauvegarde MongoDB, restaurer dans une base de test distincte et
   vérifier les collections principales.
-- **Bloquant : corriger les vulnérabilités de la section « Revue de sécurité
-  du dépôt » avant d'ouvrir l'instance à des utilisateurs ou à un client.**
+- **Bloquant : déployer les correctifs de la section « Revue de sécurité du
+  dépôt » et configurer Firebase Admin avant l'ouverture. Les audits npm locaux
+  sont à zéro ; refaire les paiements Sandbox avant lancement.**
 - Pour chaque nouveau client : ressources, comptes et secrets séparés ; domaine
   et DNS ; OAuth/Firebase ; variables Render ; paiements Sandbox ; recette et
   sauvegardes. Suivre la checklist rapide ci-dessus.
@@ -747,11 +762,11 @@ conversation doit d'abord contrôler l'état réel du dépôt et du déploiement
 > que j'ai indiqué avoir fait, tester FedaPay Sandbox, vérifier les e-mails et
 > leurs liens, faire une sauvegarde/restauration MongoDB et terminer une revue
 > de sécurité du dépôt. La revue statique du 2026-11-05 a déjà signalé un
-> endpoint Google Auth qui ne vérifie pas l'identité Firebase et peut accepter
-> un rôle fourni par le client, ainsi que des routes de mutation catalogue
-> sans contrôle admin suffisant. Lis la section « Revue de sécurité du dépôt »,
-> traite ces correctifs comme bloquants avant tout client, et ajoute des tests
-> de non-régression. Sépare les faits observés des éléments que je dois
+> endpoint Google Auth qui ne vérifiait pas l'identité Firebase et des routes
+> catalogue sans contrôle admin suffisant ; les correctifs sont maintenant
+> locaux avec tests, pas encore déployés. Lis la section « Revue de sécurité du
+> dépôt », vérifie les changements et traite les alertes npm qui restent avant
+> tout client. Sépare les faits observés des éléments que je dois
 > confirmer ; ne suppose pas que l'ancienne capture paiement d'octobre décrit
 > encore le comportement actuel. Ne demande et n'affiche aucun mot de passe,
 > code OTP, clé privée, secret webhook, token Gmail, URI MongoDB ni autre secret.

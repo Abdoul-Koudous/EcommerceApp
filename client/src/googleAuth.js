@@ -22,38 +22,30 @@ export function completeGoogleSignIn() {
       if (!result) return null;
 
       const user = result.user;
-      const fields = {
-        name: user.displayName || user.email,
-        email: user.email,
-        password: null,
-        avatar: user.photoURL,
-        mobile: user.phoneNumber,
-        role: "UTILISATEUR",
+      const payload = {
+        idToken: await user.getIdToken(),
         guestSessionId: getSessionId(),
       };
 
-      if (!fields.email) {
-        throw new Error("Google n'a pas fourni d'adresse e-mail pour ce compte.");
-      }
-
-      const response = await postData("/api/users/authWithGoogle", fields);
+      const response = await postData("/api/users/authWithGoogle", payload);
       if (
         response?.error ||
         !response?.success ||
-        !response?.data?.accesstoken
+        !response?.data?.accesstoken ||
+        !response?.data?.email
       ) {
         throw new Error(
           response?.message || "Le serveur a refusé la connexion Google.",
         );
       }
 
-      localStorage.setItem("userEmail", fields.email);
+      localStorage.setItem("userEmail", response.data.email);
       localStorage.setItem("accesstoken", response.data.accesstoken);
       localStorage.setItem("refreshToken", response.data.refreshToken);
 
       return {
         message: response.message,
-        email: fields.email,
+        email: response.data.email,
       };
     });
   }
