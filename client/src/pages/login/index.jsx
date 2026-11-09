@@ -9,7 +9,9 @@ import CircularProgress from "../../components/CircularProgress/CircularProgress
 import { UserContext } from "../../UserContext/UserContext";
 import { getFirebaseAuthErrorMessage } from "../../firebaseAuthError";
 import {
+  clearGoogleSignInRedirectPending,
   completeGoogleSignIn,
+  isGoogleSignInRedirectPending,
   startGoogleSignIn,
 } from "../../googleAuth";
 import { getSessionId } from "../utils/tracking";
@@ -21,7 +23,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { loadUser } = useContext(UserContext);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(isGoogleSignInRedirectPending);
 
   const { openToast } = useContext(ToastContext);
   const navigate = useNavigate();
@@ -77,12 +79,14 @@ const Login = () => {
         if (!result || cancelled) return;
         setIsLoading(true);
         await loadUser();
+        clearGoogleSignInRedirectPending();
         if (cancelled) return;
         openToast("success", result.message);
         navigate(redirectTo);
       })
       .catch((error) => {
         if (cancelled) return;
+        clearGoogleSignInRedirectPending();
         console.error(
           "Échec de la connexion Google:",
           error?.code,
@@ -144,6 +148,17 @@ const Login = () => {
     setIsLoading(false);
   }
   };
+
+  if (isLoading && isGoogleSignInRedirectPending()) {
+    return (
+      <div className="grt-loading-screen">
+        <div>
+          <CircularProgress />
+          <p>Finalisation de la connexion Google...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="lg-page">

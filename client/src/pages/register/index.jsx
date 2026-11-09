@@ -8,14 +8,16 @@ import CircularProgress from "../../components/CircularProgress/CircularProgress
 import { useNavigate, Link } from "react-router";
 import { getFirebaseAuthErrorMessage } from "../../firebaseAuthError";
 import {
+  clearGoogleSignInRedirectPending,
   completeGoogleSignIn,
+  isGoogleSignInRedirectPending,
   startGoogleSignIn,
 } from "../../googleAuth";
 import { UserContext } from "../../UserContext/UserContext";
 import { useEffect } from "react";
 
 const Register = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(isGoogleSignInRedirectPending);
   const [showPassword, setShowPassword] = useState(false);
   const { loadUser } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
@@ -41,12 +43,14 @@ const Register = () => {
         if (!result || cancelled) return;
         setIsLoading(true);
         await loadUser();
+        clearGoogleSignInRedirectPending();
         if (cancelled) return;
         openToast("success", result.message);
         navigate("/");
       })
       .catch((error) => {
         if (cancelled) return;
+        clearGoogleSignInRedirectPending();
         console.error(
           "Échec de l'inscription Google:",
           error?.code,
@@ -102,6 +106,17 @@ const Register = () => {
     setIsLoading(false);
   }
   };
+
+  if (isLoading && isGoogleSignInRedirectPending()) {
+    return (
+      <div className="grt-loading-screen">
+        <div>
+          <CircularProgress />
+          <p>Finalisation de la création du compte Google...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rg-page">

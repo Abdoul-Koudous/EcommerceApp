@@ -649,7 +649,7 @@ de l'environnement.
 
 | Sévérité | Fichiers et lignes | Constat confirmé | Impact |
 | --- | --- | --- | --- |
-| **CRITIQUE** | `server/route/user.route.js`, `server/controllers/user.controller.js`, `server/services/firebaseAuth.service.js` | L'endpoint Google acceptait auparavant l'e-mail et le rôle envoyés par le navigateur sans vérifier de jeton Firebase. Il vérifie maintenant le jeton, impose Google et un e-mail confirmé, et ne donne que le rôle `UTILISATEUR` aux nouveaux comptes. | Déployé dans `bfb6199`. Render a répondu `401` au test sans jeton. L'utilisateur indique avoir configuré les variables Firebase Admin ; une connexion Google réelle reste à tester. |
+| **CRITIQUE** | `server/route/user.route.js`, `server/controllers/user.controller.js`, `server/services/firebaseAuth.service.js` | L'endpoint Google acceptait auparavant l'e-mail et le rôle envoyés par le navigateur sans vérifier de jeton Firebase. Il vérifie maintenant le jeton, impose Google et un e-mail confirmé, et ne donne que le rôle `UTILISATEUR` aux nouveaux comptes. | Déployé dans `bfb6199`. Render a répondu `401` au test sans jeton ; l'utilisateur a confirmé que la connexion Google réelle fonctionne. |
 | **ÉLEVÉE** | `server/route/product.route.js`, `server/route/category.route.js`, `server/route/bannerV1.route.js`, `server/route/campaign.route.js` | Les mutations produits, variantes, catégories, bannières et campagnes, ainsi que les vues de gestion de campagnes, exigent maintenant `auth` et `adminAuth`. | Déployé dans `bfb6199`. Les créations produit/catégorie sans jeton répondent `401` ; vérifier encore `403` pour un utilisateur connecté non admin et l'accès normal d'un admin. |
 | **Dépendances serveur** | `server/package.json` et `server/package-lock.json` | Des overrides ciblés imposent Axios `1.21.0` pour les SDK de paiement, et `@google-cloud/firestore-api` `0.7.1` avec `google-gax` `6.16.0` pour Firebase Admin. | `npm audit` complet à zéro ; les SDK chargent et exposent leurs méthodes. Les paiements Sandbox restent à retester. |
 | **Dépendances e-mail** | `server/package.json` | Nodemailer a été mis à niveau vers 10.3.1. | Le test local de rendu d'e-mail passe ; tester la livraison réelle Gmail/SMTP avant remise. |
@@ -673,7 +673,11 @@ de l'environnement.
    les droits `403` pour un utilisateur standard et l'accès admin légitime.
 5. Refaire les recettes KkiaPay/FedaPay Sandbox, tester l'envoi d'e-mails,
    puis réaliser et restaurer une sauvegarde MongoDB de test.
-6. Le code est déjà poussé sur la branche dédiée et `deploy`. Ne pas effectuer
+6. La connexion Google réussit, mais l'utilisateur voit brièvement la page
+   Login avant le succès. Un correctif local affiche un indicateur de
+   finalisation pendant le retour Firebase ; il reste à déployer et à retester.
+7. Le code de sécurité précédent est déjà poussé sur la branche dédiée et
+   `deploy`. Ne pas effectuer
    d'autre push ou changement de production sans accord explicite.
 
 La revue n'a pas signalé d'autre vulnérabilité confirmée dans la configuration
@@ -722,8 +726,10 @@ de l'instance d'un nouveau client.
 - Les correctifs de sécurité ont été poussés sur `security/firebase-auth-and-access`
   et `deploy` (commit `bfb6199`). Render `/health/ready` répond `200`.
 - L'endpoint Google sans jeton répond `401` et les créations produit/catégorie
-  sans jeton répondent `401`. La connexion Google valide et le refus `403` d'un
-  utilisateur authentifié non admin restent à confirmer.
+  sans jeton répondent `401`. L'utilisateur a confirmé que la connexion Google
+  valide réussit ; le refus `403` d'un utilisateur authentifié non admin reste
+  à confirmer. Un correctif local vise le flash de la page Login après le
+  retour Google et n'est pas encore poussé.
 - Le test de livraison du webhook KkiaPay a répondu HTTP `200` dans les logs
   Render le 2026-10-22.
 - Le 2026-10-22, une capture montrait un toast de succès suivi d'un toast
@@ -769,10 +775,12 @@ conversation doit d'abord contrôler l'état réel du dépôt et du déploiement
 > de sécurité du dépôt. La revue statique du 2026-11-05 a déjà signalé un
 > endpoint Google Auth qui ne vérifiait pas l'identité Firebase et des routes
 > catalogue sans contrôle admin suffisant ; les corrections ont été poussées
-> dans le commit `bfb6199` sur `deploy` et Render répond maintenant 401 aux
-> demandes sans jeton. Lis l'état actualisé dans « Revue de sécurité du dépôt »,
-> puis accompagne-moi pour tester Google Auth et les permissions admin en
-> direct, les paiements Sandbox, les e-mails et la sauvegarde/restauration.
+> dans le commit `bfb6199` sur `deploy` ; Render répond 401 aux demandes sans
+> jeton et j'ai confirmé que Google Auth fonctionne. Un correctif local traite
+> l'affichage bref de Login au retour Firebase ; vérifie-le et demande mon
+> accord avant de le pousser. Lis l'état actualisé dans « Revue de sécurité du
+> dépôt », puis accompagne-moi pour tester les permissions admin en direct,
+> les paiements Sandbox, les e-mails et la sauvegarde/restauration.
 > Sépare les faits vérifiés des éléments que je dois confirmer.
 > confirmer ; ne suppose pas que l'ancienne capture paiement d'octobre décrit
 > encore le comportement actuel. Ne demande et n'affiche aucun mot de passe,
