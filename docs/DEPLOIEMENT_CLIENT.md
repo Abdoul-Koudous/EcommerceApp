@@ -669,15 +669,16 @@ de l'environnement.
    test de rendu de message Nodemailer 10 passent localement. Les SDK KkiaPay et
    FedaPay chargent avec Axios 1.21.0. Les builds affichent encore un
    avertissement de gros bundle.
-4. Tester avec une session navigateur les connexions Google valides ; valider
-   les droits `403` pour un utilisateur standard et l'accès admin légitime.
+4. La connexion Google a été retestée dans le navigateur après le commit
+   `b940b34` : la finalisation est visible et la connexion aboutit. Valider
+   encore les droits `403` pour un utilisateur standard et l'accès admin
+   légitime.
 5. Refaire les recettes KkiaPay/FedaPay Sandbox, tester l'envoi d'e-mails,
    puis réaliser et restaurer une sauvegarde MongoDB de test.
-6. La connexion Google réussit, mais l'utilisateur voit brièvement la page
-   Login avant le succès. Un correctif local affiche un indicateur de
-   finalisation pendant le retour Firebase ; il reste à déployer et à retester.
-7. Le code de sécurité précédent est déjà poussé sur la branche dédiée et
-   `deploy`. Ne pas effectuer
+6. La connexion Google réussit ; après le commit `b940b34`, l'utilisateur
+   confirme que l'indicateur de finalisation explique clairement l'attente et
+   que tout fonctionne.
+7. Le code de sécurité est poussé sur la branche dédiée et `deploy`. Ne pas effectuer
    d'autre push ou changement de production sans accord explicite.
 
 La revue n'a pas signalé d'autre vulnérabilité confirmée dans la configuration
@@ -727,9 +728,9 @@ de l'instance d'un nouveau client.
   et `deploy` (commit `bfb6199`). Render `/health/ready` répond `200`.
 - L'endpoint Google sans jeton répond `401` et les créations produit/catégorie
   sans jeton répondent `401`. L'utilisateur a confirmé que la connexion Google
-  valide réussit ; le refus `403` d'un utilisateur authentifié non admin reste
-  à confirmer. Un correctif local vise le flash de la page Login après le
-  retour Google et n'est pas encore poussé.
+  valide réussit. Après le commit `b940b34`, l'utilisateur a confirmé que
+  l'indicateur de finalisation corrige le retour bref à la page Login. Le refus
+  `403` d'un utilisateur authentifié non admin reste à confirmer.
 - Le test de livraison du webhook KkiaPay a répondu HTTP `200` dans les logs
   Render le 2026-10-22.
 - Le 2026-10-22, une capture montrait un toast de succès suivi d'un toast
@@ -776,9 +777,8 @@ conversation doit d'abord contrôler l'état réel du dépôt et du déploiement
 > endpoint Google Auth qui ne vérifiait pas l'identité Firebase et des routes
 > catalogue sans contrôle admin suffisant ; les corrections ont été poussées
 > dans le commit `bfb6199` sur `deploy` ; Render répond 401 aux demandes sans
-> jeton et j'ai confirmé que Google Auth fonctionne. Un correctif local traite
-> l'affichage bref de Login au retour Firebase ; vérifie-le et demande mon
-> accord avant de le pousser. Lis l'état actualisé dans « Revue de sécurité du
+> jeton, Google Auth fonctionne et l'indicateur de finalisation au retour
+> Firebase a été confirmé. Lis l'état actualisé dans « Revue de sécurité du
 > dépôt », puis accompagne-moi pour tester les permissions admin en direct,
 > les paiements Sandbox, les e-mails et la sauvegarde/restauration.
 > Sépare les faits vérifiés des éléments que je dois confirmer.
