@@ -1,7 +1,7 @@
 // src/components/sidebar/index.jsx
 import React, { useContext, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { ThemeContext } from "../../context/ThemeContext";
+import { ThemeContext } from "../../context/themeContext";
 import { useStoreIdentity } from "../../context/useStoreIdentity";
 import {
   FaTachometerAlt,

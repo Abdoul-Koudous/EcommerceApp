@@ -19,7 +19,7 @@ import "./header.scss";
 import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import ThemeToggle from "../themetoggle";
-import { ThemeContext } from "../../context/ThemeContext";
+import { ThemeContext } from "../../context/themeContext";
 import { useStoreIdentity } from "../../context/useStoreIdentity";
 
 const Header = () => {

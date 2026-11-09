@@ -1,7 +1,9 @@
 import {
   getOrCreateSettings,
+  normalizeThemeColors,
   normalizePaymentMethods,
   normalizeStoreIdentity,
+  parseThemeColorsPayload,
   parsePaymentMethodsPayload,
   parseStoreIdentityPayload,
 } from "../services/settings.service.js";
@@ -14,6 +16,7 @@ const toPublicSettings = (settings) => {
   const doc = settings.toObject ? settings.toObject() : settings;
   return {
     ...doc,
+    themeColors: normalizeThemeColors(doc.themeColors),
     paymentMethods: normalizePaymentMethods(doc.paymentMethods),
     storeIdentity: normalizeStoreIdentity(doc.storeIdentity),
   };
@@ -45,8 +48,10 @@ export async function updateSettings(request, response) {
       currency,
       paymentMethods,
       storeIdentity,
+      themeColors,
     } = request.body;
 
+    const parsedThemeColors = parseThemeColorsPayload(themeColors);
     const parsedPaymentMethods = parsePaymentMethodsPayload(paymentMethods);
     const parsedStoreIdentity = parseStoreIdentityPayload(storeIdentity);
 
@@ -57,6 +62,11 @@ export async function updateSettings(request, response) {
       settings.defaultShippingFee = defaultShippingFee;
     }
     if (currency !== undefined) settings.currency = currency;
+    if (parsedThemeColors !== undefined) {
+      for (const [key, value] of Object.entries(parsedThemeColors)) {
+        settings.set(`themeColors.${key}`, value);
+      }
+    }
     if (parsedPaymentMethods !== undefined) {
       settings.paymentMethods = parsedPaymentMethods;
     }

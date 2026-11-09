@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { FaSun, FaMoon } from "react-icons/fa";
-import { ThemeContext } from "../../context/ThemeContext";
+import { ThemeContext } from "../../context/themeContext";
 import "./themetoggle.scss";
 
 const ThemeToggle = () => {

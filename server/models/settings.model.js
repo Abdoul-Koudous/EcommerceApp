@@ -26,6 +26,11 @@ const settingsSchema = mongoose.Schema(
       default: "FCFA",
     },
 
+    themeColors: {
+      storefrontPrimary: { type: String, default: "#820b0b" },
+      adminPrimary: { type: String, default: "#820b0b" },
+    },
+
     storeIdentity: {
       name: { type: String, default: "YebouShop", trim: true },
       logoLight: { type: String, default: "" },

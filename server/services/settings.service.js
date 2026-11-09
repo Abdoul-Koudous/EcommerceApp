@@ -9,6 +9,12 @@ export const PAYMENT_METHODS = {
 const ALLOWED_PAYMENT_KEYS = Object.values(PAYMENT_METHODS);
 
 const ALLOWED_SOCIAL_LINKS = ["facebook", "instagram", "tiktok", "linkedin"];
+const ALLOWED_THEME_COLOR_KEYS = ["storefrontPrimary", "adminPrimary"];
+
+export const DEFAULT_THEME_COLORS = {
+  storefrontPrimary: "#820b0b",
+  adminPrimary: "#820b0b",
+};
 
 export const DEFAULT_STORE_IDENTITY = {
   name: "YebouShop",
@@ -35,6 +41,53 @@ export const DEFAULT_PAYMENT_METHODS = {
   kkiapay: true,
   cashOnDelivery: true,
 };
+
+export function normalizeThemeColors(raw) {
+  const source = raw && typeof raw === "object" ? raw : {};
+  return Object.fromEntries(
+    ALLOWED_THEME_COLOR_KEYS.map((key) => [
+      key,
+      /^#[\da-f]{6}$/i.test(source[key] || "")
+        ? source[key].toLowerCase()
+        : DEFAULT_THEME_COLORS[key],
+    ]),
+  );
+}
+
+export function parseThemeColorsPayload(body) {
+  if (body === undefined) {
+    return undefined;
+  }
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    const err = new Error("themeColors doit être un objet");
+    err.status = 400;
+    throw err;
+  }
+
+  const unknownKeys = Object.keys(body).filter(
+    (key) => !ALLOWED_THEME_COLOR_KEYS.includes(key),
+  );
+  if (unknownKeys.length > 0) {
+    const err = new Error(
+      `Couleurs de thème inconnues : ${unknownKeys.join(", ")}`,
+    );
+    err.status = 400;
+    throw err;
+  }
+
+  const parsed = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (typeof value !== "string" || !/^#[\da-f]{6}$/i.test(value)) {
+      const err = new Error(`${key} doit être une couleur hexadécimale valide`);
+      err.status = 400;
+      throw err;
+    }
+    parsed[key] = value.toLowerCase();
+  }
+
+  return parsed;
+}
 
 export async function getOrCreateSettings() {
   return SettingsModel.findOneAndUpdate(

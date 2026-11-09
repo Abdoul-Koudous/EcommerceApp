@@ -13,10 +13,13 @@ import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import { DEFAULT_STORE_IDENTITY } from "../../context/storeIdentity";
 import { useStoreIdentity } from "../../context/useStoreIdentity";
+import { ThemeContext } from "../../context/themeContext";
+import { DEFAULT_THEME_COLORS } from "../../context/themeColors";
 
 const Settings = () => {
   const { openToast } = useContext(ToastContext);
   const { setIdentity: setSharedIdentity } = useStoreIdentity();
+  const { setThemeColors: setSharedThemeColors } = useContext(ThemeContext);
 
   // === Paramètres généraux ===
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -36,6 +39,8 @@ const Settings = () => {
   });
   const [savingIdentity, setSavingIdentity] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState("");
+  const [themeColors, setThemeColors] = useState(DEFAULT_THEME_COLORS);
+  const [savingThemeColors, setSavingThemeColors] = useState(false);
 
   const loadSettings = useCallback(async () => {
     setLoadingSettings(true);
@@ -49,6 +54,12 @@ const Settings = () => {
         kkiapay: res.settings.paymentMethods?.kkiapay !== false,
         cashOnDelivery: res.settings.paymentMethods?.cashOnDelivery !== false,
       });
+      const loadedThemeColors = {
+        ...DEFAULT_THEME_COLORS,
+        ...res.settings.themeColors,
+      };
+      setThemeColors(loadedThemeColors);
+      setSharedThemeColors(loadedThemeColors);
       const loadedIdentity = {
         ...DEFAULT_STORE_IDENTITY,
         ...res.settings.storeIdentity,
@@ -70,7 +81,7 @@ const Settings = () => {
       openToast("error", "Impossible de charger les paramètres");
     }
     setLoadingSettings(false);
-  }, [openToast, setSharedIdentity]);
+  }, [openToast, setSharedIdentity, setSharedThemeColors]);
 
   useEffect(() => {
     loadSettings();
@@ -126,6 +137,27 @@ const Settings = () => {
       openToast("error", "Erreur serveur lors de la mise à jour");
     }
     setSavingIdentity(false);
+  };
+
+  const handleSaveThemeColors = async () => {
+    setSavingThemeColors(true);
+    try {
+      const res = await editData("/api/settings", { themeColors });
+      if (!res?.error) {
+        const savedThemeColors = {
+          ...themeColors,
+          ...res.settings?.themeColors,
+        };
+        setThemeColors(savedThemeColors);
+        setSharedThemeColors(savedThemeColors);
+        openToast("success", "Couleurs du thème mises à jour");
+      } else {
+        openToast("error", res?.message || "Erreur lors de la mise à jour");
+      }
+    } catch {
+      openToast("error", "Erreur serveur lors de la mise à jour");
+    }
+    setSavingThemeColors(false);
   };
 
   const handleLogoUpload = async (event, variant) => {
@@ -487,6 +519,68 @@ const Settings = () => {
           disabled={savingIdentity || loadingSettings || !!uploadingLogo}
         >
           <FaSave /> {savingIdentity ? "Enregistrement..." : "Enregistrer l'identité"}
+        </button>
+      </div>
+
+      <div className="settings-card">
+        <h3>Couleurs du thème</h3>
+        <p className="settings-card-desc">
+          Personnalisez séparément la couleur principale visible par les clients
+          et celle du tableau de bord. Les changements sont enregistrés pour
+          tous les visiteurs et administrateurs.
+        </p>
+
+        {loadingSettings ? (
+          <div className="settings-loading"><CircularProgress /></div>
+        ) : (
+          <div className="settings-color-grid">
+            <label className="settings-color-option" htmlFor="storefront-primary-color">
+              <span>Couleur principale de la boutique</span>
+              <span className="settings-color-control">
+                <input
+                  id="storefront-primary-color"
+                  type="color"
+                  value={themeColors.storefrontPrimary}
+                  onChange={(event) =>
+                    setThemeColors((current) => ({
+                      ...current,
+                      storefrontPrimary: event.target.value,
+                    }))
+                  }
+                />
+                <code>{themeColors.storefrontPrimary.toUpperCase()}</code>
+              </span>
+              <em>Appliquée aux boutons, liens et éléments de marque du site.</em>
+            </label>
+
+            <label className="settings-color-option" htmlFor="admin-primary-color">
+              <span>Couleur principale du tableau de bord</span>
+              <span className="settings-color-control">
+                <input
+                  id="admin-primary-color"
+                  type="color"
+                  value={themeColors.adminPrimary}
+                  onChange={(event) =>
+                    setThemeColors((current) => ({
+                      ...current,
+                      adminPrimary: event.target.value,
+                    }))
+                  }
+                />
+                <code>{themeColors.adminPrimary.toUpperCase()}</code>
+              </span>
+              <em>Modifie la couleur d’accent de l’interface d’administration.</em>
+            </label>
+          </div>
+        )}
+
+        <button
+          className="settings-save-btn"
+          onClick={handleSaveThemeColors}
+          disabled={savingThemeColors || loadingSettings}
+        >
+          <FaSave />
+          {savingThemeColors ? "Enregistrement..." : "Enregistrer les couleurs"}
         </button>
       </div>
 
