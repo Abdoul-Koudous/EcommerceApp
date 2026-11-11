@@ -84,12 +84,15 @@ const SupportInbox = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const selectedIdRef = useRef(null);
+  const selectedLatestMessageIdRef = useRef(null);
   const pollingRef = useRef(false);
   const fileInputRef = useRef(null);
   const syncNotificationsRef = useRef(() => {});
+  const toastRef = useRef(openToast);
   const unreadByConversationRef = useRef(new Map());
   const hasUnreadSnapshotRef = useRef(false);
   const [syncStatus, setSyncStatus] = useState("Actualisation automatique active");
+  toastRef.current = openToast;
 
   const syncConversationNotifications = (items) => {
     let newMessage;
@@ -108,11 +111,12 @@ const SupportInbox = () => {
     hasUnreadSnapshotRef.current = true;
 
     if (newMessage) {
-      openToast(
+      toastRef.current(
         "info",
         `Nouveau message de ${newMessage.userId?.name || "un client"} : « ${newMessage.subject} »`,
       );
     }
+    return newMessage?._id;
   };
   syncNotificationsRef.current = syncConversationNotifications;
 
@@ -151,7 +155,7 @@ const SupportInbox = () => {
           return;
         }
         const items = listResponse.data || [];
-        syncNotificationsRef.current(items);
+        const notifiedConversationId = syncNotificationsRef.current(items);
         setConversations(items);
 
         const selectedId = selectedIdRef.current;
@@ -160,6 +164,21 @@ const SupportInbox = () => {
             `/api/support-conversations/admin/${selectedId}?markRead=false`,
           );
           if (detailResponse?.success) {
+            const latestMessage = detailResponse.data.messages?.at(-1);
+            if (
+              latestMessage?.sender === "customer" &&
+              latestMessage._id !== selectedLatestMessageIdRef.current &&
+              notifiedConversationId !== selectedId
+            ) {
+              const conversation = items.find((item) => item._id === selectedId);
+              toastRef.current(
+                "info",
+                `Nouveau message de ${conversation?.userId?.name || "un client"} : « ${conversation?.subject || "conversation"} »`,
+              );
+            }
+            if (latestMessage) {
+              selectedLatestMessageIdRef.current = latestMessage._id;
+            }
             setSelected((current) =>
               current?._id === selectedId ? detailResponse.data : current,
             );
@@ -195,6 +214,8 @@ const SupportInbox = () => {
     }
     setSelected(response.data);
     selectedIdRef.current = response.data._id;
+    selectedLatestMessageIdRef.current =
+      response.data.messages?.at(-1)?._id || null;
     setReply("");
     setAttachments([]);
     setLocation(null);
@@ -220,6 +241,8 @@ const SupportInbox = () => {
     }
     setSelected(response.data);
     selectedIdRef.current = response.data._id;
+    selectedLatestMessageIdRef.current =
+      response.data.messages?.at(-1)?._id || null;
     setReply("");
     setAttachments([]);
     setLocation(null);

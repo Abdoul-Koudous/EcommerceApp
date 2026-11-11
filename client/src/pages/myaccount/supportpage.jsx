@@ -88,11 +88,14 @@ const SupportPage = () => {
   const fileInputRef = useRef(null);
   const messageListRef = useRef(null);
   const selectedIdRef = useRef(null);
+  const selectedLatestMessageIdRef = useRef(null);
   const pollingRef = useRef(false);
   const syncNotificationsRef = useRef(() => {});
+  const toastRef = useRef(openToast);
   const unreadByConversationRef = useRef(new Map());
   const hasUnreadSnapshotRef = useRef(false);
   const [syncStatus, setSyncStatus] = useState("Connexion active");
+  toastRef.current = openToast;
 
   const syncConversationNotifications = (items) => {
     let newReply;
@@ -111,11 +114,12 @@ const SupportPage = () => {
     hasUnreadSnapshotRef.current = true;
 
     if (newReply) {
-      openToast(
+      toastRef.current(
         "info",
         `Nouvelle réponse de la boutique dans « ${newReply.subject} »`,
       );
     }
+    return newReply?._id;
   };
   syncNotificationsRef.current = syncConversationNotifications;
 
@@ -152,7 +156,7 @@ const SupportPage = () => {
           return;
         }
         const items = listResponse.data || [];
-        syncNotificationsRef.current(items);
+        const notifiedConversationId = syncNotificationsRef.current(items);
         setConversations(items);
 
         const selectedId = selectedIdRef.current;
@@ -161,6 +165,21 @@ const SupportPage = () => {
             `/api/support-conversations/mine/${selectedId}`,
           );
           if (detailResponse?.success) {
+            const latestMessage = detailResponse.data.messages?.at(-1);
+            if (
+              latestMessage?.sender === "admin" &&
+              latestMessage._id !== selectedLatestMessageIdRef.current &&
+              notifiedConversationId !== selectedId
+            ) {
+              const conversation = items.find((item) => item._id === selectedId);
+              toastRef.current(
+                "info",
+                `Nouvelle réponse de la boutique dans « ${conversation?.subject || "votre conversation"} »`,
+              );
+            }
+            if (latestMessage) {
+              selectedLatestMessageIdRef.current = latestMessage._id;
+            }
             setSelected((current) =>
               current?._id === selectedId ? detailResponse.data : current,
             );
@@ -202,6 +221,8 @@ const SupportPage = () => {
     }
     setSelected(response.data);
     selectedIdRef.current = response.data._id;
+    selectedLatestMessageIdRef.current =
+      response.data.messages?.at(-1)?._id || null;
     setShowNewConversation(false);
     setReply("");
     setAttachments([]);
@@ -352,6 +373,8 @@ const SupportPage = () => {
     setShowNewConversation(false);
     setSelected(response.data);
     selectedIdRef.current = response.data._id;
+    selectedLatestMessageIdRef.current =
+      response.data.messages?.at(-1)?._id || null;
     openToast("success", "Votre message a été envoyé au service client");
     await loadConversations();
   };
@@ -371,6 +394,8 @@ const SupportPage = () => {
     }
     setSelected(response.data);
     selectedIdRef.current = response.data._id;
+    selectedLatestMessageIdRef.current =
+      response.data.messages?.at(-1)?._id || null;
     setReply("");
     setAttachments([]);
     setLocation(null);
@@ -405,6 +430,7 @@ const SupportPage = () => {
             onClick={() => {
               setSelected(null);
               selectedIdRef.current = null;
+              selectedLatestMessageIdRef.current = null;
               setReply("");
               setMessage("");
               setAttachments([]);
