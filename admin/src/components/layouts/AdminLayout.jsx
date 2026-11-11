@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import AdminSidebar from "../sidebar";
 import AdminHeader from "../header";
+import { AdminNotificationsProvider } from "../../context/AdminNotificationsProvider";
 import "./adminlayout.scss";
 
 const AdminLayout = ({ children }) => {
@@ -17,17 +18,19 @@ const AdminLayout = ({ children }) => {
   };
 
   return (
-    <div className={`admin-page ${collapsed ? "sidebar-collapsed" : ""}`}>
-      <AdminSidebar
-        isOpen={mobileOpen}
-        collapsed={collapsed}
-        onClose={() => setMobileOpen(false)}
-      />
+    <AdminNotificationsProvider>
+      <div className={`admin-page ${collapsed ? "sidebar-collapsed" : ""}`}>
+        <AdminSidebar
+          isOpen={mobileOpen}
+          collapsed={collapsed}
+          onClose={() => setMobileOpen(false)}
+        />
 
-      <AdminHeader onToggleSidebar={handleToggleSidebar} />
+        <AdminHeader onToggleSidebar={handleToggleSidebar} />
 
-      <div className="dashboard">{children}</div>
-    </div>
+        <div className="dashboard">{children}</div>
+      </div>
+    </AdminNotificationsProvider>
   );
 };
 

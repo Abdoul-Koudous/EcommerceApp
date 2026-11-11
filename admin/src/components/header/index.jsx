@@ -10,6 +10,7 @@ import { IoMdLogOut } from "react-icons/io";
 import { FaUserCircle } from "react-icons/fa";
 import { UserContext } from "../../UserContext/UserContext";
 import { fetchDataFromApi } from "../../pages/utils/api";
+import { AdminNotificationsContext } from "../../context/notificationsContext";
 import "./adminheader.scss";
 import { ToastContext } from "../../context/ToastContext";
 import { Link } from "react-router-dom";
@@ -18,10 +19,15 @@ import ThemeToggle from "../themetoggle";
 const AdminHeader = ({ onToggleSidebar }) => {
   const { user, loadUser } = useContext(UserContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const menuRef = useRef(null);
-  const notifications = 4;
+  const notifications = useContext(AdminNotificationsContext);
   const navigate = useNavigate();
   const { openToast } = useContext(ToastContext);
+  const notificationCount =
+    notifications.orders +
+    notifications.contactMessages +
+    notifications.supportMessages;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -68,11 +74,66 @@ const AdminHeader = ({ onToggleSidebar }) => {
 
         {user ? (
           <>
-            <div className="icon-wrapper badge">
-              <RiNotification3Line className="icon" />
-              <span className="badge-number">
-                {notifications > 9 ? "9+" : notifications}
-              </span>
+            <div className="notification-menu-wrap">
+              <button
+                type="button"
+                className="icon-wrapper badge"
+                aria-label={`Notifications${notificationCount ? ` : ${notificationCount} à traiter` : ""}`}
+                aria-expanded={notificationsOpen}
+                onClick={() => setNotificationsOpen((open) => !open)}
+              >
+                <RiNotification3Line className="icon" />
+                {notificationCount > 0 && (
+                  <span className="badge-number">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </span>
+                )}
+              </button>
+              {notificationsOpen && (
+                <div className="notification-dropdown" role="menu">
+                  {notificationCount === 0 ? (
+                    <p className="notification-empty">
+                      Aucune nouvelle notification
+                    </p>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setNotificationsOpen(false);
+                          navigate("/orders");
+                        }}
+                      >
+                        Commandes à traiter
+                        <span>{notifications.orders}</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setNotificationsOpen(false);
+                          navigate("/contact-messages");
+                        }}
+                      >
+                        Messages de contact non lus
+                        <span>{notifications.contactMessages}</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setNotificationsOpen(false);
+                          navigate("/support-inbox");
+                        }}
+                      >
+                        Messages support non lus
+                        <span>{notifications.supportMessages}</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="icon-wrapper">

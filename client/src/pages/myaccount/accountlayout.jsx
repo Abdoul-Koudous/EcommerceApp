@@ -19,41 +19,41 @@ import { fetchDataFromApi } from "../utils/api";
 const AccountLayout = () => {
   const { user } = useContext(UserContext);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
-  const supportPollRef = useRef(false);
+  const [unreadCounts, setUnreadCounts] = useState({
+    supportMessages: 0,
+    orders: 0,
+  });
+  const notificationPollRef = useRef(false);
 
   useEffect(() => {
     if (!user?._id) {
-      setUnreadSupportCount(0);
+      setUnreadCounts({ supportMessages: 0, orders: 0 });
       return undefined;
     }
 
     let isCurrent = true;
-    const refreshUnreadSupportCount = async () => {
-      if (document.visibilityState !== "visible" || supportPollRef.current) return;
-      supportPollRef.current = true;
+    const refreshNotifications = async () => {
+      if (document.visibilityState !== "visible" || notificationPollRef.current) return;
+      notificationPollRef.current = true;
       try {
         const response = await fetchDataFromApi(
-          "/api/support-conversations/mine",
+          "/api/notifications/mine",
         );
-        if (isCurrent && response?.success && Array.isArray(response.data)) {
-          const unreadCount = response.data.reduce(
-            (total, conversation) =>
-              total + Number(conversation.unreadByCustomer || 0),
-            0,
-          );
-          setUnreadSupportCount(unreadCount);
+        if (isCurrent && response?.success && response.data) {
+          setUnreadCounts(response.data);
         }
       } finally {
-        supportPollRef.current = false;
+        notificationPollRef.current = false;
       }
     };
 
-    refreshUnreadSupportCount();
-    const intervalId = window.setInterval(refreshUnreadSupportCount, 4000);
+    refreshNotifications();
+    const intervalId = window.setInterval(refreshNotifications, 10000);
+    document.addEventListener("visibilitychange", refreshNotifications);
     return () => {
       isCurrent = false;
       window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", refreshNotifications);
     };
   }, [user?._id]);
 
@@ -112,12 +112,23 @@ const AccountLayout = () => {
                 <div className="al-menu-item">
                   <span className="al-icon">{tab.icon}</span>
                   <span className="al-menu-label">{tab.label}</span>
-                  {tab.id === "support" && unreadSupportCount > 0 && (
+                  {tab.id === "support" &&
+                    unreadCounts.supportMessages > 0 && (
                     <span
                       className="al-unread-badge"
-                      aria-label={`${unreadSupportCount} message(s) non lu(s)`}
+                      aria-label={`${unreadCounts.supportMessages} réponse(s) non lue(s)`}
                     >
-                      {unreadSupportCount > 99 ? "99+" : unreadSupportCount}
+                      {unreadCounts.supportMessages > 99
+                        ? "99+"
+                        : unreadCounts.supportMessages}
+                    </span>
+                  )}
+                  {tab.id === "orders" && unreadCounts.orders > 0 && (
+                    <span
+                      className="al-unread-badge"
+                      aria-label={`${unreadCounts.orders} mise(s) à jour de commande`}
+                    >
+                      {unreadCounts.orders > 99 ? "99+" : unreadCounts.orders}
                     </span>
                   )}
                 </div>

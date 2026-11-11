@@ -1,5 +1,14 @@
 import mongoose from "mongoose";
 
+const supportLocationSchema = new mongoose.Schema(
+  {
+    latitude: { type: Number, min: -90, max: 90 },
+    longitude: { type: Number, min: -180, max: 180 },
+    accuracy: { type: Number, min: 0 },
+  },
+  { _id: false },
+);
+
 const supportMessageSchema = new mongoose.Schema(
   {
     sender: {
@@ -14,8 +23,22 @@ const supportMessageSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: true,
+      default: "",
       maxlength: 2000,
+    },
+    attachments: {
+      type: [
+        {
+          url: { type: String, required: true },
+          type: { type: String, enum: ["image", "video"], required: true },
+          name: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
+    location: {
+      type: supportLocationSchema,
+      default: undefined,
     },
     sentAt: {
       type: Date,

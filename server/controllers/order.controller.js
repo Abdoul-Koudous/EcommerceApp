@@ -10,6 +10,18 @@ import { sendOrderReceiptEmail } from "../utils/mailer.js";
 
 export const getOrderDetailsController = async (req, res) => {
   try {
+    await OrderModel.updateMany(
+      { userId: req.userId, customerSeenOrderStatus: { $exists: false } },
+      [{ $set: { customerSeenOrderStatus: "$order_status" } }],
+    );
+    await OrderModel.updateMany(
+      {
+        userId: req.userId,
+        customerSeenOrderStatus: { $exists: true },
+        $expr: { $ne: ["$order_status", "$customerSeenOrderStatus"] },
+      },
+      [{ $set: { customerSeenOrderStatus: "$order_status" } }],
+    );
     const { orders } = await findOrders({ userId: req.userId, perPage: 1000 });
 
     res.status(200).json({
@@ -108,7 +120,11 @@ export const updateOrderStatusController = async (req, res) => {
 
     // ✅ Si une commande "à payer à la livraison" est effectivement livrée,
     // l'argent est considéré comme encaissé → payment_status devient "Payée".
-    const setFields = { order_status };
+    const setFields = {
+      order_status,
+      customerSeenOrderStatus:
+        existingOrder.customerSeenOrderStatus || existingOrder.order_status,
+    };
     if (willBeDelivered && wasPendingPayment) {
       setFields.payment_status = "Payée";
     }
@@ -287,7 +303,10 @@ export const cancelOwnOrderController = async (req, res) => {
         payment_status: { $in: ["À payer à la livraison", "Échec"] },
       },
       {
-        $set: { order_status: "Annulée" },
+        $set: {
+          order_status: "Annulée",
+          customerSeenOrderStatus: "Annulée",
+        },
         $push: {
           statusHistory: { status: "Annulée", date: cancellationDate },
         },
@@ -311,7 +330,10 @@ export const cancelOwnOrderController = async (req, res) => {
         const revertedOrder = await OrderModel.findOneAndUpdate(
           { _id: cancelledOrder._id, order_status: "Annulée" },
           {
-            $set: { order_status: "Reçue" },
+            $set: {
+              order_status: "Reçue",
+              customerSeenOrderStatus: "Reçue",
+            },
             $pull: {
               statusHistory: {
                 status: "Annulée",
@@ -443,6 +465,11 @@ export const getOrderByIdController = async (req, res) => {
         success: false,
         message: "Commande introuvable",
       });
+    }
+
+    if (order.customerSeenOrderStatus !== order.order_status) {
+      order.customerSeenOrderStatus = order.order_status;
+      await order.save();
     }
 
     return res.status(200).json({

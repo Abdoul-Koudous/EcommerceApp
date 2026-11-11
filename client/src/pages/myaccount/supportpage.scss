@@ -216,15 +216,58 @@
     }
   }
 
+  &__media {
+    display: grid;
+    gap: 10px;
+    margin: 8px 0;
+  }
+
+  &__attachment {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 100%;
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    text-decoration: none;
+
+    img,
+    video {
+      display: block;
+      max-width: min(100%, 360px);
+      max-height: 320px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: var(--color-surface-alt-2);
+    }
+
+    video {
+      width: 100%;
+    }
+  }
+
+  &__location {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 8px 0;
+    color: var(--color-primary);
+    font-size: 0.86rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
   &__reply {
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 10px;
-    align-items: flex-end;
     padding: 14px;
     border-top: 1px solid var(--color-border-light);
 
     textarea {
-      flex: 1;
+      width: 100%;
+      min-height: 58px;
       resize: vertical;
       border: 1px solid var(--color-border);
       border-radius: 8px;
@@ -233,6 +276,80 @@
       color: var(--color-text);
       font: inherit;
     }
+
+    > button {
+      align-self: flex-end;
+    }
+  }
+
+  &__composer-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+      padding: 8px 10px;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-alt);
+      color: var(--color-text);
+      font-size: 0.82rem;
+
+      &:hover:not(:disabled) {
+        background: var(--color-primary-soft);
+      }
+    }
+  }
+
+  &__attachment-list {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 9px;
+      border-radius: 6px;
+      background: var(--color-surface-alt);
+      color: var(--color-text-secondary);
+      font-size: 0.8rem;
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      button {
+        padding: 3px 6px;
+        background: transparent;
+        color: var(--color-danger);
+      }
+    }
+  }
+
+  &__location-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+
+    button {
+      padding: 3px 6px;
+      background: transparent;
+      color: var(--color-danger);
+    }
+  }
+
+  &__composer-hint {
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
   }
 
   &__welcome {

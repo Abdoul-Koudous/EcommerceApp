@@ -4,6 +4,7 @@ import productRouter from "./product.route.js";
 import categoryRouter from "./category.route.js";
 import bannerV1Router from "./bannerV1.route.js";
 import campaignRouter from "./campaign.route.js";
+import notificationRouter from "./notification.route.js";
 
 function assertAdminProtected(router, method, path) {
   const route = router.stack
@@ -58,4 +59,17 @@ test("catalog, banner, and campaign mutations require an administrator", () => {
   for (const [router, method, path] of protectedRoutes) {
     assertAdminProtected(router, method, path);
   }
+});
+
+test("notification counts require authentication and admin privileges", () => {
+  const customerRoute = notificationRouter.stack
+    .map((layer) => layer.route)
+    .find((candidate) => candidate?.path === "/mine" && candidate.methods.get);
+  assert.ok(customerRoute, "GET /mine should be registered");
+  assert.ok(
+    customerRoute.stack.some((layer) => layer.handle.name === "auth"),
+    "GET /mine should require authentication",
+  );
+
+  assertAdminProtected(notificationRouter, "get", "/admin");
 });

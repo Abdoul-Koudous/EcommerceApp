@@ -50,6 +50,10 @@ const orderSchema = new mongoose.Schema(
       enum: ["Reçue", "En préparation", "Expédiée", "Livrée", "Annulée"],
       default: "Reçue",
     },
+    customerSeenOrderStatus: {
+      type: String,
+      enum: ["Reçue", "En préparation", "Expédiée", "Livrée", "Annulée"],
+    },
 
     // ✅ AJOUT : historique des changements de statut, pour la timeline de
     // suivi public (voir trackOrderController). Une entrée est ajoutée

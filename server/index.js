@@ -32,6 +32,7 @@ import shortLinkRouter from "./route/shortLink.route.js";
 import socialContentRouter from "./route/socialContent.route.js";
 import helpFaqRouter from "./route/helpFaq.route.js";
 import compareRouter from "./route/compare.route.js"; 
+import notificationRouter from "./route/notification.route.js";
 
 import firebaseAuthProxy from "./middleware/firebaseAuthProxy.js";
 
@@ -146,6 +147,7 @@ app.use("/go", shortLinkRouter); // ex: yebou-shop.com/go/sld-aout-montre-wa
 app.use('/api/social-content', socialContentRouter);
 app.use('/api/help-faq', helpFaqRouter);
 app.use('/api/compare', compareRouter);
+app.use("/api/notifications", notificationRouter);
 
 app.use("/api", (req, res) => {
   res.status(404).json({

@@ -3,6 +3,7 @@ import React, { useContext, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { ThemeContext } from "../../context/themeContext";
 import { useStoreIdentity } from "../../context/useStoreIdentity";
+import { AdminNotificationsContext } from "../../context/notificationsContext";
 import {
   FaTachometerAlt,
   FaBoxOpen,
@@ -27,6 +28,7 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
   const [openMenus, setOpenMenus] = useState({});
   const { identity } = useStoreIdentity();
   const { theme } = useContext(ThemeContext);
+  const notifications = useContext(AdminNotificationsContext);
   const storeLogo =
     theme === "dark"
       ? identity.logoDark || identity.logoLight
@@ -63,8 +65,20 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
         { to: "/subCategories/lists", label: "Liste des sous catégories" },
       ],
     },
-    { to: "/orders", label: "Commandes", icon: <FaShoppingCart /> },
-    { to: "/support-inbox", label: "Service client", icon: <FaComments /> },
+    {
+      to: "/orders",
+      label: "Commandes",
+      icon: <FaShoppingCart />,
+      notificationKey: "orders",
+      notificationLabel: "commande(s) à traiter",
+    },
+    {
+      to: "/support-inbox",
+      label: "Service client",
+      icon: <FaComments />,
+      notificationKey: "supportMessages",
+      notificationLabel: "message(s) non lu(s)",
+    },
     { to: "/campaigns", label: "Campagnes", icon: <FaBullhorn /> },
     { to: "/analytics", label: "Analytics", icon: <FaChartBar /> }, // ✅ NOUVEAU
     {
@@ -73,7 +87,12 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
       subLinks: [
         { to: "/about-page", label: "À propos de nous" },
         { to: "/contact-page", label: "Nous contacter" },
-        { to: "/contact-messages", label: "Messages reçus" },
+        {
+          to: "/contact-messages",
+          label: "Messages reçus",
+          notificationKey: "contactMessages",
+          notificationLabel: "message(s) non lu(s)",
+        },
       ],
     },
 
@@ -131,7 +150,18 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
                               }
                               onClick={onClose}
                             >
-                              {sub.label}
+                              <span>{sub.label}</span>
+                              {sub.notificationKey &&
+                                notifications[sub.notificationKey] > 0 && (
+                                  <span
+                                    className="sidebar-notification-badge"
+                                    aria-label={`${notifications[sub.notificationKey]} ${sub.notificationLabel}`}
+                                  >
+                                    {notifications[sub.notificationKey] > 99
+                                      ? "99+"
+                                      : notifications[sub.notificationKey]}
+                                  </span>
+                                )}
                             </NavLink>
                           </li>
                         ))}
@@ -151,6 +181,17 @@ const AdminSidebar = ({ isOpen, collapsed, onClose }) => {
                       <span className="icon">{link.icon}</span>
                       <span className="label">{link.label}</span>
                     </div>
+                    {link.notificationKey &&
+                      notifications[link.notificationKey] > 0 && (
+                        <span
+                          className="sidebar-notification-badge"
+                          aria-label={`${notifications[link.notificationKey]} ${link.notificationLabel}`}
+                        >
+                          {notifications[link.notificationKey] > 99
+                            ? "99+"
+                            : notifications[link.notificationKey]}
+                        </span>
+                      )}
                   </NavLink>
                 )}
               </li>

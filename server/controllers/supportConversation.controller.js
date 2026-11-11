@@ -1,21 +1,50 @@
 import OrderModel from "../models/order.model.js";
 import SupportConversationModel from "../models/supportConversation.model.js";
+import { uploadFromBuffer } from "../utils/cloudinaryUpload.js";
+import {
+  parseSupportLocation,
+  validateSupportMessagePayload,
+} from "../services/supportMessage.service.js";
 
-const MAX_MESSAGE_LENGTH = 2000;
 const MAX_SUBJECT_LENGTH = 100;
 
 const normalizeText = (value) =>
   typeof value === "string" ? value.trim() : "";
 
-const validateMessage = (value) => {
-  const text = normalizeText(value);
-  if (!text) {
-    return { error: "Le message ne peut pas être vide" };
-  }
-  if (text.length > MAX_MESSAGE_LENGTH) {
-    return { error: `Le message ne peut pas dépasser ${MAX_MESSAGE_LENGTH} caractères` };
-  }
-  return { text };
+const getMessageContent = async (req) => {
+  const files = req.files || [];
+  const { location, error: locationError } = parseSupportLocation(
+    req.body.location,
+  );
+  if (locationError) return { error: locationError };
+
+  const { text, error } = validateSupportMessagePayload(
+    req.body.message,
+    files,
+    location,
+  );
+  if (error) return { error };
+
+  const attachments = await Promise.all(
+    files.map(async (file) => {
+      const upload = await uploadFromBuffer(
+        file.buffer,
+        file.originalname,
+        "support",
+      );
+      if (!upload?.secure_url) {
+        throw new Error("Cloudinary n'a pas retourné l'URL de la pièce jointe");
+      }
+
+      return {
+        url: upload.secure_url,
+        type: file.mimetype.startsWith("video/") ? "video" : "image",
+        name: file.originalname.slice(0, 180),
+      };
+    }),
+  );
+
+  return { text, attachments, location };
 };
 
 const withUnreadCounts = (conversation) => {
@@ -28,7 +57,15 @@ const withUnreadCounts = (conversation) => {
   data.unreadByCustomer = data.messages.filter(
     (message) => message.sender === "admin" && !message.seenByCustomer,
   ).length;
-  data.lastMessagePreview = data.messages.at(-1)?.text || "";
+  const lastMessage = data.messages.at(-1);
+  data.lastMessagePreview =
+    lastMessage?.text ||
+    (lastMessage?.attachments?.length
+      ? "Pièce jointe"
+      : Number.isFinite(lastMessage?.location?.latitude) &&
+          Number.isFinite(lastMessage?.location?.longitude)
+        ? "Position partagée"
+        : "");
   delete data.messages;
   return data;
 };
@@ -36,12 +73,11 @@ const withUnreadCounts = (conversation) => {
 export const createCustomerConversation = async (req, res) => {
   try {
     const subject = normalizeText(req.body.subject);
-    const { text, error } = validateMessage(req.body.message);
-    if (error || !subject) {
+    if (!subject) {
       return res.status(400).json({
         error: true,
         success: false,
-        message: error || "Le sujet est obligatoire",
+        message: "Le sujet est obligatoire",
       });
     }
     if (subject.length > MAX_SUBJECT_LENGTH) {
@@ -65,6 +101,16 @@ export const createCustomerConversation = async (req, res) => {
       }
     }
 
+    const { text, attachments, location, error } =
+      await getMessageContent(req);
+    if (error) {
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: error,
+      });
+    }
+
     const conversation = await SupportConversationModel.create({
       userId,
       subject,
@@ -75,6 +121,8 @@ export const createCustomerConversation = async (req, res) => {
           sender: "customer",
           senderId: userId,
           text,
+          attachments,
+          location,
           seenByCustomer: true,
           seenByAdmin: false,
         },
@@ -160,11 +208,6 @@ export const getCustomerConversation = async (req, res) => {
 
 export const sendCustomerConversationMessage = async (req, res) => {
   try {
-    const { text, error } = validateMessage(req.body.message);
-    if (error) {
-      return res.status(400).json({ error: true, success: false, message: error });
-    }
-
     const conversation = await SupportConversationModel.findOne({
       _id: req.params.id,
       userId: req.userId,
@@ -177,10 +220,18 @@ export const sendCustomerConversationMessage = async (req, res) => {
       });
     }
 
+    const { text, attachments, location, error } =
+      await getMessageContent(req);
+    if (error) {
+      return res.status(400).json({ error: true, success: false, message: error });
+    }
+
     conversation.messages.push({
       sender: "customer",
       senderId: req.userId,
       text,
+      attachments,
+      location,
       seenByCustomer: true,
       seenByAdmin: false,
     });
@@ -277,11 +328,6 @@ export const getAdminConversation = async (req, res) => {
 
 export const sendAdminConversationMessage = async (req, res) => {
   try {
-    const { text, error } = validateMessage(req.body.message);
-    if (error) {
-      return res.status(400).json({ error: true, success: false, message: error });
-    }
-
     const conversation = await SupportConversationModel.findById(req.params.id);
     if (!conversation) {
       return res.status(404).json({
@@ -291,10 +337,18 @@ export const sendAdminConversationMessage = async (req, res) => {
       });
     }
 
+    const { text, attachments, location, error } =
+      await getMessageContent(req);
+    if (error) {
+      return res.status(400).json({ error: true, success: false, message: error });
+    }
+
     conversation.messages.push({
       sender: "admin",
       senderId: req.userId,
       text,
+      attachments,
+      location,
       seenByAdmin: true,
       seenByCustomer: false,
     });
