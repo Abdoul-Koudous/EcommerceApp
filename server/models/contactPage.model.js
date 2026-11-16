@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
+import { sanitizeRichText } from "../services/richText.service.js";
 
 const contactPageSchema = new mongoose.Schema(
   {
     heroTag: { type: String, default: "Contact" },
     heroTitle: { type: String, default: "" },
-    heroSubtitle: { type: String, default: "" },
+    heroSubtitle: { type: String, default: "", set: sanitizeRichText },
     heroImage: { type: String, default: "" },
 
     address: { type: String, default: "" },

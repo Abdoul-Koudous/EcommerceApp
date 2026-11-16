@@ -7,6 +7,8 @@ import { postData, fetchDataFromApi } from "../utils/api";
 import IconPicker from "../../components/IconPicker/IconPicker";
 import { ToastContext } from "../../context/ToastContext";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
+import RichTextEditor from "../../components/RichTextEditor";
+import { getRichTextPlainText } from "../../components/RichTextContent/richTextUtils";
 
 const AddFaq = ({ onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
@@ -73,7 +75,7 @@ const AddFaq = ({ onClose }) => {
       return openToast("error", "L'icône de catégorie est obligatoire");
     if (!formFields.question.trim())
       return openToast("error", "La question est obligatoire");
-    if (!formFields.answer.trim())
+    if (!getRichTextPlainText(formFields.answer))
       return openToast("error", "La réponse est obligatoire");
 
     try {
@@ -82,9 +84,9 @@ const AddFaq = ({ onClose }) => {
       const payload = {
         category: formFields.category.trim(),
         categoryIcon: formFields.categoryIcon,
-        categoryDescription: formFields.categoryDescription.trim(),
+        categoryDescription: formFields.categoryDescription,
         question: formFields.question.trim(),
-        answer: formFields.answer.trim(),
+        answer: formFields.answer,
         status: formFields.status,
         order: Number(formFields.order) || 0,
       };
@@ -153,15 +155,17 @@ const AddFaq = ({ onClose }) => {
 
             <div className="hlpf-form-group">
               <label>Description courte de la catégorie</label>
-              <input
-                type="text"
-                name="categoryDescription"
+              <RichTextEditor
+                className="rich-text-editor--compact"
                 value={formFields.categoryDescription}
-                onChange={(e) => {
+                onChange={(value) => {
                   setCategoryTouched(true);
-                  onChangeInput(e);
+                  setFormFields((prev) => ({
+                    ...prev,
+                    categoryDescription: value,
+                  }));
                 }}
-                placeholder="Ex: Modifier, annuler ou consulter une commande."
+                placeholder="Ex. Modifier, annuler ou consulter une commande."
               />
             </div>
 
@@ -177,7 +181,12 @@ const AddFaq = ({ onClose }) => {
 
             <div className="hlpf-form-group">
               <label>Réponse</label>
-              <textarea name="answer" value={formFields.answer} onChange={onChangeInput} />
+              <RichTextEditor
+                value={formFields.answer}
+                onChange={(value) =>
+                  setFormFields((prev) => ({ ...prev, answer: value }))
+                }
+              />
             </div>
 
             <div className="hlpf-row">

@@ -1,17 +1,18 @@
 import mongoose from "mongoose";
+import { sanitizeRichText } from "../services/richText.service.js";
 
 const aboutPageSchema = new mongoose.Schema(
   {
     // HERO
     heroTag: { type: String, default: "À propos de nous" },
     heroTitle: { type: String, default: "" },
-    heroSubtitle: { type: String, default: "" },
+    heroSubtitle: { type: String, default: "", set: sanitizeRichText },
     heroImage: { type: String, default: "" }, // URL Cloudinary
 
     // STORY
     storyTag: { type: String, default: "Notre histoire" },
     storyTitle: { type: String, default: "" },
-    storyParagraphs: [{ type: String }], // tableau de paragraphes
+    storyParagraphs: [{ type: String, set: sanitizeRichText }], // tableau de paragraphes
     storyImage: { type: String, default: "" },
 
     // STATS
@@ -29,13 +30,13 @@ const aboutPageSchema = new mongoose.Schema(
       {
         icon: { type: String, required: true }, // nom d'icône ex: "FaShippingFast"
         title: { type: String, required: true },
-        description: { type: String, required: true },
+        description: { type: String, required: true, set: sanitizeRichText },
       },
     ],
 
     // CTA
     ctaTitle: { type: String, default: "" },
-    ctaSubtitle: { type: String, default: "" },
+    ctaSubtitle: { type: String, default: "", set: sanitizeRichText },
   },
   { timestamps: true }
 );

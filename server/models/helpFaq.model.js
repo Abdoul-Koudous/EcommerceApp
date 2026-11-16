@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import {
+  richTextToPlainText,
+  sanitizeRichText,
+} from "../services/richText.service.js";
 
 const helpFaqSchema = new mongoose.Schema(
   {
@@ -29,6 +33,7 @@ const helpFaqSchema = new mongoose.Schema(
       type: String,
       default: "",
       trim: true,
+      set: sanitizeRichText,
     },
 
     question: {
@@ -41,6 +46,11 @@ const helpFaqSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      set: sanitizeRichText,
+      validate: {
+        validator: (value) => richTextToPlainText(value).length > 0,
+        message: "La réponse est obligatoire",
+      },
     },
 
     status: {

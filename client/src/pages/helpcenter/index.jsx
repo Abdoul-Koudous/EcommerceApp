@@ -6,6 +6,8 @@ import { getFaqCategories, getFaqs } from "./data";
 import { getIconComponent } from "../utils/iconMap";
 import "./helpcenter.scss";
 import { useStoreIdentity } from "../../context/useStoreIdentity";
+import RichTextContent from "../../components/RichTextContent";
+import { getRichTextPlainText } from "../../components/RichTextContent/richTextUtils";
 
 function CategoryIcon({ name }) {
   const Icon = getIconComponent(name);
@@ -87,7 +89,7 @@ export default function HelpCenter() {
       .filter(
         (item) =>
           item.question.toLowerCase().includes(q) ||
-          item.answer.toLowerCase().includes(q)
+          getRichTextPlainText(item.answer).toLowerCase().includes(q)
       )
       .slice(0, 5);
   }, [query, faqs]);
@@ -99,7 +101,7 @@ export default function HelpCenter() {
       const matchesQuery =
         !q ||
         item.question.toLowerCase().includes(q) ||
-        item.answer.toLowerCase().includes(q);
+        getRichTextPlainText(item.answer).toLowerCase().includes(q);
       return matchesCategory && matchesQuery;
     });
   }, [query, activeCategory, faqs]);
@@ -244,7 +246,10 @@ export default function HelpCenter() {
                 <CategoryIcon name={cat.icon} />
               </span>
               <span className="help-category__title">{cat.title}</span>
-              <span className="help-category__desc">{cat.description}</span>
+              <RichTextContent
+                className="help-category__desc"
+                value={cat.description}
+              />
             </button>
           ))}
         </section>
@@ -280,7 +285,12 @@ export default function HelpCenter() {
                     {item.question}
                     <span className="help-faq__chevron" aria-hidden="true" />
                   </button>
-                  {isOpen && <p className="help-faq__answer">{item.answer}</p>}
+                  {isOpen && (
+                    <RichTextContent
+                      className="help-faq__answer"
+                      value={item.answer}
+                    />
+                  )}
                 </li>
               );
             })}

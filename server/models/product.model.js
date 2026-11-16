@@ -1,9 +1,21 @@
 import mongoose from "mongoose";
+import {
+  richTextToPlainText,
+  sanitizeRichText,
+} from "../services/richText.service.js";
 
 const productSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
-    description: { type: String, required: true },
+    description: {
+      type: String,
+      required: true,
+      set: sanitizeRichText,
+      validate: {
+        validator: (value) => richTextToPlainText(value).length > 0,
+        message: "La description du produit est obligatoire",
+      },
+    },
     images: [{ type: String, required: true }],
     brand: { type: String, default: "" },
     price: { type: Number, default: 0 },

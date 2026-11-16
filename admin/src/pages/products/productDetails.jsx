@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchDataFromApi } from "../utils/api";
 import "./productDetails.scss";
+import RichTextContent from "../../components/RichTextContent";
 import ProductZoom from "../../components/productzoom";
 import {
   FaTag,
@@ -215,7 +216,7 @@ const ProductDetails = () => {
 
           <div className="pdt-description">
             <h3>Description</h3>
-            <p>{product.description}</p>
+            <RichTextContent value={product.description} />
           </div>
         </div>
       </div>

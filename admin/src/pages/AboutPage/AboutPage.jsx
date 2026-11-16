@@ -6,6 +6,7 @@ import IconPicker from "../../components/IconPicker/IconPicker";
 import "./aboutpage.scss";
 import AboutPreview from "../../components/AboutPreview/AboutPreview";
 import LivePreviewFrame from "../../components/LivePreviewFrame/LivePreviewFrame";
+import RichTextEditor from "../../components/RichTextEditor";
 
 const AboutPage = () => {
   const { openToast } = useContext(ToastContext);
@@ -151,7 +152,12 @@ const AboutPage = () => {
           </div>
           <div className="form-group">
             <label>Sous-titre</label>
-            <textarea name="heroSubtitle" rows="3" value={form.heroSubtitle} onChange={onChange} />
+            <RichTextEditor
+              value={form.heroSubtitle}
+              onChange={(value) =>
+                setForm((prev) => ({ ...prev, heroSubtitle: value }))
+              }
+            />
           </div>
           <div className="form-group">
             <label>Image de fond</label>
@@ -176,7 +182,10 @@ const AboutPage = () => {
             <label>Paragraphes</label>
             {form.storyParagraphs.map((p, i) => (
               <div className="repeatable-row" key={i}>
-                <textarea rows="3" value={p} onChange={(e) => updateParagraph(i, e.target.value)} />
+                <RichTextEditor
+                  value={p}
+                  onChange={(value) => updateParagraph(i, value)}
+                />
                 <button className="btn-remove" onClick={() => removeParagraph(i)}>
                   <FaTrash />
                 </button>
@@ -247,10 +256,9 @@ const AboutPage = () => {
               </div>
               <div className="form-group">
                 <label>Description</label>
-                <textarea
-                  rows="2"
+                <RichTextEditor
                   value={val.description}
-                  onChange={(e) => updateValue(i, "description", e.target.value)}
+                  onChange={(value) => updateValue(i, "description", value)}
                 />
               </div>
               <button className="btn-remove" onClick={() => removeValue(i)}>
@@ -271,7 +279,12 @@ const AboutPage = () => {
           </div>
           <div className="form-group">
             <label>Sous-titre</label>
-            <textarea rows="2" name="ctaSubtitle" value={form.ctaSubtitle} onChange={onChange} />
+            <RichTextEditor
+              value={form.ctaSubtitle}
+              onChange={(value) =>
+                setForm((prev) => ({ ...prev, ctaSubtitle: value }))
+              }
+            />
           </div>
         </section>
 

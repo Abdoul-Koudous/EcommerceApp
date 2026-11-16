@@ -17,6 +17,8 @@ import { UserContext } from "../../UserContext/UserContext";
 import { postData, editData, fetchDataFromApi, deleteData } from "../utils/api";
 import { ToastContext } from "../../context/ToastContext";
 import { captureUtmFromUrl, trackEvent, getSessionId } from "../utils/tracking";
+import RichTextContent from "../../components/RichTextContent";
+import { getRichTextPlainText } from "../../components/RichTextContent/richTextUtils";
 
 const DESC_PREVIEW_LENGTH = 220;
 
@@ -68,6 +70,7 @@ const ProductDetails = () => {
     loadMyListItems,
   } = useContext(UserContext);
   const { openToast } = useContext(ToastContext);
+  const plainDescription = getRichTextPlainText(product?.description);
 
   const currentCartItem = cartItems?.find(
     (item) => item.productId === product?._id,
@@ -611,12 +614,9 @@ const ProductDetails = () => {
               {/* ✅ DESCRIPTION tronquée avec "Voir plus" → scroll onglet Description */}
               {product.description && (
                 <p className="desc">
-                  {product.description.length > DESC_PREVIEW_LENGTH
-                    ? product.description
-                        .slice(0, DESC_PREVIEW_LENGTH)
-                        .trimEnd() + "…"
-                    : product.description}
-                  {product.description.length > DESC_PREVIEW_LENGTH && (
+                  {plainDescription.slice(0, DESC_PREVIEW_LENGTH).trimEnd()}
+                  {plainDescription.length > DESC_PREVIEW_LENGTH && "…"}
+                  {plainDescription.length > DESC_PREVIEW_LENGTH && (
                     <button
                       type="button"
                       className="desc-see-more"
@@ -799,7 +799,7 @@ const ProductDetails = () => {
           <div className="tabs-content">
             {activeTab === 0 && (
               <div className="tab-description">
-                <p>{product.description}</p>
+                <RichTextContent value={product.description} />
               </div>
             )}
 

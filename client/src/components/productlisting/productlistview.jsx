@@ -14,6 +14,7 @@ import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import { postData, deleteData, editData } from "../../pages/utils/api";
 import { getSessionId, trackEvent } from "../../pages/utils/tracking";
+import { getRichTextPlainText } from "../RichTextContent/richTextUtils";
 
 // longueur de description avant troncature + "Voir plus"
 const DESC_PREVIEW_LENGTH = 580;
@@ -66,6 +67,7 @@ const ProductItemView = ({ product }) => {
     productRam = [],
     productWeight = [],
   } = product;
+  const plainDescription = getRichTextPlainText(description);
 
   useEffect(() => {
     const exists = compareItems?.some((item) => item.productId === _id);
@@ -354,7 +356,7 @@ const ProductItemView = ({ product }) => {
   };
 
   const isDescTruncated =
-    !!description && description.length > DESC_PREVIEW_LENGTH;
+    !!plainDescription && plainDescription.length > DESC_PREVIEW_LENGTH;
 
   return (
     <>
@@ -420,9 +422,10 @@ const ProductItemView = ({ product }) => {
               {name}
             </h4>
             <p className="plv-desc">
-              {isDescTruncated
-                ? description.slice(0, DESC_PREVIEW_LENGTH).trimEnd() + "…"
-                : description}
+              {plainDescription
+                ? plainDescription.slice(0, DESC_PREVIEW_LENGTH).trimEnd() +
+                  (isDescTruncated ? "…" : "")
+                : ""}
               {isDescTruncated && (
                 <button
                   type="button"

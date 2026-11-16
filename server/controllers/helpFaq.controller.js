@@ -1,4 +1,5 @@
 import HelpFaqModel from "../models/helpFaq.model.js";
+import { richTextToPlainText } from "../services/richText.service.js";
 
 export async function addFaq(req, res) {
   try {
@@ -36,7 +37,7 @@ export async function addFaq(req, res) {
       });
     }
 
-    if (!answer?.trim()) {
+    if (!richTextToPlainText(answer)) {
       return res.status(400).json({
         success: false,
         error: true,
@@ -264,6 +265,13 @@ export async function updateFaq(req, res) {
     }
 
     if (req.body.answer !== undefined) {
+      if (!richTextToPlainText(req.body.answer)) {
+        return res.status(400).json({
+          success: false,
+          error: true,
+          message: "La réponse est obligatoire",
+        });
+      }
       updateData.answer = req.body.answer.trim();
     }
 

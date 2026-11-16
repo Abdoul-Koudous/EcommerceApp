@@ -3,6 +3,7 @@ import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaClock } from "react-icons/fa"
 import { fetchDataFromApi, postData } from "../utils/api";
 import { ToastContext } from "../../context/ToastContext";
 import "./contact.scss";
+import RichTextContent from "../../components/RichTextContent";
 
 const Contact = () => {
   const { openToast } = useContext(ToastContext);
@@ -85,7 +86,9 @@ const Contact = () => {
         <div className="hero-content">
           {pageData?.heroTag && <p className="tag">{pageData.heroTag}</p>}
           {pageData?.heroTitle && <h1>{pageData.heroTitle}</h1>}
-          {pageData?.heroSubtitle && <p className="subtitle">{pageData.heroSubtitle}</p>}
+          {pageData?.heroSubtitle && (
+            <RichTextContent value={pageData.heroSubtitle} className="subtitle" />
+          )}
         </div>
       </div>
 

@@ -1,0 +1,29 @@
+.rich-text-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+
+  p {
+    margin: 0 0 0.75em;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  h2,
+  h3,
+  h4 {
+    margin: 0.8em 0 0.4em;
+  }
+
+  ul,
+  ol {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+  }
+
+  a {
+    overflow-wrap: anywhere;
+  }
+}

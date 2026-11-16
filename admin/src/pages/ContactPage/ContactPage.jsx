@@ -5,6 +5,7 @@ import { FaSave } from "react-icons/fa";
 import "./contactpage.scss";
 import ContactPreview from "../../components/ContactPreview/ContactPreview";
 import LivePreviewFrame from "../../components/LivePreviewFrame/LivePreviewFrame";
+import RichTextEditor from "../../components/RichTextEditor";
 
 const ContactPage = () => {
   const { openToast } = useContext(ToastContext);
@@ -99,7 +100,12 @@ const ContactPage = () => {
           </div>
           <div className="form-group">
             <label>Sous-titre</label>
-            <textarea rows="3" name="heroSubtitle" value={form.heroSubtitle} onChange={onChange} />
+            <RichTextEditor
+              value={form.heroSubtitle}
+              onChange={(value) =>
+                setForm((prev) => ({ ...prev, heroSubtitle: value }))
+              }
+            />
           </div>
           <div className="form-group">
             <label>Image de fond</label>

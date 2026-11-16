@@ -13,6 +13,8 @@ import HoverRating from "../../components/HoverRating/HoverRating";
 import { ToastContext } from "../../context/ToastContext";
 import CircularProgress from "../../components/CircularProgress/CircularProgress";
 import VariantsManager from "../../components/VariantsManager/VariantsManager"; // ✅ NOUVEAU
+import RichTextEditor from "../../components/RichTextEditor";
+import { getRichTextPlainText } from "../../components/RichTextContent/richTextUtils";
 
 // Dropdown multi-sélection
 const DropdownMultiSelect = ({ label, options, selectedValues, onChange }) => {
@@ -90,8 +92,6 @@ const EditProduct = ({ product, onClose }) => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingMainImage, setLoadingMainImage] = useState(false);
   const [loadingExtraImages, setLoadingExtraImages] = useState(false);
-
-  const descriptionRef = useRef(null); // ✅ ref pour l'auto-resize du textarea description
 
   // STATES
   const [mainImageFile, setMainImageFile] = useState(null);
@@ -325,7 +325,7 @@ const EditProduct = ({ product, onClose }) => {
     // 🔹 VALIDATION
     if (!formFields.name.trim())
       return openToast("error", "Le nom du produit est obligatoire");
-    if (!formFields.description.trim())
+    if (!getRichTextPlainText(formFields.description))
       return openToast("error", "La description du produit est obligatoire");
 
     if (!formFields.catId)
@@ -467,17 +467,6 @@ const EditProduct = ({ product, onClose }) => {
     }
   }, [formFields.price, formFields.oldPrice]);
 
-  // ✅ auto-resize du textarea description à chaque changement de contenu (saisie ou chargement produit)
-  const autoResizeTextarea = (el) => {
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  };
-
-  useEffect(() => {
-    autoResizeTextarea(descriptionRef.current);
-  }, [formFields.description]);
-
   return (
     <div className="apd-overlay">
       <div className={`apd-content ${isClosing ? "closing" : "opening"}`}>
@@ -503,11 +492,12 @@ const EditProduct = ({ product, onClose }) => {
             </div>
             <div className="apd-form-group">
               <label>Description</label>
-              <textarea
-                ref={descriptionRef}
-                name="description"
+              <RichTextEditor
                 value={formFields.description}
-                onChange={onChangeInput}
+                onChange={(value) =>
+                  setFormFields((prev) => ({ ...prev, description: value }))
+                }
+                placeholder="Décrivez le produit, ses avantages et ses caractéristiques..."
               />
             </div>
 

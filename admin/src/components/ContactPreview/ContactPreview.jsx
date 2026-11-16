@@ -1,5 +1,6 @@
 import React from "react";
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaClock } from "react-icons/fa";
+import RichTextContent from "../RichTextContent";
 import "./contactpreview.scss";
 
 const ContactPreview = ({ data }) => {
@@ -26,7 +27,9 @@ const ContactPreview = ({ data }) => {
         <div className="hero-content">
           {data.heroTag && <p className="tag">{data.heroTag}</p>}
           {data.heroTitle && <h1>{data.heroTitle}</h1>}
-          {data.heroSubtitle && <p className="subtitle">{data.heroSubtitle}</p>}
+          {data.heroSubtitle && (
+            <RichTextContent value={data.heroSubtitle} className="subtitle" />
+          )}
         </div>
       </div>
 

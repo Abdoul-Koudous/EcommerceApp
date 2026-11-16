@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { fetchDataFromApi } from "../utils/api";
 import { getIconComponent } from "../utils/iconMap";
 import "./about.scss";
+import RichTextContent from "../../components/RichTextContent";
 
 const About = () => {
   const [data, setData] = useState(null);
@@ -36,7 +37,9 @@ const About = () => {
         <div className="hero-content">
           {data.heroTag && <p className="tag">{data.heroTag}</p>}
           {data.heroTitle && <h1>{data.heroTitle}</h1>}
-          {data.heroSubtitle && <p className="subtitle">{data.heroSubtitle}</p>}
+          {data.heroSubtitle && (
+            <RichTextContent value={data.heroSubtitle} className="subtitle" />
+          )}
         </div>
       </div>
 
@@ -47,7 +50,7 @@ const About = () => {
             {data.storyTag && <p className="tag">{data.storyTag}</p>}
             {data.storyTitle && <h2>{data.storyTitle}</h2>}
             {data.storyParagraphs?.map((p, i) => (
-              <p key={i}>{p}</p>
+              <RichTextContent key={i} value={p} className="story-paragraph" />
             ))}
             <Link to="/productlisting" className="btn-primary">
               Découvrir la boutique
@@ -88,7 +91,7 @@ const About = () => {
                 <div className="value-card" key={i}>
                   <Icon className="icon" />
                   <h4>{val.title}</h4>
-                  <p>{val.description}</p>
+                  <RichTextContent value={val.description} />
                 </div>
               );
             })}
@@ -101,7 +104,7 @@ const About = () => {
         <div className="about-cta">
           <div className="container">
             {data.ctaTitle && <h2>{data.ctaTitle}</h2>}
-            {data.ctaSubtitle && <p>{data.ctaSubtitle}</p>}
+            {data.ctaSubtitle && <RichTextContent value={data.ctaSubtitle} />}
             <Link to="/productlisting" className="btn-primary">
               Voir la boutique
             </Link>

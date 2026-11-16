@@ -14,11 +14,13 @@ import { UserContext } from "../../UserContext/UserContext";
 import { ToastContext } from "../../context/ToastContext";
 import { postData, deleteData } from "../../pages/utils/api";
 import "./productpopup.scss";
+import { getRichTextPlainText } from "../RichTextContent/richTextUtils";
 
 const DESC_PREVIEW_LENGTH = 220;
 
 const ProductPopup = ({ product, onClose, addToCart, user }) => {
   const navigate = useNavigate();
+  const plainDescription = getRichTextPlainText(product.description);
 
   const [quantity, setQuantity] = useState(1);
 
@@ -343,10 +345,9 @@ const ProductPopup = ({ product, onClose, addToCart, user }) => {
             {/* ✅ DESCRIPTION tronquée avec "Voir plus" → redirige vers la fiche produit */}
             {product.description && (
               <p className="pp-desc">
-                {product.description.length > DESC_PREVIEW_LENGTH
-                  ? product.description.slice(0, DESC_PREVIEW_LENGTH).trimEnd() + "…"
-                  : product.description}
-                {product.description.length > DESC_PREVIEW_LENGTH && (
+                {plainDescription.slice(0, DESC_PREVIEW_LENGTH).trimEnd()}
+                {plainDescription.length > DESC_PREVIEW_LENGTH && "…"}
+                {plainDescription.length > DESC_PREVIEW_LENGTH && (
                   <button
                     type="button"
                     className="pp-desc-see-more"

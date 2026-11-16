@@ -10,6 +10,7 @@ import {
   FaCartPlus,
 } from "react-icons/fa";
 import "./productlistview.scss";
+import RichTextContent from "../RichTextContent";
 import ProductPopup from "../productmodal";
 
 const ProductItemView = ({ product }) => {
@@ -96,7 +97,7 @@ const ProductItemView = ({ product }) => {
           >
             {name}
           </h4>
-          <p className="pil-desc">{description}</p>
+          <RichTextContent className="pil-desc" value={description} />
 
           <div className="pil-rating">
             {[...Array(5)].map((_, i) => (

@@ -1,5 +1,6 @@
 import React from "react";
 import { getIconComponent } from "../../pages/utils/iconOptions";
+import RichTextContent from "../RichTextContent";
 import "./aboutpreview.scss";
 
 const AboutPreview = ({ data }) => {
@@ -14,7 +15,9 @@ const AboutPreview = ({ data }) => {
         <div className="hero-content">
           {data.heroTag && <p className="tag">{data.heroTag}</p>}
           {data.heroTitle && <h1>{data.heroTitle}</h1>}
-          {data.heroSubtitle && <p className="subtitle">{data.heroSubtitle}</p>}
+          {data.heroSubtitle && (
+            <RichTextContent value={data.heroSubtitle} className="subtitle" />
+          )}
         </div>
       </div>
 
@@ -24,7 +27,10 @@ const AboutPreview = ({ data }) => {
           <div className="story-text">
             {data.storyTag && <p className="tag">{data.storyTag}</p>}
             {data.storyTitle && <h2>{data.storyTitle}</h2>}
-            {data.storyParagraphs?.map((p, i) => p && <p key={i}>{p}</p>)}
+            {data.storyParagraphs?.map(
+              (p, i) =>
+                p && <RichTextContent key={i} value={p} className="story-paragraph" />,
+            )}
             <span className="btn-primary">Découvrir la boutique</span>
           </div>
           {data.storyImage && (
@@ -62,7 +68,7 @@ const AboutPreview = ({ data }) => {
                 <div className="value-card" key={i}>
                   <Icon className="icon" />
                   <h4>{val.title || "..."}</h4>
-                  <p>{val.description || "..."}</p>
+                  <RichTextContent value={val.description || "..."} />
                 </div>
               );
             })}
@@ -75,7 +81,7 @@ const AboutPreview = ({ data }) => {
         <div className="about-cta">
           <div className="container">
             {data.ctaTitle && <h2>{data.ctaTitle}</h2>}
-            {data.ctaSubtitle && <p>{data.ctaSubtitle}</p>}
+            {data.ctaSubtitle && <RichTextContent value={data.ctaSubtitle} />}
             <span className="btn-primary">Voir la boutique</span>
           </div>
         </div>
